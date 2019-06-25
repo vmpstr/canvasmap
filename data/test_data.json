@@ -1,0 +1,27 @@
+[
+  {
+    "bug": 12345,
+    "label": "test bug"
+  },
+  {
+    "bug": 12346,
+    "label": "another test",
+    "blocked_on": [1111, 1112]
+  },
+  {
+    "bug": 1111,
+    "label": "blocker",
+    "blocking": [12346],
+    "blocked_on": [2222]
+  },
+  {
+    "bug": 1112,
+    "label": "another blocker",
+    "blocking": [12346]
+  },
+  {
+    "bug": 2222,
+    "label": "child blocker",
+    "blocking": [1111]
+  }
+]
