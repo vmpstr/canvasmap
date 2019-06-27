@@ -1,6 +1,7 @@
 import { LayoutItem } from './layout_item.mjs';
 import { Theme } from './theme.mjs';
 import { PlaceholderItem } from './data_sources/special_items.mjs';
+import { Rect } from './geometry/rect.mjs';
 
 export class Layout {
   constructor(ctx) {
@@ -113,20 +114,14 @@ export class Layout {
 
     let result = [];
 
-    // TODO(vmpstr): Make a rect class.
-    const l = rect[0];
-    const t = rect[1];
-    const r = l + rect[2];
-    const b = t + rect[3];
-
     const item_intersects = (item) => {
       if (!item)
         return false;
-      const il = item.position[0];
-      const it = item.position[1];
-      const ir = il + item.size[0];
-      const ib = it + item.size[1];
-      return il < r && it < b && ir > l && ib > t;
+      let irect = new Rect(item.position, item.size);
+      return irect.left < rect.right &&
+             irect.top < rect.bottom &&
+             irect.right > rect.left &&
+             irect.bottom > rect.top;
     }
 
     for (let i = 0; i < this.items_.length; ++i) {

@@ -36,6 +36,12 @@ export class Rasterizer {
         this.app_canvas_.ctx.fillText(item.label, item.position[0] + Theme.padding(item), item.position[1] + 0.5 * item.size[1]);
       }
 
+      if (item.decorators) {
+        for (let i = 0; i < item.decorators.length; ++i) {
+          item.decorators[i].rasterize(this.app_canvas_.ctx);
+        }
+      }
+
       if (item.dragging)
         this.app_canvas_.ctx.restore();
 

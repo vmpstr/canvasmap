@@ -1,4 +1,5 @@
 import { Theme } from './theme.mjs';
+import { Rect } from './geometry/rect.mjs';
 
 export class LayoutItem {
   constructor(item, position) {
@@ -13,6 +14,17 @@ export class LayoutItem {
     const width = Math.max(2 * Theme.padding(this) + text_width, Theme.minWidth(this));
     const height = Math.max(2 * Theme.padding(this) + Theme.fontSize(this), Theme.minHeight(this));
     this.size_ = [width, height];
+    this.layoutDecorators();
+  }
+
+  layoutDecorators() {
+    if (!this.decorators_)
+      return;
+
+    let border_rect = new Rect(this.position_, this.size_);
+    for (let i = 0; i < this.decorators_.length; ++i) {
+      border_rect = this.decorators_[i].layout(border_rect);
+    }
   }
 
   get position() { 
@@ -21,6 +33,7 @@ export class LayoutItem {
 
   set position(v) {
     this.position_ = v;
+    this.layoutDecorators();
   }
 
   get size() {
@@ -61,5 +74,13 @@ export class LayoutItem {
 
   get has_parent() {
     return !!(this.parent || this.tentative_parent || this.has_placeholder_parent);
+  }
+
+  get decorators() {
+    return this.decorators_;
+  }
+
+  set decorators(v) {
+    this.decorators_ = v;
   }
 }

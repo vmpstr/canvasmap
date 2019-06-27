@@ -39,7 +39,7 @@ async function initialize() {
   layout = new Layout(app_canvas.ctx);
   drag_control = new DragControl(layout);
 
-  const data_source = DataSource.Create("test");
+  const data_source = DataSource.Create("github");
   await data_source.load();
   let y = 0;
   for (let i = 0; i < data_source.data.length; ++i) {

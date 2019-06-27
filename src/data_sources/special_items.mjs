@@ -7,9 +7,9 @@ export class UserItem {
   }
 
   construct(layout_item) {
-    layout_item.label_ = "";
-    layout_item.ancestors_ = [];
-    layout_item.descendants_ = [];
+    layout_item.label = "";
+    layout_item.ancestors = [];
+    layout_item.descendants = [];
   }
 
   get id_namespace() {
@@ -31,7 +31,7 @@ export class PlaceholderItem {
     this.tentative_parent_ = tentative_parent;
   }
   construct(layout_item) {
-    layout_item.label_ = this.held_item_.label;
+    layout_item.label = this.held_item_.label;
     layout_item.box = { color: Theme.placeholderStyle.box.color };
     layout_item.border = { color: Theme.placeholderStyle.border.color };
     layout_item.edge = { color: Theme.placeholderStyle.edge.color };

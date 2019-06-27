@@ -1,5 +1,6 @@
 import { Layout } from './layout.mjs';
 import { Theme } from './theme.mjs';
+import { Rect } from './geometry/rect.mjs';
 
 export class DragControl {
   constructor(layout) {
@@ -41,12 +42,11 @@ export class DragControl {
       this.layout_.tickDragging(this.drag_item_);
     }
 
-    const query_rect = [
-      this.drag_item_.position[0],
-      this.drag_item_.position[1] - 0.5 * this.drag_item_.drag_size[1],
-      this.drag_item_.drag_size[0],
-      0.5 * this.drag_item_.drag_size[1]
-    ];
+    const query_rect = new Rect(
+      [this.drag_item_.position[0], this.drag_item_.position[1] - 0.5 * this.drag_item_.drag_size[1]],
+      [this.drag_item_.drag_size[0], 0.5 * this.drag_item_.drag_size[1]]
+    );
+    
     const candidates = this.layout_.getItemsInRect(query_rect);
     if (!candidates.length) {
       this.layout_.removePlaceholder();
