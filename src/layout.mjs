@@ -1,5 +1,6 @@
 import { LayoutItem } from './layout_item.mjs';
 import { Theme } from './theme.mjs';
+import { PlaceholderItem } from './data_sources/special_items.mjs';
 
 export class Layout {
   constructor(ctx) {
@@ -181,9 +182,9 @@ export class Layout {
     if (this.tree_is_dirty_)
       this.rebuild();
 
-    item.dragging = false;
+    delete item.dragging;
     delete item.drag_size;
-    this.markChildren(item, (child) => { child.hide = false; });
+    this.markChildren(item, (child) => { delete child.hide; });
   }
 
   markChildren(item, mark) {
@@ -250,24 +251,19 @@ export class Layout {
   removePlaceholder() {
     if (!this.placeholder_)
       return;
-    this.placeholder_.held_item.tentative_parent = null;
     this.removeChildById(this.placeholder_.parent, this.placeholder_.id);
-    this.placeholder_ = null;
+    this.placeholder_.data_item.release();
+    delete this.placeholder_;
 
     this.layout();
   }
 
   addPlaceholder(held_item, parent, after_child) {
     console.assert(!this.placeholder_);
-    held_item.tentative_parent = parent;
-    this.placeholder_ = new LayoutItem({ label: held_item.label, override_id: "placeholder" }, [0, 0]);
-    this.placeholder_.held_item = held_item;
+    this.placeholder_ = new LayoutItem(new PlaceholderItem(held_item, parent), [0, 0]);
     this.placeholder_.parent = parent;
     this.placeholder_.children = [];
     this.insertChild(parent, after_child, this.placeholder_);
-    this.placeholder_.box = { color: Theme.placeholderStyle.box.color };
-    this.placeholder_.border = { color: Theme.placeholderStyle.border.color };
-    this.placeholder_.edge = { color: Theme.placeholderStyle.edge.color };
 
     this.layout();
   }
@@ -275,9 +271,8 @@ export class Layout {
   commitPlaceholder() {
     if (!this.placeholder_)
       return;
-    const item = this.placeholder_.held_item;
-    item.parent = item.tentative_parent;
-    item.tentative_parent = null;
+    const item = this.placeholder_.data_item.held_item;
+    item.parent = this.placeholder_.data_item.tentative_parent;
     // TODO(vmpstr): There is a problem with multiple ancestors here.
     item.ancestors = [item.parent.id];
     this.replaceChild(item.parent, this.placeholder_.id, item);

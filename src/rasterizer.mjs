@@ -28,7 +28,7 @@ export class Rasterizer {
       const box_rasterizer = Theme.boxRasterizer(item);
       box_rasterizer(this.app_canvas_.ctx, item.position[0], item.position[1], item.size[0], item.size[1]);
 
-      if (!item.is_editing && item.id != "placeholder") {
+      if (!item.is_editing) {
         this.app_canvas_.ctx.beginPath();
         this.app_canvas_.ctx.font = Theme.fontStyle(item);
         this.app_canvas_.ctx.fillStyle = Theme.fontColor(item);

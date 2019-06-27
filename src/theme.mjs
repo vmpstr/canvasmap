@@ -58,7 +58,7 @@ export class Theme {
   }
 
   static defaults(item) {
-    return item && (item.parent || item.tentative_parent) ? Theme.childDefaults : Theme.rootDefaults;
+    return item && item.has_parent ? Theme.childDefaults : Theme.rootDefaults;
   }
 
   static childSpacing(item) {
@@ -225,5 +225,8 @@ Theme.placeholderStyle = {
   },
   edge: {
     color: "rgb(128, 128, 128)"
+  },
+  font: {
+    color: "transparent"
   }
 };

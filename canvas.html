@@ -15,6 +15,7 @@ import { Layout } from './src/layout.mjs';
 import { RunLoop } from './src/run_loop.mjs';
 import { Rasterizer } from './src/rasterizer.mjs';
 import { DragControl } from './src/drag_control.mjs';
+import { UserItem } from './src/data_sources/special_items.mjs';
 
 let app_canvas;
 let rasterizer;
@@ -72,7 +73,7 @@ function handleDoubleClick(p) {
     editing_item = item;
   } else {
     editing_item = layout.addItem(
-      { label: "" },
+      new UserItem(),
       [p[0] - Theme.padding(), p[1] - Theme.padding()]);
   }
   app_canvas.startEdit(editing_item);

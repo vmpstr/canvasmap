@@ -2,10 +2,8 @@ import { Theme } from './theme.mjs';
 
 export class LayoutItem {
   constructor(item, position) {
-    this.label_ = item.label;
-    this.id_ = item.override_id || this.getItemId(item);
-    this.ancestors_ = item.blocking;
-    this.descendants_ = item.blocked_on || [];
+    this.data_item_ = item;
+    item.construct(this);
     this.position_ = position;
   }
 
@@ -49,18 +47,19 @@ export class LayoutItem {
     return this.descendants_;
   }
 
-  get id() {
-    return this.id_;
+  set descendants(v) {
+    this.descendants_ = v;
   }
 
-  getItemId(item) {
-    if (item.bug !== undefined)
-      return item.bug;
-    const id = LayoutItem.autogen_id_prefix + LayoutItem.autogen_next_id;
-    ++LayoutItem.autogen_next_id;
-    return id;
+  get id() {
+    return this.data_item_.id_namespace + this.data_item_.local_id;
+  }
+
+  get data_item() {
+    return this.data_item_;
+  }
+
+  get has_parent() {
+    return !!(this.parent || this.tentative_parent || this.has_placeholder_parent);
   }
 }
-
-LayoutItem.autogen_id_prefix = "LI";
-LayoutItem.autogen_next_id = 1;
