@@ -10,7 +10,7 @@ export class BoxDecorator {
     this.anchor_ = anchor;
     this.behavior_ = behavior;
     this.settings_ = settings;
-    this.rect_ = new Rect([0, 0], this.settings_.size);
+    this.rect_ = new Rect([0, 0], this.settings_.size.slice());
     this.decorators_ = new LayoutDecoratorContainer();
   }
 
@@ -19,20 +19,22 @@ export class BoxDecorator {
   }
 
   layoutSize(border_rect) {
-    this.rect_ = new Rect([0, 0], this.settings_.size);
+    this.rect_ = new Rect([0, 0], this.settings_.size.slice());
     this.rect_ = this.decorators_.layoutSize(this.rect_);
     if (this.behavior_ != Decorators.behavior.contained)
       return border_rect;
 
     switch(this.anchor_) {
       case Decorators.anchor.bottom:
-        border_rect.height = border_rect.height + this.rect_.height + 2 * this.spacing;
+        border_rect.height += this.rect_.height + 2 * this.spacing;
         break;
-      case Decorators.anchor.bottom_left:
-      case Decorators.anchor.bottom_right:
+      case Decorators.anchor.right:
+        border_rect.width += this.rect_.width + 2 * this.spacing;
+        break;
       case Decorators.anchor.center:
       case Decorators.anchor.left:
-      case Decorators.anchor.right:
+      case Decorators.anchor.bottom_left:
+      case Decorators.anchor.bottom_right:
       case Decorators.anchor.top_left:
       case Decorators.anchor.top_right:
       case Decorators.anchor.top:
@@ -84,11 +86,16 @@ export class BoxDecorator {
         if (this.decorated_item_)
           this.rect_.y -= 0.5 * Theme.padding(this.decorated_item_);
         break;
+      case Decorators.anchor.right:
+        this.rect_.x = border_rect.right - this.rect_.width - this.spacing;
+        this.rect_.y = 0.5 * (border_rect.top + border_rect.bottom) - 0.5 * this.rect_.height;
+        if (this.decorated_item_)
+          this.rect_.x -= 0.5 * Theme.padding(this.decorated_item_);
+        break;
       case Decorators.anchor.bottom_left:
       case Decorators.anchor.bottom_right:
       case Decorators.anchor.center:
       case Decorators.anchor.left:
-      case Decorators.anchor.right:
       case Decorators.anchor.top_left:
       case Decorators.anchor.top_right:
       case Decorators.anchor.top:
@@ -120,7 +127,7 @@ export class BoxDecorator {
   }
 
   get spacing() {
-    let result = 2;
+    let result = this.settings_.margin || 0;
     if (this.settings_.stroke_width)
       result += this.settings_.stroke_width;
     else

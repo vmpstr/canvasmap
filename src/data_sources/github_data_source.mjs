@@ -32,11 +32,26 @@ class GithubItem {
     layout_item.decorators.addDecorator(
       Decorators.create(
         Decorators.type.box,
+        Decorators.anchor.right,
+        Decorators.behavior.contained,
+        {
+          size: [20, 10],
+          margin: 2,
+          background_color: "blue",
+          border_radius: 4,
+          stroke_color: "white",
+          stroke_width: 2
+        })
+    );
+    layout_item.decorators.addDecorator(
+      Decorators.create(
+        Decorators.type.box,
         Decorators.anchor.bottom,
         Decorators.behavior.contained,
         {
           size: [20, 10],
-          background_color: "blue",
+          margin: 2,
+          background_color: "green",
           border_radius: 4,
           stroke_color: "white",
           stroke_width: 2
@@ -46,8 +61,8 @@ class GithubItem {
     layout_item.decorators.last_added.addDecorator(
       Decorators.create(
         Decorators.type.box,
-        Decorators.anchor.right,
-        Decorators.behavior.floating,
+        Decorators.anchor.bottom,
+        Decorators.behavior.contained,
         {
           size: [5, 5],
           background_color: "red"
