@@ -56,4 +56,20 @@ export class Rect {
   get bottom() {
     return this.position_[1] + this.size_[1];
   }
+
+  get position() {
+    return this.position_;
+  }
+
+  set position(v) {
+    this.position_ = v;
+  }
+
+  get size() {
+    return this.size_;
+  }
+
+  set size(v) {
+    this.size_ = v;
+  }
 }

@@ -20,7 +20,7 @@ export class Decorators {
     if (behavior == Decorators.behavior.excluded)
       return anchor != Decorators.anchor.center;
     if (behavior == Decorators.behavior.contained)
-      return anchor == Decorators.anchor.right;
+      return anchor == Decorators.anchor.bottom;
   }
 }
 

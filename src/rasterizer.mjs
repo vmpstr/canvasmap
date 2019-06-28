@@ -33,14 +33,11 @@ export class Rasterizer {
         this.app_canvas_.ctx.font = Theme.fontStyle(item);
         this.app_canvas_.ctx.fillStyle = Theme.fontColor(item);
         this.app_canvas_.ctx.textBaseline = "middle";
-        this.app_canvas_.ctx.fillText(item.label, item.position[0] + Theme.padding(item), item.position[1] + 0.5 * item.size[1]);
+        this.app_canvas_.ctx.fillText(item.label, item.position[0] + Theme.padding(item), item.position[1] + Theme.padding(item) + 0.5 * Theme.fontSize(item));
       }
 
-      if (item.decorators) {
-        for (let i = 0; i < item.decorators.length; ++i) {
-          item.decorators[i].rasterize(this.app_canvas_.ctx);
-        }
-      }
+      if (item.decorators)
+        item.decorators.rasterize(this.app_canvas_.ctx);
 
       if (item.dragging)
         this.app_canvas_.ctx.restore();

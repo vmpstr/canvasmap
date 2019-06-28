@@ -29,11 +29,11 @@ class GithubItem {
     layout_item.label = this.json_.title;
     layout_item.ancestors = [];
     layout_item.descendants = [];
-    layout_item.decorators = [
+    layout_item.decorators.addDecorator(
       Decorators.create(
         Decorators.type.box,
-        Decorators.anchor.top_right,
-        Decorators.behavior.floating,
+        Decorators.anchor.bottom,
+        Decorators.behavior.contained,
         {
           size: [20, 10],
           background_color: "blue",
@@ -41,9 +41,9 @@ class GithubItem {
           stroke_color: "white",
           stroke_width: 2
         })
-    ];
+    );
 
-    layout_item.decorators[0].decorators = [
+    layout_item.decorators.last_added.addDecorator(
       Decorators.create(
         Decorators.type.box,
         Decorators.anchor.right,
@@ -52,7 +52,7 @@ class GithubItem {
           size: [5, 5],
           background_color: "red"
         })
-    ];
+    );
   }
 
   get id_namespace() {

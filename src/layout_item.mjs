@@ -1,14 +1,24 @@
 import { Theme } from './theme.mjs';
 import { Rect } from './geometry/rect.mjs';
+import { LayoutDecoratorContainer } from './decorators/layout_decorator_container.mjs';
 
 export class LayoutItem {
   constructor(item, position) {
     this.data_item_ = item;
-    item.construct(this);
+    this.decorators_ = new LayoutDecoratorContainer(this);
     this.position_ = position;
+
+    // Has to be the last call, since it depends on the rest of the constructor.
+    item.construct(this);
   }
 
   layout(ctx, pending_label) {
+    if (this.data_item_.local_id == "placeholder") {
+      this.data_item_.held_item.layout(ctx, pending_label);
+      this.size_ = this.data_item_.held_item.size;
+      return;
+    }
+
     ctx.font = Theme.fontStyle(this);
     const text_width = ctx.measureText(pending_label !== undefined ? pending_label : this.label_).width;
     const width = Math.max(2 * Theme.padding(this) + text_width, Theme.minWidth(this));
@@ -18,13 +28,11 @@ export class LayoutItem {
   }
 
   layoutDecorators() {
-    if (!this.decorators_)
-      return;
-
-    let border_rect = new Rect(this.position_, this.size_);
-    for (let i = 0; i < this.decorators_.length; ++i) {
-      border_rect = this.decorators_[i].layout(border_rect);
-    }
+    // TODO(vmpstr): Store a rect on this item.
+    let border_rect = this.decorators_.layoutSize(new Rect(this.position_, this.size_));
+    this.decorators_.layoutPosition(border_rect);
+    this.position_ = border_rect.position;
+    this.size_ = border_rect.size;
   }
 
   get position() { 
@@ -33,7 +41,6 @@ export class LayoutItem {
 
   set position(v) {
     this.position_ = v;
-    this.layoutDecorators();
   }
 
   get size() {
@@ -78,9 +85,5 @@ export class LayoutItem {
 
   get decorators() {
     return this.decorators_;
-  }
-
-  set decorators(v) {
-    this.decorators_ = v;
   }
 }

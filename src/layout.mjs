@@ -67,14 +67,16 @@ export class Layout {
   // of the bottom of the last child in this item (ie the spot where the next
   // item can go)
   layoutRecursive(item, start_point) {
-    item.layout(this.ctx_);
-
     // If we're given a start_point, it means our position is restricted
     // by the parent.
     if (start_point !== undefined) {
       console.assert(item.parent);
       item.position = start_point;
     }
+    // Note that we have to layout after positioning, so that decorators
+    // can properly position themselves during layout.
+    item.layout(this.ctx_);
+
 
     let child_x = item.position[0] + Theme.childIndent(item);
     let child_y = item.position[1] + item.size[1] + Theme.childSpacing(item);
