@@ -28,11 +28,13 @@ export class BoxDecorator {
       case Decorators.anchor.bottom:
         border_rect.height += this.rect_.height + 2 * this.spacing;
         break;
+      case Decorators.anchor.left:
+        border_rect.x -= this.rect_.width + 2 * this.spacing;
+        // fallthrough.
       case Decorators.anchor.right:
         border_rect.width += this.rect_.width + 2 * this.spacing;
         break;
       case Decorators.anchor.center:
-      case Decorators.anchor.left:
       case Decorators.anchor.bottom_left:
       case Decorators.anchor.bottom_right:
       case Decorators.anchor.top_left:
@@ -96,6 +98,12 @@ export class BoxDecorator {
       case Decorators.anchor.bottom_right:
       case Decorators.anchor.center:
       case Decorators.anchor.left:
+      case Decorators.anchor.right:
+        this.rect_.x = border_rect.left + this.spacing;
+        this.rect_.y = 0.5 * (label_rect.top + label_rect.bottom) - 0.5 * this.rect_.height;
+        if (this.decorated_item_)
+          this.rect_.x += 0.5 * Theme.padding(this.decorated_item_);
+        break;
       case Decorators.anchor.top_left:
       case Decorators.anchor.top_right:
       case Decorators.anchor.top:

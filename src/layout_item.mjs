@@ -48,7 +48,7 @@ export class LayoutItem {
       [this.position_[0] + this.label_offset_[0], this.position_[1] + this.label_offset_[1] - 0.5 * Theme.fontSize(this)],
       [this.label_width_, Theme.fontSize(this)]
     );
-    this.decorators_.layoutPosition(border_rect, label_rect);
+    this.decorators_.layoutPosition(new Rect(this.position_, this.size_), label_rect);
   }
 
   get position() { 

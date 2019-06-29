@@ -46,7 +46,7 @@ class GithubItem {
     layout_item.decorators.addDecorator(
       Decorators.create(
         Decorators.type.box,
-        Decorators.anchor.right,
+        Decorators.anchor.left,
         Decorators.behavior.contained,
         {
           size: [20, 10],
