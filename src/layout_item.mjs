@@ -7,12 +7,15 @@ export class LayoutItem {
     this.data_item_ = item;
     this.decorators_ = new LayoutDecoratorContainer(this);
     this.position_ = position;
+    this.label_offset_ = [0, 0];
 
     // Has to be the last call, since it depends on the rest of the constructor.
     item.construct(this);
   }
 
   layout(ctx, pending_label) {
+    // If we're laying out the placeholder, then layout the held item instead and take
+    // its size. This is to avoid putting decorators on placeholders.
     if (this.data_item_.local_id == "placeholder") {
       this.data_item_.held_item.layout(ctx, pending_label);
       this.size_ = this.data_item_.held_item.size;
@@ -24,15 +27,27 @@ export class LayoutItem {
     const width = Math.max(2 * Theme.padding(this) + text_width, Theme.minWidth(this));
     const height = Math.max(2 * Theme.padding(this) + Theme.fontSize(this), Theme.minHeight(this));
     this.size_ = [width, height];
-    this.layoutDecorators();
+    this.layoutDecorators(text_width);
   }
 
-  layoutDecorators() {
+  layoutDecorators(label_width) {
     // TODO(vmpstr): Store a rect on this item.
-    let border_rect = this.decorators_.layoutSize(new Rect(this.position_, this.size_));
-    this.decorators_.layoutPosition(border_rect);
-    this.position_ = border_rect.position;
+    let border_rect = this.decorators_.layoutSize(new Rect(this.position_.slice(), this.size_.slice()));
+
+    // The decorator could have changed the x/y of the rect. However, since we might be
+    // restricted by parent positioning, we don't actually record the position change in
+    // |this.position_|, instead adjust where the label offset would be.
+    this.label_offset_ = [
+      this.position_[0] - border_rect.position[0] + Theme.padding(this),
+      this.position_[1] - border_rect.position[1] + Theme.padding(this) + 0.5 * Theme.fontSize(this)
+    ];
     this.size_ = border_rect.size;
+
+    const label_rect = new Rect(
+      [this.position_[0] + this.label_offset_[0], this.position_[1] + this.label_offset_[1] - 0.5 * Theme.fontSize(this)],
+      [label_width, Theme.fontSize(this)]
+    );
+    this.decorators_.layoutPosition(border_rect, label_rect);
   }
 
   get position() { 
@@ -85,5 +100,9 @@ export class LayoutItem {
 
   get decorators() {
     return this.decorators_;
+  }
+
+  get label_offset() {
+    return this.label_offset_;
   }
 }

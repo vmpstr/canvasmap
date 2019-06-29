@@ -30,58 +30,58 @@ class GithubItem {
     layout_item.ancestors = [];
     layout_item.descendants = [];
 
-    if (this.json_.labels.length > 0) {
-      layout_item.decorators.addDecorator(
-        Decorators.create(
-          Decorators.type.box,
-          Decorators.anchor.right,
-          Decorators.behavior.contained,
-          {
-            size: [30, 20],
-            margin: 2,
-            background_color: "#" + this.json_.labels[0].color
-          })
-      );
-    }
-    //layout_item.decorators.addDecorator(
-    //  Decorators.create(
-    //    Decorators.type.box,
-    //    Decorators.anchor.right,
-    //    Decorators.behavior.contained,
-    //    {
-    //      size: [20, 10],
-    //      margin: 2,
-    //      background_color: "blue",
-    //      border_radius: 4,
-    //      stroke_color: "white",
-    //      stroke_width: 2
-    //    })
-    //);
-    //layout_item.decorators.addDecorator(
-    //  Decorators.create(
-    //    Decorators.type.box,
-    //    Decorators.anchor.center,
-    //    Decorators.behavior.floating,
-    //    {
-    //      size: [20, 10],
-    //      margin: 2,
-    //      background_color: "green",
-    //      border_radius: 4,
-    //      stroke_color: "white",
-    //      stroke_width: 2
-    //    })
-    //);
+    //if (this.json_.labels.length > 0) {
+    //  layout_item.decorators.addDecorator(
+    //    Decorators.create(
+    //      Decorators.type.box,
+    //      Decorators.anchor.right,
+    //      Decorators.behavior.contained,
+    //      {
+    //        size: [30, 20],
+    //        margin: 2,
+    //        background_color: "#" + this.json_.labels[0].color
+    //      })
+    //  );
+    //}
+    layout_item.decorators.addDecorator(
+      Decorators.create(
+        Decorators.type.box,
+        Decorators.anchor.right,
+        Decorators.behavior.contained,
+        {
+          size: [20, 10],
+          margin: 2,
+          background_color: "blue",
+          border_radius: 4,
+          stroke_color: "white",
+          stroke_width: 2
+        })
+    );
+    layout_item.decorators.addDecorator(
+      Decorators.create(
+        Decorators.type.box,
+        Decorators.anchor.bottom,
+        Decorators.behavior.contained,
+        {
+          size: [20, 10],
+          margin: 2,
+          background_color: "green",
+          border_radius: 4,
+          stroke_color: "white",
+          stroke_width: 2
+        })
+    );
 
-    //layout_item.decorators.last_added.addDecorator(
-    //  Decorators.create(
-    //    Decorators.type.box,
-    //    Decorators.anchor.bottom,
-    //    Decorators.behavior.contained,
-    //    {
-    //      size: [5, 5],
-    //      background_color: "red"
-    //    })
-    //);
+    layout_item.decorators.last_added.addDecorator(
+      Decorators.create(
+        Decorators.type.box,
+        Decorators.anchor.bottom,
+        Decorators.behavior.contained,
+        {
+          size: [5, 5],
+          background_color: "red"
+        })
+    );
   }
 
   get id_namespace() {

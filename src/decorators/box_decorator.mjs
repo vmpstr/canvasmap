@@ -43,19 +43,19 @@ export class BoxDecorator {
     return border_rect;
   }
 
-  layoutPosition(border_rect) {
+  layoutPosition(border_rect, label_rect) {
     switch(this.behavior_) {
       case Decorators.behavior.contained:
-        this.layoutPositionContained(border_rect);
+        this.layoutPositionContained(border_rect, label_rect);
         break;
       case Decorators.behavior.excluded:
-        this.layoutPositionExcluded(border_rect);
+        this.layoutPositionExcluded(border_rect, label_rect);
         break;
       case Decorators.behavior.floating:
-        this.layoutPositionFloating(border_rect);
+        this.layoutPositionFloating(border_rect, label_rect);
         break;
     }
-    this.decorators_.layoutPosition(this.rect_);
+    this.decorators_.layoutPosition(this.rect_, this.rect_);
   }
 
   addDecorator(decorator) {
@@ -78,17 +78,17 @@ export class BoxDecorator {
     return this.behavior_;
   }
 
-  layoutPositionContained(border_rect) {
+  layoutPositionContained(border_rect, label_rect) {
     switch(this.anchor_) {
       case Decorators.anchor.bottom:
-        this.rect_.x = 0.5 * (border_rect.left + border_rect.right) - 0.5 * this.rect_.width;
+        this.rect_.x = 0.5 * (label_rect.left + label_rect.right) - 0.5 * this.rect_.width;
         this.rect_.y = border_rect.bottom - this.rect_.height - this.spacing;
         if (this.decorated_item_)
           this.rect_.y -= 0.5 * Theme.padding(this.decorated_item_);
         break;
       case Decorators.anchor.right:
         this.rect_.x = border_rect.right - this.rect_.width - this.spacing;
-        this.rect_.y = 0.5 * (border_rect.top + border_rect.bottom) - 0.5 * this.rect_.height;
+        this.rect_.y = 0.5 * (label_rect.top + label_rect.bottom) - 0.5 * this.rect_.height;
         if (this.decorated_item_)
           this.rect_.x -= 0.5 * Theme.padding(this.decorated_item_);
         break;

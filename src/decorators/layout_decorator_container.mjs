@@ -42,7 +42,7 @@ export class LayoutDecoratorContainer {
     return border_rect;
   }
 
-  layoutPosition(border_rect) {
+  layoutPosition(border_rect, label_rect) {
     // After the sizes are laid out, our border rect is fixed, so now we can layout
     // for position.
     for (const [behavior, decorators] of Object.entries(this.decorator_map_)) {
@@ -50,7 +50,7 @@ export class LayoutDecoratorContainer {
         continue;
 
       for (const [anchor, decorator] of Object.entries(decorators)) {
-        decorator.layoutPosition(border_rect);
+        decorator.layoutPosition(border_rect, label_rect);
       }
     }
   }

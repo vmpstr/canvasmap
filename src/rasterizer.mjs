@@ -33,7 +33,7 @@ export class Rasterizer {
         this.app_canvas_.ctx.font = Theme.fontStyle(item);
         this.app_canvas_.ctx.fillStyle = Theme.fontColor(item);
         this.app_canvas_.ctx.textBaseline = "middle";
-        this.app_canvas_.ctx.fillText(item.label, item.position[0] + Theme.padding(item), item.position[1] + Theme.padding(item) + 0.5 * Theme.fontSize(item));
+        this.app_canvas_.ctx.fillText(item.label, item.position[0] + item.label_offset[0], item.position[1] + item.label_offset[1]);
       }
 
       if (item.decorators)
