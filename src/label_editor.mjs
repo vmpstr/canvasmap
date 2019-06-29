@@ -26,9 +26,9 @@ export class LabelEditor {
   generateInputStyle() {
     let result = "position: absolute;"
     result += "font: " + Theme.fontStyle(this.item_) + ";";
-    result += "left: " + (this.item_.position[0] + Theme.padding(this.item_) - 1) + "px;";
-    result += "top: " + (this.item_.position[1] + 0.5 * Theme.padding(this.item_) + 1) + "px;";
-    result += "width: " + Math.max(5, this.item_.size[0] - 2 * Theme.padding(this.item_)) + "px;"
+    result += "left: " + (this.item_.position[0] + this.item_.label_offset[0] - 1) + "px;";
+    result += "top: " + (this.item_.position[1] + this.item_.label_offset[1] - 0.5 * Theme.fontSize(this.item_) - 4) + "px;";
+    result += "width: " + Math.max(5, this.item_.label_width) + "px;";
     return result;
   }
 
@@ -41,7 +41,7 @@ export class LabelEditor {
 
   handleOnInput(e) {
     this.item_.layout(this.app_canvas_.ctx, this.input_.value);
-    this.input_.style.width = Math.max(5, this.item_.size[0] - 2 * Theme.padding(this.item_)) + "px";
+    this.input_.style.width = Math.max(5, this.item_.label_width) + "px";
     RunLoop.postTaskAndDraw();
   }
 

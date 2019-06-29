@@ -8,6 +8,7 @@ export class LayoutItem {
     this.decorators_ = new LayoutDecoratorContainer(this);
     this.position_ = position;
     this.label_offset_ = [0, 0];
+    this.label_width_ = 0;
 
     // Has to be the last call, since it depends on the rest of the constructor.
     item.construct(this);
@@ -23,14 +24,14 @@ export class LayoutItem {
     }
 
     ctx.font = Theme.fontStyle(this);
-    const text_width = ctx.measureText(pending_label !== undefined ? pending_label : this.label_).width;
-    const width = Math.max(2 * Theme.padding(this) + text_width, Theme.minWidth(this));
+    this.label_width_ = ctx.measureText(pending_label !== undefined ? pending_label : this.label_).width;
+    const width = Math.max(2 * Theme.padding(this) + this.label_width_, Theme.minWidth(this));
     const height = Math.max(2 * Theme.padding(this) + Theme.fontSize(this), Theme.minHeight(this));
     this.size_ = [width, height];
-    this.layoutDecorators(text_width);
+    this.layoutDecorators();
   }
 
-  layoutDecorators(label_width) {
+  layoutDecorators() {
     // TODO(vmpstr): Store a rect on this item.
     let border_rect = this.decorators_.layoutSize(new Rect(this.position_.slice(), this.size_.slice()));
 
@@ -45,7 +46,7 @@ export class LayoutItem {
 
     const label_rect = new Rect(
       [this.position_[0] + this.label_offset_[0], this.position_[1] + this.label_offset_[1] - 0.5 * Theme.fontSize(this)],
-      [label_width, Theme.fontSize(this)]
+      [this.label_width_, Theme.fontSize(this)]
     );
     this.decorators_.layoutPosition(border_rect, label_rect);
   }
@@ -104,5 +105,9 @@ export class LayoutItem {
 
   get label_offset() {
     return this.label_offset_;
+  }
+
+  get label_width() {
+    return this.label_width_;
   }
 }
