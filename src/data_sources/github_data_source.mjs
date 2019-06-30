@@ -49,7 +49,7 @@ class GithubItem {
         Decorators.anchor.left,
         Decorators.behavior.contained,
         {
-          size: [20, 10],
+          size: [20, 100],
           margin: 2,
           background_color: "blue",
           border_radius: 4,

@@ -1,13 +1,12 @@
 import { Decorators } from './decorators.mjs';
 
 export class LayoutDecoratorContainer {
-  constructor(decorated_item) {
+  constructor() {
     this.decorator_map_ = {};
     const values = Object.values(Decorators.behavior);
     for (let i = 0; i < values.length; ++i) {
       this.decorator_map_[values[i]] = {}; 
     }
-    this.decorated_item_ = decorated_item;
   }
 
   addDecorator(decorator) {
@@ -17,7 +16,6 @@ export class LayoutDecoratorContainer {
     // Only one decorator per slot is allowed, use decorator containers
     // otherwise.
     console.assert(!this.decorator_map_[behavior][anchor]);
-    decorator.decorated_item = this.decorated_item_;
     this.decorator_map_[behavior][anchor] = decorator;
     this.last_added_ = decorator;
   }
@@ -30,13 +28,13 @@ export class LayoutDecoratorContainer {
     return this.decorator_map_[behavior][anchor];
   }
 
-  layoutSize(border_rect) {
+  layoutSize(border_rect, label_rect) {
     for (const [behavior, decorators] of Object.entries(this.decorator_map_)) {
       if (!decorators)
         continue;
 
       for (const [anchor, decorator] of Object.entries(decorators)) {
-        border_rect = decorator.layoutSize(border_rect);
+        border_rect = decorator.layoutSize(border_rect, label_rect);
       }
     }
     return border_rect;

@@ -72,4 +72,8 @@ export class Rect {
   set size(v) {
     this.size_ = v;
   }
+
+  toString() {
+    return this.position_.toString() + " " + this.size_.toString();
+  }
 }

@@ -14,32 +14,79 @@ export class BoxDecorator {
     this.decorators_ = new LayoutDecoratorContainer();
   }
 
-  set decorated_item(v) {
-    this.decorated_item_ = v;
-  }
-
-  layoutSize(border_rect) {
+  layoutSize(border_rect, label_rect) {
     this.rect_ = new Rect([0, 0], this.settings_.size.slice());
-    this.rect_ = this.decorators_.layoutSize(this.rect_);
+    this.label_rect_ = new Rect(this.rect_.position.slice(), this.rect_.size.slice());
+    this.rect_ = this.decorators_.layoutSize(this.rect_, this.label_rect_);
+
+    // Non-contained behavior doesn't affect size.
     if (this.behavior_ != Decorators.behavior.contained)
       return border_rect;
 
+    const height = this.rect_.height + 2 * this.spacing;
+    const width = this.rect_.width + 2 * this.spacing;
     switch(this.anchor_) {
+      case Decorators.anchor.top:
+        if (height > label_rect.top - border_rect.top) { 
+          const extra_height = height - (label_rect.top - border_rect.top);
+          border_rect.y -= extra_height;
+          border_rect.height += extra_height;
+        }
+        if (width > border_rect.width) {
+          const extra_width = width - border_rect.width;
+          border_rect.width += extra_width;
+          border_rect.x -= 0.5 * extra_width;
+        }
+        break;
       case Decorators.anchor.bottom:
-        border_rect.height += this.rect_.height + 2 * this.spacing;
+        if (height > border_rect.bottom - label_rect.bottom) {
+          const extra_height = height - (border_rect.bottom - label_rect.bottom);
+          border_rect.height += extra_height;
+        }
+        if (width > border_rect.width) {
+          const extra_width = height - border_rect.width;
+          border_rect.width += extra_width;
+          border_rect.x -= 0.5 * extra_width;
+        }
         break;
       case Decorators.anchor.left:
-        border_rect.x -= this.rect_.width + 2 * this.spacing;
-        // fallthrough.
+        if (width > label_rect.left - border_rect.left) {
+          const extra_width = width - (label_rect.left - border_rect.left);
+          border_rect.x -= extra_width;
+          border_rect.width += extra_width;
+        }
+        if (height > border_rect.height) {
+          const extra_height = height - border_rect.height;
+          border_rect.height += extra_height;
+          border_rect.y -= 0.5 * extra_height;
+        }
+        break;
       case Decorators.anchor.right:
-        border_rect.width += this.rect_.width + 2 * this.spacing;
+        if (width > border_rect.right - label_rect.right) {
+          const extra_width = width - (border_rect.right - label_rect.right);
+          border_rect.width += extra_width;
+        }
+        if (height > border_rect.height) {
+          const extra_height = height - border_rect.height;
+          border_rect.height += extra_height;
+          border_rect.y -= 0.5 * extra_height;
+        }
         break;
       case Decorators.anchor.center:
+        // Center is the only one that unconditionally bumps up the sizes,
+        // since it's hard to reason about available space when placing a thing
+        // in the middle of where the label rect is... This really should only
+        // be used for nested decorators.
+        border_rect.width += width
+        border_rect.x -= 0.5 * width;
+        border_rect.height += height;
+        border_rect.y -= 0.5 * height;
+        break;
       case Decorators.anchor.bottom_left:
       case Decorators.anchor.bottom_right:
       case Decorators.anchor.top_left:
       case Decorators.anchor.top_right:
-      case Decorators.anchor.top:
+        console.assert(false);
         break;
     }
     return border_rect;
@@ -57,7 +104,8 @@ export class BoxDecorator {
         this.layoutPositionFloating(border_rect, label_rect);
         break;
     }
-    this.decorators_.layoutPosition(this.rect_, this.rect_);
+    this.label_rect_.position = this.rect_.position.slice();
+    this.decorators_.layoutPosition(this.rect_, this.label_rect_);
   }
 
   addDecorator(decorator) {
@@ -82,31 +130,31 @@ export class BoxDecorator {
 
   layoutPositionContained(border_rect, label_rect) {
     switch(this.anchor_) {
+      case Decorators.anchor.top:
+        this.rect_.x = 0.5 * (label_rect.left + label_rect.right) - 0.5 * this.rect_.width;
+        this.rect_.y = label_rect.top - this.rect_.height - this.spacing;
+        break;
       case Decorators.anchor.bottom:
         this.rect_.x = 0.5 * (label_rect.left + label_rect.right) - 0.5 * this.rect_.width;
-        this.rect_.y = border_rect.bottom - this.rect_.height - this.spacing;
-        if (this.decorated_item_)
-          this.rect_.y -= 0.5 * Theme.padding(this.decorated_item_);
+        this.rect_.y = label_rect.bottom + this.spacing;
         break;
-      case Decorators.anchor.right:
-        this.rect_.x = border_rect.right - this.rect_.width - this.spacing;
-        this.rect_.y = 0.5 * (label_rect.top + label_rect.bottom) - 0.5 * this.rect_.height;
-        if (this.decorated_item_)
-          this.rect_.x -= 0.5 * Theme.padding(this.decorated_item_);
-        break;
-      case Decorators.anchor.bottom_left:
-      case Decorators.anchor.bottom_right:
-      case Decorators.anchor.center:
       case Decorators.anchor.left:
-      case Decorators.anchor.right:
-        this.rect_.x = border_rect.left + this.spacing;
+        this.rect_.x = label_rect.left - this.rect_.width - this.spacing;
         this.rect_.y = 0.5 * (label_rect.top + label_rect.bottom) - 0.5 * this.rect_.height;
-        if (this.decorated_item_)
-          this.rect_.x += 0.5 * Theme.padding(this.decorated_item_);
+        break;
+      case Decorators.anchor.right:
+        this.rect_.x = label_rect.right + this.spacing;
+        this.rect_.y = 0.5 * (label_rect.top + label_rect.bottom) - 0.5 * this.rect_.height;
+        break;
+      case Decorators.anchor.center:
+        this.rect_.x = 0.5 * (label_rect.left + label_rect.right) - 0.5 * this.rect_.width;
+        this.rect_.y = 0.5 * (label_rect.top + label_rect.bottom) - 0.5 * this.rect_.height;
         break;
       case Decorators.anchor.top_left:
       case Decorators.anchor.top_right:
-      case Decorators.anchor.top:
+      case Decorators.anchor.bottom_left:
+      case Decorators.anchor.bottom_right:
+        console.assert(false);
         break;
     }
     if (this.settings_.offset) {
@@ -115,17 +163,30 @@ export class BoxDecorator {
     }
   }
 
-  layoutPositionExcluded(border_rect) {
+  layoutPositionExcluded(border_rect, label_rect) {
     switch(this.anchor_) {
+      case Decorators.anchor.top:
+        this.rect_.x = 0.5 * (border_rect.left + border_rect.right) - 0.5 * this.rect_.width;
+        this.rect_.y = border_rect.top - this.rect_.height - this.spacing;
+        break;
       case Decorators.anchor.bottom:
+        this.rect_.x = 0.5 * (border_rect.left + border_rect.right) - 0.5 * this.rect_.width;
+        this.rect_.y = border_rect.bottom + this.spacing;
+        break;
+      case Decorators.anchor.left:
+        this.rect_.x = border_rect.left - this.rect_.width - this.spacing;
+        this.rect_.y = 0.5 * (border_rect.top + border_rect.bottom) - 0.5 * this.rect_.height;
+        break;
+      case Decorators.anchor.right:
+        this.rect_.x = border_rect.right + this.spacing;
+        this.rect_.y = 0.5 * (border_rect.top + border_rect.bottom) - 0.5 * this.rect_.height;
+        break;
       case Decorators.anchor.bottom_left:
       case Decorators.anchor.bottom_right:
-      case Decorators.anchor.center:
-      case Decorators.anchor.left:
-      case Decorators.anchor.right:
       case Decorators.anchor.top_left:
       case Decorators.anchor.top_right:
-      case Decorators.anchor.top:
+      case Decorators.anchor.center:
+        console.assert(false);
         break;
     }
     if (this.settings_.offset) {
@@ -143,7 +204,7 @@ export class BoxDecorator {
     return result;
   }
 
-  layoutPositionFloating(border_rect) {
+  layoutPositionFloating(border_rect, label_rect) {
     switch(this.anchor_) {
       case Decorators.anchor.bottom:
         this.rect_.x = 0.5 * (border_rect.left + border_rect.right) - 0.5 * this.rect_.width

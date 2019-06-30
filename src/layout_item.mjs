@@ -5,7 +5,7 @@ import { LayoutDecoratorContainer } from './decorators/layout_decorator_containe
 export class LayoutItem {
   constructor(item, position) {
     this.data_item_ = item;
-    this.decorators_ = new LayoutDecoratorContainer(this);
+    this.decorators_ = new LayoutDecoratorContainer();
     this.position_ = position;
     this.label_offset_ = [0, 0];
     this.label_width_ = 0;
@@ -33,7 +33,11 @@ export class LayoutItem {
 
   layoutDecorators() {
     // TODO(vmpstr): Store a rect on this item.
-    let border_rect = this.decorators_.layoutSize(new Rect(this.position_.slice(), this.size_.slice()));
+    let border_rect = this.decorators_.layoutSize(
+      new Rect(this.position_.slice(), this.size_.slice()),
+      new Rect([this.position_[0] + Theme.padding(this), this.position_[1] + Theme.padding(this)],
+               [this.size_[0] - 2 * Theme.padding(this), this.size_[1] - 2 * Theme.padding(this)])
+    );
 
     // The decorator could have changed the x/y of the rect. However, since we might be
     // restricted by parent positioning, we don't actually record the position change in
