@@ -19,11 +19,11 @@ export class ListDecorator {
     this.behavior_ = behavior;
   }
 
-  layoutSize(border_rect, label_rect) {
+  layoutSize(ctx, border_rect, label_rect) {
     const total_size = [0, 0];
     // TODO(vmpstr): This is horizontal growth, need vertical too.
     for (let i = 0; i < this.decorators_.length; ++i) {
-      const size = this.decorators_[i].layoutSize();
+      const size = this.decorators_[i].layoutSize(ctx);
       total_size[0] += size[0];
       total_size[1] = Math.max(total_size[1], size[1]);
     }
@@ -35,7 +35,7 @@ export class ListDecorator {
     return BoxDecoratorUtils.adjustBorderRect(this, width, height, border_rect, label_rect);
   }
 
-  layoutPosition(border_rect, label_rect) {
+  layoutPosition(ctx, border_rect, label_rect) {
     this.rect_ = BoxDecoratorUtils.layoutOwnRect(this, this.rect_, border_rect, label_rect);
     if (this.settings_.offset) {
       this.rect_.x += this.settings_.offset[0];
@@ -43,7 +43,7 @@ export class ListDecorator {
     }
 
     for (let i = 0; i < this.decorators_.length; ++i) {
-      this.decorators_[i].layoutPosition();
+      this.decorators_[i].layoutPosition(ctx);
     }
   }
 
@@ -118,23 +118,23 @@ class ListDecoratorItem {
     this.decorator_ = decorator;
   }
 
-  layoutSize() {
+  layoutSize(ctx) {
     const anchor = this.decorator_.anchor;
     const behavior = this.decorator_.behavior;
     this.decorator_.override(Decorators.anchor.center, Decorators.behavior.contained);
 
-    this.rect_ = this.decorator_.layoutSize(new Rect([0, 0], [0, 0]), new Rect([0, 0], [0, 0]));
+    this.rect_ = this.decorator_.layoutSize(ctx, new Rect([0, 0], [0, 0]), new Rect([0, 0], [0, 0]));
 
     this.decorator_.override(anchor, behavior);
     return this.rect_.size;
   }
 
-  layoutPosition() {
+  layoutPosition(ctx) {
     const anchor = this.decorator_.anchor;
     const behavior = this.decorator_.behavior;
     this.decorator_.override(Decorators.anchor.center, Decorators.behavior.contained);
 
-    this.decorator_.layoutPosition(new Rect([0, 0], [0, 0]), new Rect([0, 0], [0, 0]));
+    this.decorator_.layoutPosition(ctx, new Rect([0, 0], [0, 0]), new Rect([0, 0], [0, 0]));
 
     this.decorator_.override(anchor, behavior);
   }

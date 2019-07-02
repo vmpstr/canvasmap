@@ -4,14 +4,12 @@ import { LayoutDecoratorContainer } from './layout_decorator_container.mjs';
 import { Theme } from '../theme.mjs';
 import { BoxDecoratorUtils } from './box_decorator_utils.mjs'
 
-export class BoxDecorator {
+export class TextDecorator {
   constructor(anchor, behavior, settings) {
     console.assert(Decorators.validCombination(anchor, behavior));
-
     this.anchor_ = anchor;
     this.behavior_ = behavior;
     this.settings_ = settings;
-    this.rect_ = new Rect([0, 0], this.settings_.size.slice());
     this.decorators_ = new LayoutDecoratorContainer();
   }
 
@@ -21,7 +19,10 @@ export class BoxDecorator {
   }
 
   layoutSize(ctx, border_rect, label_rect) {
-    this.rect_ = new Rect([0, 0], this.settings_.size.slice());
+    ctx.font = this.settings_.font_size + "px " + this.settings_.font_face;
+    const text_width = ctx.measureText(this.settings_.label || "").width;
+    const text_height = this.settings_.font_size;
+    this.rect_ = new Rect([0, 0], [text_width, text_height]);
     this.label_rect_ = new Rect(this.rect_.position.slice(), this.rect_.size.slice());
     this.rect_ = this.decorators_.layoutSize(ctx, this.rect_, this.label_rect_);
 
@@ -65,52 +66,20 @@ export class BoxDecorator {
   }
 
   get spacing() {
-    let result = this.settings_.margin || 0;
-    if (this.settings_.stroke_width)
-      result += this.settings_.stroke_width;
-    else
-      result += 1;
-    return result;
+    return this.settings_.margin || 0;
   }
 
   rasterize(ctx) {
-    if (this.settings_.background_color) {
-      ctx.fillStyle = this.settings_.background_color;
+    ctx.font = this.settings_.font_size + "px " + this.settings_.font_face;
+    if (this.settings_.font_color) {
+      ctx.fillStyle = this.settings_.font_color;
     } else {
-      ctx.fillStyle = "transparent";
-    }
-    if (this.settings_.stroke_color) {
-      ctx.strokeStyle = this.settings_.stroke_color;
-    } else {
-      ctx.strokeStyle = "transparent";
-    }
-    if (this.settings_.stroke_width) {
-      ctx.lineWidth = this.settings_.stroke_width;
-    } else  {
-      ctx.lineWidth = 1;
+      ctx.fillStyle = "black";
     }
 
     ctx.beginPath();
-    const x = this.rect_.x;
-    const y = this.rect_.y;
-    const width = this.rect_.width;
-    const height = this.rect_.height;
-    let radius = 0;
-    if (this.settings_.border_radius)
-      radius = this.settings_.border_radius;
-
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.arcTo(x + width, y, x + width, y + radius, radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-    ctx.lineTo(x + radius, y + height);
-    ctx.arcTo(x, y + height, x, y + height - radius, radius);
-    ctx.lineTo(x, y + radius);
-    ctx.arcTo(x, y, x + radius, y, radius);
-
-    ctx.fill();
-    ctx.stroke();
+    ctx.textBaseline = "middle";
+    ctx.fillText(this.settings_.label, this.rect_.x, this.rect_.y + 0.5 * this.rect_.height);
 
     if (this.decorators_)
       this.decorators_.rasterize(ctx);

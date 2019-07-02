@@ -58,7 +58,7 @@ export class BoxDecoratorUtils {
         // since it's hard to reason about available space when placing a thing
         // in the middle of where the label rect is... This really should only
         // be used for nested decorators.
-        border_rect.width += width
+        border_rect.width += width;
         border_rect.x -= 0.5 * width;
         border_rect.height += height;
         border_rect.y -= 0.5 * height;

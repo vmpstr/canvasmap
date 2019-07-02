@@ -47,9 +47,22 @@ class GithubItem {
           Decorators.anchor.right,
           Decorators.behavior.contained,
           {
-            size: [30, 15],
+            size: [0, 0],
             margin: 1,
             background_color: "#" + this.json_.labels[i].color
+          })
+      );
+      label_container.last_added.addDecorator(
+        Decorators.create(
+          Decorators.type.text,
+          Decorators.anchor.center,
+          Decorators.behavior.contained,
+          {
+            margin: 5,
+            font_color: "black",
+            font_face: "Arial",
+            font_size: 14,
+            label: this.json_.labels[i].name
           })
       );
       //label_container.last_added.addDecorator(

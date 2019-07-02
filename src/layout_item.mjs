@@ -28,12 +28,13 @@ export class LayoutItem {
     const width = Math.max(2 * Theme.padding(this) + this.label_width_, Theme.minWidth(this));
     const height = Math.max(2 * Theme.padding(this) + Theme.fontSize(this), Theme.minHeight(this));
     this.size_ = [width, height];
-    this.layoutDecorators();
+    this.layoutDecorators(ctx);
   }
 
-  layoutDecorators() {
+  layoutDecorators(ctx) {
     // TODO(vmpstr): Store a rect on this item.
     let border_rect = this.decorators_.layoutSize(
+      ctx,
       new Rect(this.position_.slice(), this.size_.slice()),
       new Rect([this.position_[0] + Theme.padding(this), this.position_[1] + Theme.padding(this)],
                [this.size_[0] - 2 * Theme.padding(this), this.size_[1] - 2 * Theme.padding(this)])
@@ -52,7 +53,7 @@ export class LayoutItem {
       [this.position_[0] + this.label_offset_[0], this.position_[1] + this.label_offset_[1] - 0.5 * Theme.fontSize(this)],
       [this.label_width_, Theme.fontSize(this)]
     );
-    this.decorators_.layoutPosition(new Rect(this.position_, this.size_), label_rect);
+    this.decorators_.layoutPosition(ctx, new Rect(this.position_, this.size_), label_rect);
   }
 
   get position() { 
