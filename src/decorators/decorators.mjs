@@ -1,6 +1,7 @@
 import { BoxDecorator } from './box_decorator.mjs';
 import { ListDecorator } from './list_decorator.mjs';
 import { TextDecorator } from './text_decorator.mjs';
+import { ImageDecorator } from './image_decorator.mjs';
 
 export class Decorators {
   static create(type, anchor, behavior, settings) {
@@ -11,8 +12,8 @@ export class Decorators {
         return new ListDecorator(anchor, behavior, settings);
       case Decorators.type.text:
         return new TextDecorator(anchor, behavior, settings);
-      case Decorators.type.icon:
-        console.assert(false);
+      case Decorators.type.image:
+        return new ImageDecorator(anchor, behavior, settings);
     }
   }
 
@@ -39,8 +40,8 @@ export class Decorators {
 
 Decorators.type = {
   box: "box",
+  image: "image",
   list: "list",
-  icon: "icon",
   text: "text",
 }
   

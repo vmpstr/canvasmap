@@ -1,8 +1,10 @@
 import { Decorators } from '../decorators/decorators.mjs';
+import { RunLoop } from '../run_loop.mjs';
 
 export class GithubDataSource {
   constructor() {
     this.data_ = null;
+    this.favicon_ = new Image;
   }
   get data() {
     return this.data_;
@@ -11,6 +13,10 @@ export class GithubDataSource {
   async load() {
     const data = await fetch('https://api.github.com/repos/vmpstr/canvasmap/issues').then(resp => resp.json());
     this.data_ = [];
+
+    GithubDataSource.favicon = new Image();
+    GithubDataSource.favicon.src = 'https://api.github.com/favicon.ico';
+    GithubDataSource.favicon.decode().then(() => RunLoop.postTaskAndDraw);
 
     for (let i = 0; i < data.length; ++i) {
       this.data_.push(new GithubItem(data[i]));
@@ -30,6 +36,22 @@ class GithubItem {
     layout_item.ancestors = [];
     layout_item.descendants = [];
 
+    // Favicon.
+    layout_item.decorators.addDecorator(
+      Decorators.create(
+        Decorators.type.image,
+        Decorators.anchor.left,
+        Decorators.behavior.contained,
+        {
+          size: [20, 20],
+          stroke_color: "black",
+          border_radius: 10,
+          margin: 5,
+          image: GithubDataSource.favicon,
+          background_color: "lightgrey"
+        })
+    );
+    // Label list.
     layout_item.decorators.addDecorator(
       Decorators.create(
         Decorators.type.list,
@@ -65,67 +87,25 @@ class GithubItem {
             label: this.json_.labels[i].name
           })
       );
-      //label_container.last_added.addDecorator(
-      //  Decorators.create(
-      //    Decorators.type.box,
-      //    Decorators.anchor.top_left,
-      //    Decorators.behavior.floating,
-      //    {
-      //      size: [6, 6],
-      //      border_radius: 3,
-      //      background_color: "red"
-      //    }
-      //  )
-      //);
     }
-    
-    //layout_item.decorators.addDecorator(
-    //  Decorators.create(
-    //    Decorators.type.list,
-    //    Decorators.anchor.right,
-    //    Decorators.behavior.contained,
-    //    {})
-    //);
-    //let last = layout_item.decorators.last_added;
-    //last.addDecorator(
-    //  Decorators.create(
-    //    Decorators.type.box,
-    //    Decorators.anchor.bottom,
-    //    Decorators.behavior.contained,
-    //    {
-    //      size: [20, 10],
-    //      margin: 2,
-    //      background_color: "green",
-    //      border_radius: 4,
-    //      stroke_color: "white",
-    //      stroke_width: 2
-    //    })
-    //);
-    //last.addDecorator(
-    //  Decorators.create(
-    //    Decorators.type.box,
-    //    Decorators.anchor.bottom,
-    //    Decorators.behavior.contained,
-    //    {
-    //      size: [30, 10],
-    //      margin: 2,
-    //      background_color: "blue",
-    //      border_radius: 4,
-    //      stroke_color: "white",
-    //      stroke_width: 2
-    //    })
-    //);
 
-    //layout_item.decorators.last_added.addDecorator(
-    //  Decorators.create(
-    //    Decorators.type.box,
-    //    Decorators.anchor.bottom,
-    //    Decorators.behavior.contained,
-    //    {
-    //      size: [5, 5],
-    //      background_color: "red"
-    //    })
-    //);
+    // Assignee.
+    if (this.json_.assignee && this.json_.assignee.avatar_url) {
+      let image = new Image;
+      image.src = this.json_.assignee.avatar_url;
+      image.decode().then(() => RunLoop.postTaskAndDraw);
+      layout_item.decorators.addDecorator(
+        Decorators.create(
+          Decorators.type.image,
+          Decorators.anchor.bottom_left,
+          Decorators.behavior.floating,
+          {
+            size: [20, 20],
+            border_radius: 10,
+            image: image
+          })
+      );
+    }
   }
 
   get id_namespace() {
