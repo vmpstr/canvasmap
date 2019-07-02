@@ -1,10 +1,13 @@
 import { BoxDecorator } from './box_decorator.mjs';
+import { ListDecorator } from './list_decorator.mjs';
 
 export class Decorators {
   static create(type, anchor, behavior, settings) {
     switch (type) {
       case Decorators.type.box:
         return new BoxDecorator(anchor, behavior, settings);
+      case Decorators.type.list:
+        return new ListDecorator(anchor, behavior, settings);
       case Decorators.type.icon:
       case Decorators.type.text:
         console.assert(false);
@@ -34,6 +37,7 @@ export class Decorators {
 
 Decorators.type = {
   box: "box",
+  list: "list",
   icon: "icon",
   text: "text",
 }

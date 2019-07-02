@@ -30,58 +30,87 @@ class GithubItem {
     layout_item.ancestors = [];
     layout_item.descendants = [];
 
-    //if (this.json_.labels.length > 0) {
-    //  layout_item.decorators.addDecorator(
-    //    Decorators.create(
-    //      Decorators.type.box,
-    //      Decorators.anchor.right,
-    //      Decorators.behavior.contained,
-    //      {
-    //        size: [30, 20],
-    //        margin: 2,
-    //        background_color: "#" + this.json_.labels[0].color
-    //      })
-    //  );
-    //}
     layout_item.decorators.addDecorator(
       Decorators.create(
-        Decorators.type.box,
-        Decorators.anchor.left,
+        Decorators.type.list,
+        Decorators.anchor.right,
         Decorators.behavior.contained,
-        {
-          size: [20, 100],
-          margin: 2,
-          background_color: "blue",
-          border_radius: 4,
-          stroke_color: "white",
-          stroke_width: 2
-        })
+        {})
     );
-    layout_item.decorators.addDecorator(
-      Decorators.create(
-        Decorators.type.box,
-        Decorators.anchor.bottom,
-        Decorators.behavior.contained,
-        {
-          size: [20, 10],
-          margin: 2,
-          background_color: "green",
-          border_radius: 4,
-          stroke_color: "white",
-          stroke_width: 2
-        })
-    );
+    let label_container = layout_item.decorators.last_added;
+    for (let i = 0; i < this.json_.labels.length; ++i) {
+      label_container.addDecorator(
+        Decorators.create(
+          Decorators.type.box,
+          Decorators.anchor.right,
+          Decorators.behavior.contained,
+          {
+            size: [30, 15],
+            margin: 2,
+            background_color: "#" + this.json_.labels[i].color
+          })
+      );
+      //label_container.last_added.addDecorator(
+      //  Decorators.create(
+      //    Decorators.type.box,
+      //    Decorators.anchor.top_left,
+      //    Decorators.behavior.floating,
+      //    {
+      //      size: [6, 6],
+      //      border_radius: 3,
+      //      background_color: "red"
+      //    }
+      //  )
+      //);
+    }
+    
+    //layout_item.decorators.addDecorator(
+    //  Decorators.create(
+    //    Decorators.type.list,
+    //    Decorators.anchor.right,
+    //    Decorators.behavior.contained,
+    //    {})
+    //);
+    //let last = layout_item.decorators.last_added;
+    //last.addDecorator(
+    //  Decorators.create(
+    //    Decorators.type.box,
+    //    Decorators.anchor.bottom,
+    //    Decorators.behavior.contained,
+    //    {
+    //      size: [20, 10],
+    //      margin: 2,
+    //      background_color: "green",
+    //      border_radius: 4,
+    //      stroke_color: "white",
+    //      stroke_width: 2
+    //    })
+    //);
+    //last.addDecorator(
+    //  Decorators.create(
+    //    Decorators.type.box,
+    //    Decorators.anchor.bottom,
+    //    Decorators.behavior.contained,
+    //    {
+    //      size: [30, 10],
+    //      margin: 2,
+    //      background_color: "blue",
+    //      border_radius: 4,
+    //      stroke_color: "white",
+    //      stroke_width: 2
+    //    })
+    //);
 
-    layout_item.decorators.last_added.addDecorator(
-      Decorators.create(
-        Decorators.type.box,
-        Decorators.anchor.bottom,
-        Decorators.behavior.contained,
-        {
-          size: [5, 5],
-          background_color: "red"
-        })
-    );
+    //layout_item.decorators.last_added.addDecorator(
+    //  Decorators.create(
+    //    Decorators.type.box,
+    //    Decorators.anchor.bottom,
+    //    Decorators.behavior.contained,
+    //    {
+    //      size: [5, 5],
+    //      background_color: "red"
+    //    })
+    //);
   }
 
   get id_namespace() {

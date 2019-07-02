@@ -2,17 +2,16 @@ import { Decorators } from './decorators.mjs';
 import { Rect } from '../geometry/rect.mjs';
 import { LayoutDecoratorContainer } from './layout_decorator_container.mjs';
 import { Theme } from '../theme.mjs';
-import { BoxDecoratorUtils } from './box_decorator_utils.mjs'
+import { BoxDecoratorUtils } from './box_decorator_utils.mjs';
 
-export class BoxDecorator {
+export class ListDecorator {
   constructor(anchor, behavior, settings) {
     console.assert(Decorators.validCombination(anchor, behavior));
 
     this.anchor_ = anchor;
     this.behavior_ = behavior;
     this.settings_ = settings;
-    this.rect_ = new Rect([0, 0], this.settings_.size.slice());
-    this.decorators_ = new LayoutDecoratorContainer();
+    this.decorators_ = [];
   }
 
   override(anchor, behavior) {
@@ -21,10 +20,15 @@ export class BoxDecorator {
   }
 
   layoutSize(border_rect, label_rect) {
-    this.rect_ = new Rect([0, 0], this.settings_.size.slice());
-    this.label_rect_ = new Rect(this.rect_.position.slice(), this.rect_.size.slice());
-    this.rect_ = this.decorators_.layoutSize(this.rect_, this.label_rect_);
+    const total_size = [0, 0];
+    // TODO(vmpstr): This is horizontal growth, need vertical too.
+    for (let i = 0; i < this.decorators_.length; ++i) {
+      const size = this.decorators_[i].layoutSize();
+      total_size[0] += size[0];
+      total_size[1] = Math.max(total_size[1], size[1]);
+    }
 
+    this.rect_ = new Rect([0, 0], total_size);
     const height = this.rect_.height + 2 * this.spacing;
     const width = this.rect_.width + 2 * this.spacing;
 
@@ -37,20 +41,18 @@ export class BoxDecorator {
       this.rect_.x += this.settings_.offset[0];
       this.rect_.y += this.settings_.offset[1];
     }
-    this.label_rect_.position = this.rect_.position.slice();
-    this.decorators_.layoutPosition(this.rect_, this.label_rect_);
+
+    for (let i = 0; i < this.decorators_.length; ++i) {
+      this.decorators_[i].layoutPosition();
+    }
   }
 
   addDecorator(decorator) {
-    this.decorators_.addDecorator(decorator);
+    this.decorators_.push(new ListDecoratorItem(decorator));
   }
 
   get last_added() {
-    return this.decorators_.last_added;
-  }
-
-  getAt(anchor, behavior) {
-    return this.decorators_.getAt(anchor, behavior);
+    return this.decorators_[this.decorators_.length - 1].decorator;
   }
 
   get anchor() {
@@ -62,12 +64,7 @@ export class BoxDecorator {
   }
 
   get spacing() {
-    let result = this.settings_.margin || 0;
-    if (this.settings_.stroke_width)
-      result += this.settings_.stroke_width;
-    else
-      result += 1;
-    return result;
+    return this.settings_.margin || 0;
   }
 
   rasterize(ctx) {
@@ -88,7 +85,7 @@ export class BoxDecorator {
     }
 
     ctx.beginPath();
-    const x = this.rect_.x;
+    let x = this.rect_.x;
     const y = this.rect_.y;
     const width = this.rect_.width;
     const height = this.rect_.height;
@@ -109,15 +106,55 @@ export class BoxDecorator {
     ctx.fill();
     ctx.stroke();
 
-    if (this.decorators_)
-      this.decorators_.rasterize(ctx);
+    for (let i = 0; i < this.decorators_.length; ++i) {
+      this.decorators_[i].rasterize(ctx, [x, y]);
+      x += this.decorators_[i].rect.size[0];
+    }
+  }
+}
+
+class ListDecoratorItem {
+  constructor(decorator) {
+    this.decorator_ = decorator;
   }
 
-  set decorators(v) {
-    this.decorators_ = v;
+  layoutSize() {
+    const anchor = this.decorator_.anchor;
+    const behavior = this.decorator_.behavior;
+    this.decorator_.override(Decorators.anchor.center, Decorators.behavior.contained);
+
+    this.rect_ = this.decorator_.layoutSize(new Rect([0, 0], [0, 0]), new Rect([0, 0], [0, 0]));
+
+    this.decorator_.override(anchor, behavior);
+    return this.rect_.size;
   }
 
-  get decorators() {
-    return this.decorators_;
+  layoutPosition() {
+    const anchor = this.decorator_.anchor;
+    const behavior = this.decorator_.behavior;
+    this.decorator_.override(Decorators.anchor.center, Decorators.behavior.contained);
+
+    this.decorator_.layoutPosition(new Rect([0, 0], [0, 0]), new Rect([0, 0], [0, 0]));
+
+    this.decorator_.override(anchor, behavior);
+  }
+
+  rasterize(ctx, position) {
+    ctx.save();
+    ctx.translate(position[0] - this.rect_.x, position[1] - this.rect_.y);
+    this.decorator_.rasterize(ctx);
+    ctx.restore();
+  }
+
+  get decorator() {
+    return this.decorator_;
+  }
+
+  get rect() {
+    return this.rect_;
+  }
+
+  get spacing() {
+    return this.decorator_.spacing;
   }
 }
