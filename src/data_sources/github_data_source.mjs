@@ -35,7 +35,9 @@ class GithubItem {
         Decorators.type.list,
         Decorators.anchor.right,
         Decorators.behavior.contained,
-        {})
+        {
+          margin: 7
+        })
     );
     let label_container = layout_item.decorators.last_added;
     for (let i = 0; i < this.json_.labels.length; ++i) {
@@ -46,7 +48,7 @@ class GithubItem {
           Decorators.behavior.contained,
           {
             size: [30, 15],
-            margin: 2,
+            margin: 1,
             background_color: "#" + this.json_.labels[i].color
           })
       );
