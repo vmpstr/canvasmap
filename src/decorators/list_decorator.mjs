@@ -47,8 +47,23 @@ export class ListDecorator {
     }
   }
 
+  getClickableDecoratorAtPoint(p) {
+    let result;
+    for (let i = 0; i < this.decorators_.length; ++i) {
+      if (!this.decorators_[i].decorator.bounding_box.containsPoint(p))
+        continue;
+      let candidate = this.decorators_[i].decorator.getClickableDecoratorAtPoint(p);
+      result = result || candidate;
+    }
+    return result;
+  }
+
   addDecorator(decorator) {
     this.decorators_.push(new ListDecoratorItem(decorator));
+  }
+
+  get bounding_box() {
+    return this.rect_;
   }
 
   get last_added() {

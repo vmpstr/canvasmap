@@ -79,6 +79,7 @@ export class AppCanvas {
       for (let i = 0; i < this.mouseUpEvents_.length; ++i)
         result = this.mouseUpEvents_[i](p, e) || result;
       if (this.did_drag_) {
+        this.canvas_.style.cursor = "default";
         this.ignoreClicks();
         this.did_drag_ = false;
       }
@@ -88,6 +89,9 @@ export class AppCanvas {
       for (let i = 0; i < this.mouseMoveEvents_.length; ++i)
         result = this.mouseMoveEvents_[i](p, delta, e) || result;
       this.did_drag_ = result;
+      if (this.did_drag_) {
+        this.canvas_.style.cursor = "move";
+      }
     } else if (e.type.toLowerCase() == "click") {
       if (!this.ignore_clicks_) {
         for (let i = 0; i < this.clickEvents_.length; ++i)
@@ -125,5 +129,9 @@ export class AppCanvas {
       this.label_editor_.commitEdit();
       this.label_editor_.item.is_editing = false;
     }
+  }
+
+  get dragging() {
+    return this.did_drag_;
   }
 }

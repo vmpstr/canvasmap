@@ -76,4 +76,11 @@ export class Rect {
   toString() {
     return this.position_.toString() + " " + this.size_.toString();
   }
+
+  containsPoint(p) {
+    return p[0] > this.left &&
+           p[0] < this.right &&
+           p[1] > this.top &&
+           p[1] < this.bottom;
+  }
 }

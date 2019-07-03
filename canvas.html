@@ -31,9 +31,11 @@ async function initialize() {
   app_canvas = new AppCanvas();
   app_canvas.addEventListener("mousedown", handleMouseDown);
   app_canvas.addEventListener("mousemove", handleMouseMove);
+  app_canvas.addEventListener("mousemove", handleHoverPointer);
   app_canvas.addEventListener("mouseup", handleMouseUp);
   app_canvas.addEventListener("click", handleClick);
   app_canvas.addEventListener("dblclick", handleDoubleClick);
+  window.addEventListener("keyup", handleKeyUp);
 
   rasterizer = new Rasterizer(app_canvas);
   layout = new Layout(app_canvas.ctx);
@@ -43,8 +45,10 @@ async function initialize() {
   await data_source.load();
   let y = 0;
   for (let i = 0; i < data_source.data.length; ++i) {
-    layout.addItem(data_source.data[i], [0, y]);
-    y += layout.last_item.size[1] + 2;
+    const item = layout.addItem(data_source.data[i], [0, y]);
+    const bounding_box = item.bounding_box;
+    item.position = [-bounding_box.left, y];
+    y += bounding_box.height + 2;
   }
   layout.layout();
 }
@@ -62,7 +66,20 @@ function handleMouseMove(p, delta) {
   return drag_control.handleMouseMove(p, delta);
 }
 
+function handleHoverPointer(p) {
+  if (app_canvas.dragging)
+    return;
+  const decorator = layout.getDecoratorAtPoint(p);
+  if (decorator && decorator.handleClick) {
+    app_canvas.canvas.style.cursor = "pointer";
+  } else {
+    app_canvas.canvas.style.cursor = "default";
+  }
+}
+
 function handleClick(p) {
+  const decorator = layout.getDecoratorAtPoint(p);
+  decorator && decorator.handleClick && decorator.handleClick();
 }
 
 function handleDoubleClick(p) {
@@ -80,9 +97,13 @@ function handleDoubleClick(p) {
   return true;
 }
 
+function handleKeyUp(e) {
+}
+
 onload = () => {
   requestAnimationFrame(() => {
     initialize().then(() => RunLoop.postTaskAndDraw());
   });
 }
+
 </script>

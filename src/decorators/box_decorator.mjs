@@ -44,6 +44,22 @@ export class BoxDecorator {
     this.decorators_.layoutPosition(ctx, this.rect_, this.label_rect_);
   }
 
+  getClickableDecoratorAtPoint(p) {
+    const candidate = this.decorators_.getClickableDecoratorAtPoint(p);
+    if (candidate)
+      return candidate;
+    if (this.settings_.onclick && this.rect_.containsPoint(p))
+      return this;
+  }
+
+  handleClick() {
+    this.settings_.onclick && this.settings_.onclick();
+  }
+
+  get bounding_box() {
+    return this.rect_;
+  }
+
   addDecorator(decorator) {
     this.decorators_.addDecorator(decorator);
   }

@@ -33,6 +33,9 @@ export class LabelEditor {
   }
 
   handleOnKeyUp(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (e.key === "Enter")
       this.commitEdit();
     else if (e.key === "Escape")

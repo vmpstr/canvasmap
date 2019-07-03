@@ -111,6 +111,23 @@ export class Layout {
     return null;
   }
 
+  getDecoratorAtPoint(p) {
+    this.layoutIfNeeded();
+
+    for (let i = 0; i < this.items_.length; ++i) {
+      const item = this.items_[i];
+      const bounding_box = item.bounding_box;
+      if (p[0] > bounding_box.left &&
+          p[1] > bounding_box.top &&
+          p[0] < bounding_box.right &&
+          p[1] < bounding_box.bottom) {
+        const decorator = item.getClickableDecoratorAtPoint(p);
+        if (decorator)
+          return decorator;
+      }
+    }
+  }
+
   getItemsInRect(rect) {
     this.layoutIfNeeded();
 

@@ -12,9 +12,12 @@ export class LayoutItem {
 
     // Has to be the last call, since it depends on the rest of the constructor.
     item.construct(this);
+    this.needs_layout_ = false;
   }
 
   layout(ctx, pending_label) {
+    this.needs_layout_ = false;
+
     // If we're laying out the placeholder, then layout the held item instead and take
     // its size. This is to avoid putting decorators on placeholders.
     if (this.data_item_.local_id == "placeholder") {
@@ -57,14 +60,38 @@ export class LayoutItem {
   }
 
   get position() { 
+    console.assert(!this.needs_layout_);
     return this.position_;
   }
 
   set position(v) {
     this.position_ = v;
+    this.needs_layout_ = true;
+  }
+
+  get bounding_box() {
+    console.assert(!this.needs_layout_);
+    let rect = new Rect(this.position_.slice(), this.size_.slice());
+    let decorators_bounds = this.decorators_.bounding_box;
+    if (decorators_bounds) {
+      const new_x = Math.min(rect.left, decorators_bounds.left);
+      const new_y = Math.min(rect.top, decorators_bounds.top);
+      const new_right = Math.max(rect.right, decorators_bounds.right);
+      const new_bottom = Math.max(rect.bottom, decorators_bounds.bottom);
+      rect.x = new_x;
+      rect.y = new_y;
+      rect.width = new_right - new_x;
+      rect.height = new_bottom - new_y;
+    }
+    return rect;
+  }
+
+  getClickableDecoratorAtPoint(p) {
+    return this.decorators_.getClickableDecoratorAtPoint(p);
   }
 
   get size() {
+    console.assert(!this.needs_layout_);
     return this.size_;
   }
 
@@ -74,6 +101,7 @@ export class LayoutItem {
 
   set label(v) {
     this.label_ = v;
+    this.needs_layout_ = true;
   }
 
   get ancestors() {

@@ -1,4 +1,5 @@
 import { Decorators } from './decorators.mjs';
+import { Rect } from '../geometry/rect.mjs';
 
 export class LayoutDecoratorContainer {
   constructor() {
@@ -62,5 +63,45 @@ export class LayoutDecoratorContainer {
         decorator.rasterize(ctx);
       }
     }
+  }
+
+  get bounding_box() {
+    let rect;
+    for (const [behavior, decorators] of Object.entries(this.decorator_map_)) {
+      if (!decorators)
+        continue;
+
+      for (const [anchor, decorator] of Object.entries(decorators)) {
+        const bounding_box = decorator.bounding_box;
+        if (!rect) {
+          // TODO(vmpstr): Add Rect.clone
+          rect = new Rect(bounding_box.position.slice(), bounding_box.size.slice());
+        } else {
+          const new_x = Math.min(rect.left, bounding_box.left);
+          const new_y = Math.min(rect.top, bounding_box.top);
+          const new_right = Math.max(rect.right, bounding_box.right);
+          const new_bottom = Math.max(rect.bottom, bounding_box.bottom);
+          rect.x = new_x;
+          rect.y = new_y;
+          rect.width = new_right - new_x;
+          rect.height = new_bottom - new_y;
+        }
+      }
+    }
+    return rect;
+  }
+
+  getClickableDecoratorAtPoint(p) {
+    let result;
+    for (const [behavior, decorators] of Object.entries(this.decorator_map_)) {
+      if (!decorators)
+        continue;
+      
+      for (const [anchor, decorator] of Object.entries(decorators)) {
+        let candidate = decorator.getClickableDecoratorAtPoint(p);
+        result = result || candidate;
+      }
+    }
+    return result;
   }
 }
