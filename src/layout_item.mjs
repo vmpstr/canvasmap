@@ -13,6 +13,7 @@ export class LayoutItem {
     // Has to be the last call, since it depends on the rest of the constructor.
     item.construct(this);
     this.needs_layout_ = false;
+    this.selection_ = "none";
   }
 
   layout(ctx, pending_label) {
@@ -142,5 +143,13 @@ export class LayoutItem {
 
   get label_width() {
     return this.label_width_;
+  }
+
+  markSelection(v) {
+    this.selection_ = v;
+  }
+
+  get selection() {
+    return this.selection_;
   }
 }

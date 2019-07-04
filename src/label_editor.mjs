@@ -65,8 +65,8 @@ export class LabelEditor {
     if (!this.input_)
       return;
     this.input_.remove();
+    this.item_.layout(this.app_canvas_.ctx);
     RunLoop.postTaskAndDraw(() => {
-      this.item_.layout(this.app_canvas_.ctx);
       this.app_canvas_.finishEdit();
       this.item_ = null;
     });

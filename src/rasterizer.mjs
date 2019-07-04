@@ -27,6 +27,16 @@ export class Rasterizer {
 
       const box_rasterizer = Theme.boxRasterizer(item);
       box_rasterizer(this.app_canvas_.ctx, item.position[0], item.position[1], item.size[0], item.size[1]);
+      if (item.selection && item.selection != "none") {
+        const stroke_style =
+          item.selection == "candidate" ? Theme.selectionCandidateBorderColor
+                                        : Theme.selectionBorderColor;
+        const x = item.position[0] - Theme.selectionPad;
+        const y = item.position[1] - Theme.selectionPad;
+        const width = item.size[0] + 2 * Theme.selectionPad;
+        const height = item.size[1] + 2 * Theme.selectionPad;
+        box_rasterizer(this.app_canvas_.ctx, x, y, width, height, stroke_style, Theme.selectionStrokeWidth);
+      }
 
       if (!item.is_editing) {
         this.app_canvas_.ctx.beginPath();

@@ -128,7 +128,7 @@ Theme.rootDefaults = {
   childIndent: 50
 };
 Theme.rootDefaults.boxRasterizer = (item) => {
-  return (ctx, x, y, width, height) => {
+  return (ctx, x, y, width, height, stroke_override, line_width_override) => {
     ctx.beginPath();
     console.assert(width >= Theme.minWidth(item));
     console.assert(height >= Theme.minHeight(item));
@@ -143,11 +143,13 @@ Theme.rootDefaults.boxRasterizer = (item) => {
     ctx.lineTo(x, y + radius);
     ctx.arcTo(x, y, x + radius, y, radius);
 
-    ctx.fillStyle = Theme.fillStyle(item);
-    ctx.fill();
+    if (stroke_override === undefined) {
+      ctx.fillStyle = Theme.fillStyle(item);
+      ctx.fill();
+    }
 
-    ctx.strokeStyle = Theme.borderColor(item);
-    ctx.lineWidth = Theme.borderWidth(item);
+    ctx.strokeStyle = stroke_override || Theme.borderColor(item);
+    ctx.lineWidth = line_width_override || Theme.borderWidth(item);
     ctx.stroke();
   };
 };
@@ -176,7 +178,7 @@ Theme.childDefaults = {
   }
 };
 Theme.childDefaults.boxRasterizer = (item) => {
-  return (ctx, x, y, width, height) => {
+  return (ctx, x, y, width, height, stroke_override, line_width_override) => {
     ctx.beginPath();
     const radius = Theme.borderRadius(item);
     console.assert(width >= Theme.minWidth(item));
@@ -191,11 +193,13 @@ Theme.childDefaults.boxRasterizer = (item) => {
     ctx.lineTo(x, y + radius);
     ctx.arcTo(x, y, x + radius, y, radius);
 
-    ctx.fillStyle = Theme.fillStyle(item);
-    ctx.fill();
+    if (stroke_override === undefined) {
+      ctx.fillStyle = Theme.fillStyle(item);
+      ctx.fill();
+    }
 
-    ctx.strokeStyle = Theme.borderColor(item);
-    ctx.lineWidth = Theme.borderWidth(item);
+    ctx.strokeStyle = stroke_override || Theme.borderColor(item);
+    ctx.lineWidth = line_width_override || Theme.borderWidth(item);
     ctx.stroke();
   };
 };
@@ -230,3 +234,8 @@ Theme.placeholderStyle = {
     color: "transparent"
   }
 };
+
+Theme.selectionCandidateBorderColor = "grey";
+Theme.selectionBorderColor = "blue";
+Theme.selectionPad = 1.5;
+Theme.selectionStrokeWidth = 2;

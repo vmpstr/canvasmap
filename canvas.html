@@ -16,11 +16,14 @@ import { RunLoop } from './src/run_loop.mjs';
 import { Rasterizer } from './src/rasterizer.mjs';
 import { DragControl } from './src/drag_control.mjs';
 import { UserItem } from './src/data_sources/special_items.mjs';
+import { SelectionControl } from './src/selection_control.mjs';
 
 let app_canvas;
 let rasterizer;
 let layout;
 let drag_control;
+let hover_decorator;
+let selection_control;
 
 RunLoop.draw = () => {
   layout.layoutIfNeeded();
@@ -40,6 +43,9 @@ async function initialize() {
   rasterizer = new Rasterizer(app_canvas);
   layout = new Layout(app_canvas.ctx);
   drag_control = new DragControl(layout);
+
+  hover_decorator = null;
+  selection_control = new SelectionControl(layout);
 
   const data_source = DataSource.Create("github");
   await data_source.load();
@@ -67,19 +73,28 @@ function handleMouseMove(p, delta) {
 }
 
 function handleHoverPointer(p) {
-  if (app_canvas.dragging)
+  if (app_canvas.dragging) {
+    hover_decorator = null;
+    selection_control.cancel();
     return;
+  }
+  selection_control.handleMouseMove(p);
   const decorator = layout.getDecoratorAtPoint(p);
   if (decorator && decorator.handleClick) {
+    hover_decorator = decorator;
     app_canvas.canvas.style.cursor = "pointer";
   } else {
     app_canvas.canvas.style.cursor = "default";
+    hover_decorator = null;
   }
 }
 
 function handleClick(p) {
-  const decorator = layout.getDecoratorAtPoint(p);
-  decorator && decorator.handleClick && decorator.handleClick();
+  if (hover_decorator) {
+    hover_decorator.handleClick();
+  } else {
+    selection_control.handleClick(p);
+  }
 }
 
 function handleDoubleClick(p) {
