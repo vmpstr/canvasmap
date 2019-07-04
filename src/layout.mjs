@@ -222,6 +222,9 @@ export class Layout {
   }
 
   insertChild(item, after_child, child) {
+    child.parent = item;
+    child.ancestors = [item.id];
+
     if (!after_child) {
       item.children.splice(0, 0, child);
       item.descendants.splice(0, 0, child.id);
@@ -240,6 +243,10 @@ export class Layout {
         break;
       }
     }
+  }
+
+  appendChild(item, child) {
+    this.insertChild(item, item.children.length ? item.children[item.children.length - 1] : null, child);
   }
 
   replaceChild(item, old_child_id, new_child) {

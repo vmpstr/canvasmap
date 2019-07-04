@@ -39,6 +39,7 @@ async function initialize() {
   app_canvas.addEventListener("click", handleClick);
   app_canvas.addEventListener("dblclick", handleDoubleClick);
   window.addEventListener("keyup", handleKeyUp);
+  window.addEventListener("keydown", handleKeyDown);
 
   rasterizer = new Rasterizer(app_canvas);
   layout = new Layout(app_canvas.ctx);
@@ -112,7 +113,41 @@ function handleDoubleClick(p) {
   return true;
 }
 
+function handleKeyDown(e) {
+  if (e.key == "Tab") {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}
+
 function handleKeyUp(e) {
+  const selected = selection_control.selected;
+  if (!selected)
+    return;
+
+  let need_draw = false;
+  if (e.key == "Enter") {
+    const editing_item = layout.addItem(new UserItem(), [0, 0]);
+    if (selected.parent) {
+      layout.insertChild(selected.parent, selected, editing_item);
+    } else {
+      layout.appendChild(selected, editing_item);
+    }
+    layout.layoutIfNeeded();
+    app_canvas.startEdit(editing_item);
+    selection_control.selected = editing_item;
+    need_draw = true;
+  } else if (e.key == "Tab") {
+    const editing_item = layout.addItem(new UserItem(), [0, 0]);
+    layout.appendChild(selected, editing_item);
+    layout.layoutIfNeeded();
+    app_canvas.startEdit(editing_item);
+    selection_control.selected = editing_item;
+    need_draw = true;
+  }
+
+  if (need_draw)
+    RunLoop.postTaskAndDraw();
 }
 
 onload = () => {

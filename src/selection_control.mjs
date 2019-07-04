@@ -18,10 +18,15 @@ export class SelectionControl {
   handleClick(p) {
     if (!this.selection_candidate_) {
       const item = this.layout_.getItemAtPoint(p);
-      console.assert(!item || item == this.selection_);
-      if (!item)
-        this.removeSelection();
-      return;
+      // This can happen if the selection was programmatically changed,
+      // and then no mouse move happened, but a click did.
+      if (!item || item == this.selection_) {
+        if (!item)
+          this.removeSelection();
+        return;
+      } else {
+        this.selection_candidate_ = item;
+      }
     }
 
     if (this.selection_)
@@ -66,6 +71,20 @@ export class SelectionControl {
       this.selection_ = null;
       RunLoop.postTaskAndDraw();
     }
+  }
+
+  get selected() {
+    return this.selection_;
+  }
+
+  set selected(v) {
+    if (this.selection_candidate_ == v)
+      this.removeCandidate();
+    if (this.selection_ != v)
+      this.removeSelection();
+    this.selection_ = v;
+    this.selection_.markSelection("selected");
+    RunLoop.postTaskAndDraw();
   }
 
 }

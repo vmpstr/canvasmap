@@ -15,7 +15,7 @@ export class GithubDataSource {
     this.data_ = [];
 
     GithubDataSource.favicon = new Image();
-    GithubDataSource.favicon.onload = () => RunLoop.postTaskAndDraw;
+    GithubDataSource.favicon.onload = () => RunLoop.postTaskAndDraw();
     GithubDataSource.favicon.src = 'https://api.github.com/favicon.ico';
 
     for (let i = 0; i < data.length; ++i) {
@@ -95,7 +95,7 @@ class GithubItem {
     // Assignee.
     if (this.json_.assignee && this.json_.assignee.avatar_url) {
       let image = new Image;
-      image.onload = () => RunLoop.postTaskAndDraw;
+      image.onload = () => RunLoop.postTaskAndDraw();
       image.src = this.json_.assignee.avatar_url;
       layout_item.decorators.addDecorator(
         Decorators.create(
