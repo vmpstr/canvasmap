@@ -8,12 +8,12 @@ export class EmptyDataSource {
 
 
 export class DataSource {
-  static Create(type) {
+  static Create(type, settings) {
     if (type === "test")
-      return new TestDataSource();
+      return new TestDataSource(settings);
     if (type === "github")
-      return new GithubDataSource();
-    return new EmptyDataSource();
+      return new GithubDataSource(settings);
+    return new EmptyDataSource(settings);
   }
 }
 

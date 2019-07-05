@@ -48,7 +48,11 @@ async function initialize() {
   hover_decorator = null;
   selection_control = new SelectionControl(layout);
 
-  const data_source = DataSource.Create("github");
+  const url = new URL(window.location);
+  const data_source_type = url.searchParams.get("source") || "empty";
+  const repo = url.searchParams.get("repo") || "vmpstr/canvasmap";
+
+  const data_source = DataSource.Create(data_source_type, { repo: repo });
   await data_source.load();
   let y = 0;
   for (let i = 0; i < data_source.data.length; ++i) {

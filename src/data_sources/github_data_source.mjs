@@ -2,16 +2,18 @@ import { Decorators } from '../decorators/decorators.mjs';
 import { RunLoop } from '../run_loop.mjs';
 
 export class GithubDataSource {
-  constructor() {
+  constructor(settings) {
     this.data_ = null;
     this.favicon_ = new Image;
+    this.settings_ = settings;
   }
   get data() {
     return this.data_;
   }
 
   async load() {
-    const data = await fetch('https://api.github.com/repos/vmpstr/canvasmap/issues').then(resp => resp.json());
+    const repo = this.settings_.repo;
+    const data = await fetch('https://api.github.com/repos/' + repo + '/issues').then(resp => resp.json());
     this.data_ = [];
 
     GithubDataSource.favicon = new Image();
