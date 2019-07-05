@@ -83,4 +83,49 @@ export class SelectionControl {
     RunLoop.postTaskAndDraw();
   }
 
+  selectParent() {
+    if (!this.selection_ || !this.selection_.parent)
+      return;
+    this.selected = this.selection_.parent;
+  }
+
+  selectChild() {
+    if (!this.selection_ || !this.selection_.children.length)
+      return;
+    this.selected = this.selection_.children[0];
+  }
+
+  selectPreviousSibling() {
+    if (!this.selection_ || !this.selection_.parent)
+      return;
+    const length = this.selection_.parent.children.length;
+    for (let i = 0; i < length; ++i) {
+      if (this.selection_.parent.children[i].id == this.selection_.id) {
+        if (i == 0)
+          this.selectParent();
+        else
+          this.selected = this.selection_.parent.children[i - 1];
+        return;
+      }
+    }
+  }
+
+  selectNextSibling() {
+    if (!this.selection_)
+      return;
+    if (!this.selection_.parent) {
+      this.selectChild();
+      return;
+    }
+    const length = this.selection_.parent.children.length;
+    // Iterating to length - 1, so that we can +1 unconditionally.
+    for (let i = 0; i < length - 1; ++i) {
+      if (this.selection_.parent.children[i].id == this.selection_.id) {
+        this.selected = this.selection_.parent.children[i + 1];
+        return;
+      }
+    }
+    this.selectChild();
+  }
+
 }

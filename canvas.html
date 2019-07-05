@@ -109,6 +109,7 @@ function handleDoubleClick(p) {
       new UserItem(),
       [p[0] - Theme.padding(), p[1] - Theme.padding()]);
   }
+  selection_control.selected = editing_item;
   app_canvas.startEdit(editing_item);
   return true;
 }
@@ -144,6 +145,14 @@ function handleKeyUp(e) {
     app_canvas.startEdit(editing_item);
     selection_control.selected = editing_item;
     need_draw = true;
+  } else if (e.key == "ArrowLeft") {
+    selection_control.selectParent();
+  } else if (e.key == "ArrowRight") {
+    selection_control.selectChild();
+  } else if (e.key == "ArrowUp") {
+    selection_control.selectPreviousSibling();
+  } else if (e.key == "ArrowDown") {
+    selection_control.selectNextSibling();
   }
 
   if (need_draw)
