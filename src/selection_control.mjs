@@ -8,11 +8,8 @@ export class SelectionControl {
   }
 
   cancel() {
-    this.selection_candidate_ && this.selection_candidate_.markSelection("none");
-    this.selection_ && this.selection_.markSelection("none");
-    this.selection_candidate_ = null;
-    this.selection_ = null;
-    RunLoop.postTaskAndDraw();
+    this.removeSelection();
+    this.removeCandidate();
   }
 
   handleClick(p) {
@@ -47,10 +44,9 @@ export class SelectionControl {
     if (new_candidate == this.selection_candidate_)
       return;
 
-    if (new_candidate == this.selection_) {
-      this.removeCandidate();
+    this.removeCandidate();
+    if (new_candidate == this.selection_)
       return;
-    }
 
     this.selection_candidate_ = new_candidate;
     this.selection_candidate_.markSelection("candidate");
