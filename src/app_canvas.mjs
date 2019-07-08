@@ -32,6 +32,7 @@ export class AppCanvas {
     this.last_local_mouse_position_ = [0, 0];
 
     this.label_editor_ = null;
+    this.zoom_ = 1;
   }
 
   get canvas() {
@@ -70,6 +71,15 @@ export class AppCanvas {
     e.preventDefault();
     e.stopPropagation();
     const p = this.globalToLocal([e.clientX, e.clientY]);
+    // TODO(vmpstr): This isn't pixel perfect, and so it messes up the offset from visual draw?
+    // something's wrong.
+    //if (e.type.toLowerCase() == "mousemove" && e.altKey && e.buttons == 1) {
+    //  this.offset_[0] += e.movementX;
+    //  this.offset_[1] += e.movementY;
+    //  this.last_local_mouse_position_ = this.globalToLocal([e.clientX, e.clientY]);
+    //  RunLoop.postTaskAndDraw();
+    //  return;
+    //}
 
     let result = false;
     if (e.type.toLowerCase() == "mousedown") {
@@ -116,7 +126,15 @@ export class AppCanvas {
   }
 
   globalToLocal(p) {
-    return [p[0] - this.offset_[0], p[1] - this.offset_[1]];
+    return [(p[0] - this.offset_[0]) / this.zoom_, (p[1] - this.offset_[1]) / this.zoom_];
+  }
+
+  set zoom(v) {
+    this.zoom_ = v;
+  }
+
+  get zoom() {
+    return this.zoom_;
   }
 
   startEdit(item) {
@@ -133,5 +151,21 @@ export class AppCanvas {
 
   get dragging() {
     return this.did_drag_;
+  }
+
+  clearCanvas() {
+    const p = this.globalToLocal([0, 0]);
+    this.ctx_.clearRect(p[0], p[1], this.canvas_.width / this.zoom_, this.canvas_.height / this.zoom_);
+  }
+
+  startDraw() {
+    this.ctx_.save();
+    // TODO(vmpstr): something's wrong here.
+    //this.ctx_.translate(this.offset_[0], this.offset_[1]);
+    this.ctx_.scale(this.zoom_, this.zoom_);
+  }
+
+  endDraw() {
+    this.ctx_.restore();
   }
 }

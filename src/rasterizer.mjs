@@ -9,7 +9,7 @@ export class Rasterizer {
 
   draw(tree) {
     // TODO(vmpstr): Need better invalidation, instead of redrawing everything.
-    this.app_canvas_.ctx.clearRect(0, 0, this.app_canvas_.canvas.width, this.app_canvas_.canvas.height);
+    this.app_canvas_.clearCanvas();
 
     this.drawRecursive(Object.values(tree));
   }

@@ -27,7 +27,9 @@ let selection_control;
 
 RunLoop.draw = () => {
   layout.layoutIfNeeded();
+  app_canvas.startDraw();
   rasterizer.draw(layout.tree);
+  app_canvas.endDraw();
 }
 
 async function initialize() {
@@ -38,6 +40,7 @@ async function initialize() {
   app_canvas.addEventListener("mouseup", handleMouseUp);
   app_canvas.addEventListener("click", handleClick);
   app_canvas.addEventListener("dblclick", handleDoubleClick);
+  app_canvas.canvas.addEventListener("wheel", handleWheel);
   window.addEventListener("keyup", handleKeyUp);
   window.addEventListener("keydown", handleKeyDown);
 
@@ -161,6 +164,19 @@ function handleKeyUp(e) {
 
   if (need_draw)
     RunLoop.postTaskAndDraw();
+}
+
+function handleWheel(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.ctrlKey) {
+    if (e.wheelDelta < 0) {
+      app_canvas.zoom = Math.max(0.5, app_canvas.zoom - 0.1);
+    } else {
+      app_canvas.zoom = Math.min(2, app_canvas.zoom + 0.1);
+    }
+    RunLoop.postTaskAndDraw();
+  }
 }
 
 onload = () => {
