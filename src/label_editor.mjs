@@ -24,10 +24,17 @@ export class LabelEditor {
   }
 
   generateInputStyle() {
+    let left = this.item_.position[0] + this.item_.label_offset[0] + this.app_canvas_.scroll_offset[0] / this.app_canvas_.zoom - 1;
+    let top = this.item_.position[1] + this.item_.label_offset[1] + this.app_canvas_.scroll_offset[1]  / this.app_canvas_.zoom - (0.5 * Theme.fontSize(this.item_) + 4);
+    left *= this.app_canvas_.zoom;
+    top *= this.app_canvas_.zoom;
+
     let result = "position: absolute;"
+    result += "transform-origin: top left;"
+    result += "transform: scale(" + this.app_canvas_.zoom + ");";
     result += "font: " + Theme.fontStyle(this.item_) + ";";
-    result += "left: " + (this.item_.position[0] + this.item_.label_offset[0] - 1) + "px;";
-    result += "top: " + (this.item_.position[1] + this.item_.label_offset[1] - 0.5 * Theme.fontSize(this.item_) - 4) + "px;";
+    result += "left: " + left + "px;";
+    result += "top: " + top + "px;";
     result += "width: " + Math.max(5, this.item_.label_width) + "px;";
     return result;
   }
