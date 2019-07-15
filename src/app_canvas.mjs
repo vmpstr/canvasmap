@@ -14,7 +14,8 @@ export class AppCanvas {
     document.body.appendChild(this.canvas_)
 
     const bounding_rect = this.canvas_.getBoundingClientRect();
-    this.offset_ = [bounding_rect.left, bounding_rect.top];
+    this.client_offset_ = [bounding_rect.left, bounding_rect.top];
+    this.scroll_offset_ = [0, 0];
 
     this.mouseDownEvents_ = [];
     this.mouseUpEvents_ = [];
@@ -30,6 +31,7 @@ export class AppCanvas {
 
     this.ignore_clicks_ = false;
     this.last_local_mouse_position_ = [0, 0];
+    this.last_global_mouse_position_ = [0, 0];
 
     this.label_editor_ = null;
     this.zoom_ = 1;
@@ -41,10 +43,6 @@ export class AppCanvas {
 
   get ctx() {
     return this.ctx_;
-  }
-
-  get offset() {
-    return this.offset_;
   }
 
   resizeCanvas() {
@@ -71,15 +69,15 @@ export class AppCanvas {
     e.preventDefault();
     e.stopPropagation();
     const p = this.globalToLocal([e.clientX, e.clientY]);
-    // TODO(vmpstr): This isn't pixel perfect, and so it messes up the offset from visual draw?
-    // something's wrong.
-    //if (e.type.toLowerCase() == "mousemove" && e.altKey && e.buttons == 1) {
-    //  this.offset_[0] += e.movementX;
-    //  this.offset_[1] += e.movementY;
-    //  this.last_local_mouse_position_ = this.globalToLocal([e.clientX, e.clientY]);
-    //  RunLoop.postTaskAndDraw();
-    //  return;
-    //}
+
+    const global_delta = [e.clientX - this.last_global_mouse_position_[0], e.clientY - this.last_global_mouse_position_[1]];
+    this.last_global_mouse_position_ = [e.clientX, e.clientY];
+    if (e.type.toLowerCase() == "mousemove" && e.altKey && e.buttons == 1) {
+      this.scroll_offset_[0] += global_delta[0];
+      this.scroll_offset_[1] += global_delta[1];
+      RunLoop.postTaskAndDraw();
+      return;
+    }
 
     let result = false;
     if (e.type.toLowerCase() == "mousedown") {
@@ -126,7 +124,7 @@ export class AppCanvas {
   }
 
   globalToLocal(p) {
-    return [(p[0] - this.offset_[0]) / this.zoom_, (p[1] - this.offset_[1]) / this.zoom_];
+    return [(p[0] - this.client_offset_[0]) / this.zoom_ - this.scroll_offset_[0] / this.zoom_, (p[1] - this.client_offset_[1]) / this.zoom_ - this.scroll_offset_[1] / this.zoom_];
   }
 
   set zoom(v) {
@@ -135,6 +133,10 @@ export class AppCanvas {
 
   get zoom() {
     return this.zoom_;
+  }
+
+  get scroll_offset() {
+    return this.scroll_offset_;
   }
 
   startEdit(item) {
@@ -154,14 +156,13 @@ export class AppCanvas {
   }
 
   clearCanvas() {
-    const p = this.globalToLocal([0, 0]);
-    this.ctx_.clearRect(p[0], p[1], this.canvas_.width / this.zoom_, this.canvas_.height / this.zoom_);
+    this.ctx_.clearRect(0, 0, this.canvas_.width, this.canvas_.height);
   }
 
   startDraw() {
     this.ctx_.save();
-    // TODO(vmpstr): something's wrong here.
-    //this.ctx_.translate(this.offset_[0], this.offset_[1]);
+    this.clearCanvas();
+    this.ctx_.translate(this.scroll_offset_[0], this.scroll_offset_[1]);
     this.ctx_.scale(this.zoom_, this.zoom_);
   }
 
