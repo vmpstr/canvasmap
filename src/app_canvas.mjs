@@ -9,6 +9,8 @@ export class AppCanvas {
     this.canvas_.height = window.innerHeight - 6;
     this.canvas_.id = "app_canvas";
     this.ctx_ = this.canvas_.getContext("2d");
+    this.ctx_.clearRect(0, 0, this.canvas_.width, this.canvas_.height);
+
     window.addEventListener("resize", () => this.resizeCanvas());
 
     document.body.appendChild(this.canvas_)
