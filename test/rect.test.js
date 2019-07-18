@@ -1,3 +1,4 @@
+import { Point } from '../src/geometry/point.mjs';
 import { Rect } from '../src/geometry/rect.mjs';
 
 describe('Rect', () => {
@@ -12,12 +13,17 @@ describe('Rect', () => {
     expect(r.top).toBe(2);
     expect(r.bottom).toBe(6);
   })
+
   it("should contain inner points", () => {
     const r = new Rect([10, 20], [30, 40]);
     expect(r.containsPoint([11, 21])).toBeTruthy();
     expect(r.containsPoint([15, 59])).toBeTruthy();
     expect(r.containsPoint([39, 59])).toBeTruthy();
+    expect(r.containsPoint(new Point([11, 21]))).toBeTruthy();
+    expect(r.containsPoint(new Point([15, 59]))).toBeTruthy();
+    expect(r.containsPoint(new Point([39, 59]))).toBeTruthy();
   })
+
   it("should not contain edge points", () => {
     const r = new Rect([10, 20], [30, 40]);
     expect(r.containsPoint([10, 20])).toBeFalsy();
@@ -28,7 +34,16 @@ describe('Rect', () => {
     expect(r.containsPoint([40, 20])).toBeFalsy();
     expect(r.containsPoint([40, 30])).toBeFalsy();
     expect(r.containsPoint([40, 60])).toBeFalsy();
+    expect(r.containsPoint(new Point([10, 20]))).toBeFalsy();
+    expect(r.containsPoint(new Point([10, 30]))).toBeFalsy();
+    expect(r.containsPoint(new Point([10, 60]))).toBeFalsy();
+    expect(r.containsPoint(new Point([20, 20]))).toBeFalsy();
+    expect(r.containsPoint(new Point([20, 60]))).toBeFalsy();
+    expect(r.containsPoint(new Point([40, 20]))).toBeFalsy();
+    expect(r.containsPoint(new Point([40, 30]))).toBeFalsy();
+    expect(r.containsPoint(new Point([40, 60]))).toBeFalsy();
   })
+
   it("should not contain outer points", () => {
     const r = new Rect([10, 20], [30, 40]);
     expect(r.containsPoint([1, 20])).toBeFalsy();
@@ -39,5 +54,13 @@ describe('Rect', () => {
     expect(r.containsPoint([50, 20])).toBeFalsy();
     expect(r.containsPoint([50, 30])).toBeFalsy();
     expect(r.containsPoint([50, 60])).toBeFalsy();
+    expect(r.containsPoint(new Point([1, 20]))).toBeFalsy();
+    expect(r.containsPoint(new Point([1, 30]))).toBeFalsy();
+    expect(r.containsPoint(new Point([1, 60]))).toBeFalsy();
+    expect(r.containsPoint(new Point([20, 10]))).toBeFalsy();
+    expect(r.containsPoint(new Point([20, 70]))).toBeFalsy();
+    expect(r.containsPoint(new Point([50, 20]))).toBeFalsy();
+    expect(r.containsPoint(new Point([50, 30]))).toBeFalsy();
+    expect(r.containsPoint(new Point([50, 60]))).toBeFalsy();
   })
 })
