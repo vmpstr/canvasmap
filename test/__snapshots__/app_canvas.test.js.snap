@@ -21,3 +21,42 @@ Array [
   },
 ]
 `;
+
+exports[`AppCanvas should resize canvas on window resize 1`] = `
+Array [
+  Object {
+    "props": Object {
+      "height": 762,
+      "width": 1022,
+      "x": 0,
+      "y": 0,
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "clearRect",
+  },
+  Object {
+    "props": Object {
+      "height": 1518,
+      "width": 2042,
+      "x": 0,
+      "y": 0,
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "clearRect",
+  },
+]
+`;

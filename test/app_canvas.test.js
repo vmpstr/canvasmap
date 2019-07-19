@@ -1,5 +1,6 @@
 import { AppCanvas } from '../src/app_canvas.mjs';
 import { RunLoop } from '../src/run_loop.mjs';
+import { Point } from '../src/geometry/point.mjs';
 
 describe("AppCanvas", () => {
   it("should create and initialize a canvas", () => {
@@ -29,5 +30,122 @@ describe("AppCanvas", () => {
 
     expect(global.requestAnimationFrame).toHaveBeenCalledTimes(1);
     expect(mock_draw).toHaveBeenCalledTimes(1);
+
+    app.clearCanvas();
+    expect(app.ctx.__getEvents()).toMatchSnapshot();
   })
+
+  it("maps globalToLocal correctly", () => {
+    const app = new AppCanvas();
+    // Identity.
+    expect(app.globalToLocal(new Point([123, 321])))
+      .toStrictEqual(new Point([123, 321]));
+
+    // Client offset.
+    app.client_offset_ = new Point([10, 20]);
+    expect(app.globalToLocal(new Point([123, 321])))
+      .toStrictEqual(new Point([113, 301]));
+    app.client_offset_ = new Point([0, 0]);
+
+    // Scroll offset.
+    app.global_scroll_offset_ = new Point([10, 20]);
+    expect(app.globalToLocal(new Point([123, 321])))
+      .toStrictEqual(new Point([113, 301]));
+    app.global_scroll_offset_ = new Point([0, 0]);
+
+    // Zoom.
+    app.zoom_ = 2;
+    expect(app.globalToLocal(new Point([123, 321])))
+      .toStrictEqual(new Point([61.5, 160.5]));
+
+    // Zoom + client offset
+    app.client_offset_ = new Point([10, 20]);
+    expect(app.globalToLocal(new Point([123, 321])))
+      .toStrictEqual(new Point([(123 - 10) / 2, (321 - 20) / 2]));
+    app.client_offset_ = new Point([0, 0]);
+
+    // Zoom + scroll offset.
+    app.global_scroll_offset_ = new Point([10, 20]);
+    expect(app.globalToLocal(new Point([123, 321])))
+      .toStrictEqual(new Point([(123 - 10) / 2, (321 - 20) / 2]));
+    app.global_scroll_offset_ = new Point([0, 0]);
+  });
+
+  it("should allow mousedown event listeners", () => {
+    const app = new AppCanvas();
+    const expect_identity = jest.fn((p, e) => {
+      expect(p).toStrictEqual(new Point([123, 321]));
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("mousedown");
+    });
+
+    app.addEventListener("mousedown", expect_identity);
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mousedown",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+
+    expect(expect_identity).toHaveBeenCalledTimes(1);
+    app.removeEventListener("mousedown", expect_identity);
+
+    // Now with zoom.
+    app.zoom_ = 2;
+    const expect_zoomed = jest.fn((p, e) => {
+      expect(p).toStrictEqual(new Point([61.5, 160.5]));
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("mousedown");
+    });
+    app.addEventListener("mousedown", expect_zoomed);
+
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mousedown",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+
+    expect(expect_zoomed).toHaveBeenCalledTimes(1);
+
+    // Try with another instance of the same handler.
+    app.addEventListener("mousedown", expect_zoomed);
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mousedown",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+
+    // 2 more times (3 total).
+    expect(expect_zoomed).toHaveBeenCalledTimes(3);
+  });
+
+  it("should remove all instances of handlers", () => {
+    const app = new AppCanvas();
+    const fail_if_called = jest.fn();
+
+    app.addEventListener("mousedown", fail_if_called);
+    app.addEventListener("mousedown", fail_if_called);
+    app.addEventListener("mousedown", fail_if_called);
+    app.addEventListener("mousedown", fail_if_called);
+    app.removeEventListener("mousedown", fail_if_called);
+
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mousedown",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+
+    expect(fail_if_called).toHaveBeenCalledTimes(0);
+  });
 });
