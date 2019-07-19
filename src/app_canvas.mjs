@@ -70,7 +70,6 @@ export class AppCanvas {
        (p[1] - this.client_offset_[1] - this.global_scroll_offset_[1]) / this.zoom_]);
   }
 
-
   addEventListener(event_name, f) {
     if (event_name.toLowerCase() == "mousedown") {
       this.mouseDownEvents_.push(f);
@@ -107,6 +106,10 @@ export class AppCanvas {
         i--;
       }
     }
+  }
+
+  onZoomChanged() {
+    this.last_local_mouse_position_ = this.globalToLocal(this.last_global_mouse_position_);
   }
         
   handleMouseEvent(e) {
@@ -170,6 +173,7 @@ export class AppCanvas {
 
   set zoom(v) {
     this.zoom_ = v;
+    this.onZoomChanged();
   }
 
   get zoom() {

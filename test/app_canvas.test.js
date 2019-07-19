@@ -54,7 +54,7 @@ describe("AppCanvas", () => {
     app.global_scroll_offset_ = new Point([0, 0]);
 
     // Zoom.
-    app.zoom_ = 2;
+    app.zoom = 2;
     expect(app.globalToLocal(new Point([123, 321])))
       .toStrictEqual(new Point([61.5, 160.5]));
 
@@ -93,7 +93,7 @@ describe("AppCanvas", () => {
     app.removeEventListener("mousedown", expect_identity);
 
     // Now with zoom.
-    app.zoom_ = 2;
+    app.zoom = 2;
     const expect_zoomed = jest.fn((p, e) => {
       expect(p).toStrictEqual(new Point([61.5, 160.5]));
       expect(e.toString()).toBe("[object MouseEvent]");
@@ -147,5 +147,124 @@ describe("AppCanvas", () => {
     );
 
     expect(fail_if_called).toHaveBeenCalledTimes(0);
+  });
+
+  it("should allow mouseup event listeners", () => {
+    const app = new AppCanvas();
+    const expect_identity = jest.fn((p, e) => {
+      expect(p).toStrictEqual(new Point([123, 321]));
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("mouseup");
+    });
+
+    app.addEventListener("mouseup", expect_identity);
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mouseup",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+
+    expect(expect_identity).toHaveBeenCalledTimes(1);
+    app.removeEventListener("mouseup", expect_identity);
+
+    // Now with zoom.
+    app.zoom = 2;
+    const expect_zoomed = jest.fn((p, e) => {
+      expect(p).toStrictEqual(new Point([61.5, 160.5]));
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("mouseup");
+    });
+    app.addEventListener("mouseup", expect_zoomed);
+
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mouseup",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+
+    expect(expect_zoomed).toHaveBeenCalledTimes(1);
+
+    // Try with another instance of the same handler.
+    app.addEventListener("mouseup", expect_zoomed);
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mouseup",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+
+    // 2 more times (3 total).
+    expect(expect_zoomed).toHaveBeenCalledTimes(3);
+  });
+
+  it("should allow mousemove event listeners", () => {
+    const app = new AppCanvas();
+    const expect_full_delta = jest.fn((p, d, e) => {
+      expect(p).toStrictEqual(new Point([123, 321]));
+      expect(d).toStrictEqual([123, 321]);
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("mousemove");
+    });
+
+    app.addEventListener("mousemove", expect_full_delta);
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mousemove",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+
+    expect(expect_full_delta).toHaveBeenCalledTimes(1);
+    app.removeEventListener("mousemove", expect_full_delta);
+
+    const expect_small_delta = jest.fn((p, d, e) => {
+      expect(p).toStrictEqual(new Point([134, 343]));
+      expect(d).toStrictEqual([11, 22]);
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("mousemove");
+    });
+
+    app.addEventListener("mousemove", expect_small_delta);
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mousemove",
+      {
+        clientX: 134,
+        clientY: 343,
+        button: 0
+      })
+    );
+    expect(expect_small_delta).toHaveBeenCalledTimes(1);
+    app.removeEventListener("mousemove", expect_small_delta);
+      
+    // Now with zoom.
+    app.zoom = 2;
+    const expect_zoomed = jest.fn((p, d, e) => {
+      expect(p).toStrictEqual(new Point([61.5, 160.5]));
+      expect(d).toStrictEqual([-5.5, -11]);
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("mousemove");
+    });
+    app.addEventListener("mousemove", expect_zoomed);
+
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mousemove",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+
+    expect(expect_zoomed).toHaveBeenCalledTimes(1);
   });
 });
