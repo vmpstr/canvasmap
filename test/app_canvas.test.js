@@ -2,6 +2,8 @@ import { AppCanvas } from '../src/app_canvas.mjs';
 import { RunLoop } from '../src/run_loop.mjs';
 import { Point } from '../src/geometry/point.mjs';
 
+"use strict";
+
 describe("AppCanvas", () => {
   it("should create and initialize a canvas", () => {
     const app = new AppCanvas();
@@ -10,7 +12,7 @@ describe("AppCanvas", () => {
     expect(app.ctx.__getEvents()).toMatchSnapshot();
 
     expect(document.body.firstElementChild).toBe(app.canvas);
-  });
+  })
 
   it("should resize canvas on window resize", () => {
     const app = new AppCanvas();
@@ -69,7 +71,7 @@ describe("AppCanvas", () => {
     expect(app.globalToLocal(new Point([123, 321])))
       .toStrictEqual(new Point([(123 - 10) / 2, (321 - 20) / 2]));
     app.global_scroll_offset_ = new Point([0, 0]);
-  });
+  })
 
   it("should allow mousedown event listeners", () => {
     const app = new AppCanvas();
@@ -125,7 +127,7 @@ describe("AppCanvas", () => {
 
     // 2 more times (3 total).
     expect(expect_zoomed).toHaveBeenCalledTimes(3);
-  });
+  })
 
   it("should remove all instances of handlers", () => {
     const app = new AppCanvas();
@@ -147,7 +149,7 @@ describe("AppCanvas", () => {
     );
 
     expect(fail_if_called).toHaveBeenCalledTimes(0);
-  });
+  })
 
   it("should allow mouseup event listeners", () => {
     const app = new AppCanvas();
@@ -203,7 +205,7 @@ describe("AppCanvas", () => {
 
     // 2 more times (3 total).
     expect(expect_zoomed).toHaveBeenCalledTimes(3);
-  });
+  })
 
   it("should allow mousemove event listeners", () => {
     const app = new AppCanvas();
@@ -266,5 +268,159 @@ describe("AppCanvas", () => {
     );
 
     expect(expect_zoomed).toHaveBeenCalledTimes(1);
-  });
+  })
+
+  it("should allow click event listeners", () => {
+    const app = new AppCanvas();
+    const expect_click = jest.fn((p, e) => {
+      expect(p).toStrictEqual(new Point([123, 321]));
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("click");
+    });
+    app.addEventListener("click", expect_click);
+
+    app.canvas.dispatchEvent(new MouseEvent(
+      "click",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+    expect(expect_click).toHaveBeenCalledTimes(1);
+    app.removeEventListener("click", expect_click);
+
+    const expect_zoomed = jest.fn((p, e) => {
+      expect(p).toStrictEqual(new Point([61.5, 160.5]));
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("click");
+    });
+    app.addEventListener("click", expect_zoomed);
+
+    app.zoom = 2;
+    app.canvas.dispatchEvent(new MouseEvent(
+      "click",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+    expect(expect_zoomed).toHaveBeenCalledTimes(1);
+  })
+
+  it("should allow dblclick event listeners", () => {
+    const app = new AppCanvas();
+    const expect_click = jest.fn((p, e) => {
+      expect(p).toStrictEqual(new Point([123, 321]));
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("dblclick");
+    });
+    app.addEventListener("dblclick", expect_click);
+
+    app.canvas.dispatchEvent(new MouseEvent(
+      "dblclick",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+    expect(expect_click).toHaveBeenCalledTimes(1);
+    app.removeEventListener("dblclick", expect_click);
+
+    const expect_zoomed = jest.fn((p, e) => {
+      expect(p).toStrictEqual(new Point([61.5, 160.5]));
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("dblclick");
+    });
+    app.addEventListener("dblclick", expect_zoomed);
+
+    app.zoom = 2;
+    app.canvas.dispatchEvent(new MouseEvent(
+      "dblclick",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+    expect(expect_zoomed).toHaveBeenCalledTimes(1);
+  })
+
+  it("should ignore clicks after drag", () => {
+    // Testing timeouts requires fake timers.
+    jest.useFakeTimers();
+
+    const app = new AppCanvas();
+    const expect_full_delta = jest.fn((p, d, e) => {
+      expect(p).toStrictEqual(new Point([123, 321]));
+      expect(d).toStrictEqual([123, 321]);
+      expect(e.toString()).toBe("[object MouseEvent]");
+      expect(e.type).toBe("mousemove");
+      return true;
+    });
+
+    app.addEventListener("mousemove", expect_full_delta);
+    app.canvas.dispatchEvent(new MouseEvent(
+      "mousemove",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+    expect(expect_full_delta).toHaveBeenCalledTimes(1);
+    expect(app.dragging).toBeTruthy();
+
+    // Mouse up after drag should cause us to ignore clicks for a while.
+    app.canvas.dispatchEvent(new MouseEvent("mouseup"));
+
+    const click_handler_after_drag = jest.fn();
+    app.addEventListener("click", click_handler_after_drag);
+    app.canvas.dispatchEvent(new MouseEvent(
+      "click",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+    expect(click_handler_after_drag).toHaveBeenCalledTimes(0);
+
+    const dblclick_handler_after_drag = jest.fn();
+    app.addEventListener("dblclick", dblclick_handler_after_drag);
+    app.canvas.dispatchEvent(new MouseEvent(
+      "dblclick",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+    expect(dblclick_handler_after_drag).toHaveBeenCalledTimes(0);
+
+    // After timeout, we should start processing clicks and double clicks.
+    jest.runOnlyPendingTimers();
+
+    app.canvas.dispatchEvent(new MouseEvent(
+      "click",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+    expect(click_handler_after_drag).toHaveBeenCalledTimes(1);
+
+    app.canvas.dispatchEvent(new MouseEvent(
+      "dblclick",
+      {
+        clientX: 123,
+        clientY: 321,
+        button: 0
+      })
+    );
+    expect(dblclick_handler_after_drag).toHaveBeenCalledTimes(1);
+  })
 });

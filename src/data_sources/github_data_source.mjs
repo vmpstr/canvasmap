@@ -67,7 +67,7 @@ class GithubItem {
         })
     );
     let label_container = layout_item.decorators.last_added;
-    for (let i = 0; i < this.json_.labels.length; ++i) {
+    for (let i = 0; i < this.json_.labels.length || 0; ++i) {
       label_container.addDecorator(
         Decorators.create(
           Decorators.type.box,
@@ -119,6 +119,10 @@ class GithubItem {
 
   get local_id() {
     return this.json_.id;
+  }
+
+  toString() {
+    return "GithubItem(" + this.local_id + ", '" + this.json_.title + "')";
   }
 }
 

@@ -3,12 +3,15 @@ import { LabelEditor } from './label_editor.mjs';
 import { Point } from './geometry/point.mjs';
 
 export class AppCanvas {
+  // Constructor.
   constructor() {
     this.createCanvas();
     this.registerEventListeners();
     this.initializeSettings();
   }
 
+  
+  // Initialization functions.
   createCanvas() {
     this.canvas_ = document.createElement("canvas");
     this.canvas_.style = "padding: 0; border: 1px solid black";
@@ -50,26 +53,20 @@ export class AppCanvas {
     this.zoom_ = 1;
   }
 
-  get canvas() {
-    return this.canvas_;
-  }
 
-  get ctx() {
-    return this.ctx_;
-  }
-
+  // Event responders.
   resizeCanvas() {
     this.canvas_.width = window.innerWidth - 2;
     this.canvas_.height = window.innerHeight - 6;
     RunLoop.postTaskAndDraw();
   }
 
-  globalToLocal(p) {
-    return new Point(
-      [(p[0] - this.client_offset_[0] - this.global_scroll_offset_[0]) / this.zoom_,
-       (p[1] - this.client_offset_[1] - this.global_scroll_offset_[1]) / this.zoom_]);
+  onZoomChanged() {
+    this.last_local_mouse_position_ = this.globalToLocal(this.last_global_mouse_position_);
   }
+        
 
+  // Event registration and dispatch.
   addEventListener(event_name, f) {
     if (event_name.toLowerCase() == "mousedown") {
       this.mouseDownEvents_.push(f);
@@ -108,10 +105,6 @@ export class AppCanvas {
     }
   }
 
-  onZoomChanged() {
-    this.last_local_mouse_position_ = this.globalToLocal(this.last_global_mouse_position_);
-  }
-        
   handleMouseEvent(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -171,19 +164,9 @@ export class AppCanvas {
     this.ignore_clicks_handle_ = setTimeout(() => { this.ignore_clicks_ = false; }, 60);
   }
 
-  set zoom(v) {
-    this.zoom_ = v;
-    this.onZoomChanged();
-  }
 
-  get zoom() {
-    return this.zoom_;
-  }
-
-  get scroll_offset() {
-    return this.global_scroll_offset_;
-  }
-
+  // Editing functionality.
+  // TODO(vmpstr): Need tests.
   startEdit(item) {
     item.is_editing = true;
     this.label_editor_ = new LabelEditor(this, item);
@@ -196,10 +179,9 @@ export class AppCanvas {
     }
   }
 
-  get dragging() {
-    return this.did_drag_;
-  }
 
+  // Draw functionality.
+  // TODO(vmpstr): Need tests.
   startDraw() {
     this.ctx_.save();
     this.clearCanvas();
@@ -214,4 +196,40 @@ export class AppCanvas {
   endDraw() {
     this.ctx_.restore();
   }
+
+
+  // Getters and setters.
+  get zoom() {
+    return this.zoom_;
+  }
+
+  set zoom(v) {
+    this.zoom_ = v;
+    this.onZoomChanged();
+  }
+
+  get scroll_offset() {
+    return this.global_scroll_offset_;
+  }
+
+  get dragging() {
+    return this.did_drag_;
+  }
+
+  get canvas() {
+    return this.canvas_;
+  }
+
+  get ctx() {
+    return this.ctx_;
+  }
+
+  
+  // Helpers.
+  globalToLocal(p) {
+    return new Point(
+      [(p[0] - this.client_offset_[0] - this.global_scroll_offset_[0]) / this.zoom_,
+       (p[1] - this.client_offset_[1] - this.global_scroll_offset_[1]) / this.zoom_]);
+  }
+
 }
