@@ -29,6 +29,12 @@ export class Theme {
     return Theme.defaults(item).border.width;
   }
 
+  static borderRadius(item) {
+    if (item && item.border && item.border.radius !== undefined)
+      return item.border.radius;
+    return Theme.defaults(item).border.radius;
+  }
+
   static padding(item) {
     if (item && item.padding !== undefined)
       return item.padding;
@@ -50,10 +56,23 @@ export class Theme {
   }
 
   static edgeRasterizer(item) {
+    console.assert(item && item.has_parent);
     return Theme.defaults(item).edgeRasterizer(item);
   }
 
+  // Returns where to start the edge continuation.
+  // e.g. 
+  // A
+  // |
+  // x--B
+  // |
+  // y--C
+  //
+  // If given the edge from A to B, would return a point before the
+  // x curve begins, so that the edge can be drawn for C starting
+  // from that point.
   static edgeContinuation(item, edge_start, edge_end) {
+    console.assert(item.has_parent);
     return Theme.defaults(item).edgeContinuation(item, edge_start, edge_end);
   }
 
@@ -73,25 +92,22 @@ export class Theme {
     return Theme.defaults(item).childIndent;
   }
 
-  static borderRadius(item) {
-    if (item && item.border && item.border.radius !== undefined)
-      return item.border.radius;
-    return Theme.defaults(item).border.radius;
-  }
-
   static edgeRadius(item) {
+    console.assert(item && item.has_parent);
     if (item && item.edge && item.edge.radius !== undefined)
       return item.edge.radius;
     return Theme.defaults(item).edge.radius;
   }
 
   static edgeColor(item) {
+    console.assert(item && item.has_parent);
     if (item && item.edge && item.edge.color !== undefined)
       return item.edge.color;
     return Theme.defaults(item).edge.color;
   }
 
   static edgeWidth(item) {
+    console.assert(item && item.has_parent);
     if (item && item.edge && item.edge.width !== undefined)
       return item.edge.width;
     return Theme.defaults(item).edge.width;
