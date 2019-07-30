@@ -1,3 +1,5 @@
+'use strict';
+
 import { RunLoop } from './run_loop.mjs';
 import { LabelEditor } from './label_editor.mjs';
 import { Point } from './geometry/point.mjs';

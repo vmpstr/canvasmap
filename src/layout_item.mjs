@@ -1,5 +1,8 @@
+'use strict';
+
 import { Theme } from './theme.mjs';
 import { Rect } from './geometry/rect.mjs';
+import { Point } from './geometry/point.mjs';
 import { LayoutDecoratorContainer } from './decorators/layout_decorator_container.mjs';
 
 export class LayoutItem {
@@ -9,13 +12,141 @@ export class LayoutItem {
     this.position_ = position;
     this.label_offset_ = [0, 0];
     this.label_width_ = 0;
+    this.needs_layout_ = true;
+    // TODO(vmpstr): Add a selection enum.
+    this.selection_ = "none";
+    this.label_ = "";
+    this.size_ = [0, 0];
+    this.children_ = [];
+    this.aux_ = {
+      ancestors: [],
+      descendants: []
+    };
 
     // Has to be the last call, since it depends on the rest of the constructor.
     item.construct(this);
-    this.needs_layout_ = false;
-    this.selection_ = "none";
   }
 
+  ////////////////////////////
+  // Getters with no setters
+  ////////////////////////////
+  get id() {
+    return this.data_item_.id_namespace + this.data_item_.local_id;
+  }
+
+  get data_item() {
+    return this.data_item_;
+  }
+
+  get has_parent() {
+    // TODO(vmpstr): Clean up these variables into setters and getters.
+    return !!(this.parent || this.tentative_parent || this.has_placeholder_parent);
+  }
+
+  get decorators() {
+    return this.decorators_;
+  }
+
+  get label_offset() {
+    console.assert(!this.needs_layout_);
+    return this.label_offset_;
+  }
+
+  get label_width() {
+    console.assert(!this.needs_layout_);
+    return this.label_width_;
+  }
+
+  get size() {
+    console.assert(!this.needs_layout_);
+    return this.size_;
+  }
+
+  get bounding_box() {
+    console.assert(!this.needs_layout_);
+    let rect = new Rect(new Point(this.position_), this.size_.slice());
+    let decorators_bounds = this.decorators_.bounding_box;
+    if (decorators_bounds) {
+      // TODO(vmpstr): Rect.union?
+      const new_x = Math.min(rect.left, decorators_bounds.left);
+      const new_y = Math.min(rect.top, decorators_bounds.top);
+      const new_right = Math.max(rect.right, decorators_bounds.right);
+      const new_bottom = Math.max(rect.bottom, decorators_bounds.bottom);
+      rect.x = new_x;
+      rect.y = new_y;
+      rect.width = new_right - new_x;
+      rect.height = new_bottom - new_y;
+    }
+    return rect;
+  }
+
+  ////////////////////////////
+  // Getters with setters
+  ////////////////////////////
+  get label() {
+    return this.label_;
+  }
+  set label(v) {
+    this.label_ = v;
+    this.needs_layout_ = true;
+  }
+
+  get parent() {
+    return this.parent_;
+  }
+  set parent(v) {
+    this.parent_ = v;
+  }
+
+  get children() {
+    return this.children_;
+  }
+  set children(v) {
+    this.children_ = v;
+  }
+
+  get selection() {
+    return this.selection_;
+  }
+  markSelection(v) {
+    this.selection_ = v;
+  }
+
+  get position() { 
+    console.assert(!this.needs_layout_);
+    return this.position_;
+  }
+  set position(v) {
+    this.position_ = v;
+    this.needs_layout_ = true;
+  }
+
+  get needs_layout() {
+    return this.needs_layout_;
+  }
+  set needs_layout(v) {
+    // Only this can clear layout value.
+    console.assert(v);
+    this.needs_layout_ = v;
+  }
+
+  get ancestors() {
+    return this.aux_.ancestors;
+  }
+  set ancestors(v) {
+    this.aux_.ancestors = v;
+  }
+
+  get descendants() {
+    return this.aux_.descendants;
+  }
+  set descendants(v) {
+    this.aux_.descendants = v;
+  }
+
+  ////////////////////////////
+  // Other functionality 
+  ////////////////////////////
   layout(ctx, pending_label) {
     this.needs_layout_ = false;
 
@@ -39,7 +170,7 @@ export class LayoutItem {
     // TODO(vmpstr): Store a rect on this item.
     let border_rect = this.decorators_.layoutSize(
       ctx,
-      new Rect(this.position_.slice(), this.size_.slice()),
+      new Rect(new Point(this.position_), this.size_.slice()),
       new Rect([this.position_[0] + Theme.padding(this), this.position_[1] + Theme.padding(this)],
                [this.size_[0] - 2 * Theme.padding(this), this.size_[1] - 2 * Theme.padding(this)])
     );
@@ -60,96 +191,7 @@ export class LayoutItem {
     this.decorators_.layoutPosition(ctx, new Rect(this.position_, this.size_), label_rect);
   }
 
-  get position() { 
-    console.assert(!this.needs_layout_);
-    return this.position_;
-  }
-
-  set position(v) {
-    this.position_ = v;
-    this.needs_layout_ = true;
-  }
-
-  get bounding_box() {
-    console.assert(!this.needs_layout_);
-    let rect = new Rect(this.position_.slice(), this.size_.slice());
-    let decorators_bounds = this.decorators_.bounding_box;
-    if (decorators_bounds) {
-      const new_x = Math.min(rect.left, decorators_bounds.left);
-      const new_y = Math.min(rect.top, decorators_bounds.top);
-      const new_right = Math.max(rect.right, decorators_bounds.right);
-      const new_bottom = Math.max(rect.bottom, decorators_bounds.bottom);
-      rect.x = new_x;
-      rect.y = new_y;
-      rect.width = new_right - new_x;
-      rect.height = new_bottom - new_y;
-    }
-    return rect;
-  }
-
   getClickableDecoratorAtPoint(p) {
     return this.decorators_.getClickableDecoratorAtPoint(p);
-  }
-
-  get size() {
-    console.assert(!this.needs_layout_);
-    return this.size_;
-  }
-
-  get label() {
-    return this.label_;
-  }
-
-  set label(v) {
-    this.label_ = v;
-    this.needs_layout_ = true;
-  }
-
-  get ancestors() {
-    return this.ancestors_;
-  }
-
-  set ancestors(v) {
-    this.ancestors_ = v;
-  }
-
-  get descendants() {
-    return this.descendants_;
-  }
-
-  set descendants(v) {
-    this.descendants_ = v;
-  }
-
-  get id() {
-    return this.data_item_.id_namespace + this.data_item_.local_id;
-  }
-
-  get data_item() {
-    return this.data_item_;
-  }
-
-  get has_parent() {
-    return !!(this.parent || this.tentative_parent || this.has_placeholder_parent);
-  }
-
-  get decorators() {
-    return this.decorators_;
-  }
-
-  get label_offset() {
-    return this.label_offset_;
-  }
-
-  get label_width() {
-    return this.label_width_;
-  }
-
-  markSelection(v) {
-    this.selection_ = v;
-  }
-
-  get selection() {
-    return this.selection_;
   }
 }

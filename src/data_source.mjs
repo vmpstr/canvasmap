@@ -1,3 +1,5 @@
+'use strict';
+
 import { TestDataSource } from './data_sources/test_data_source.mjs';
 import { GithubDataSource } from './data_sources/github_data_source.mjs';
 

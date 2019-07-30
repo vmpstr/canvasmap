@@ -1,7 +1,11 @@
+'use strict';
+
+import { Point } from './point.mjs';
+
 export class Rect {
   constructor(position, size) {
     console.assert(position);
-    console.assert(position.length == 2);
+    console.assert(position instanceof Point || position.length == 2);
     console.assert(size);
     console.assert(size.length == 2);
 

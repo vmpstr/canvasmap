@@ -1,3 +1,5 @@
+'use strict';
+
 export class Theme {
   static fontFace(item) {
     return (item && item.font && item.font.face) || Theme.defaults(item).font.face;

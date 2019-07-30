@@ -1,3 +1,5 @@
+'use strict';
+
 export class Point {
   constructor(position) {
     this[0] = position[0];
