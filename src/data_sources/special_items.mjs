@@ -6,11 +6,7 @@ export class UserItem {
     UserItem.next_id++;
   }
 
-  construct(layout_item) {
-    layout_item.label = "";
-    layout_item.ancestors = [];
-    layout_item.descendants = [];
-  }
+  construct(layout_item) {}
 
   get id_namespace() {
     return UserItem.id_namespace;
@@ -39,7 +35,7 @@ export class PlaceholderItem {
   }
 
   release() {
-    delete this.held_item_.has_placeholder_parent;
+    this.held_item_.has_placeholder_parent = false;
   }
 
   get id_namespace() {

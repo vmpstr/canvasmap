@@ -20,7 +20,9 @@ export class LayoutItem {
     this.children_ = [];
     this.aux_ = {
       ancestors: [],
-      descendants: []
+      descendants: [],
+      has_placeholder_parent: false,
+      hide: false,
     };
 
     // Has to be the last call, since it depends on the rest of the constructor.
@@ -40,7 +42,7 @@ export class LayoutItem {
 
   get has_parent() {
     // TODO(vmpstr): Clean up these variables into setters and getters.
-    return !!(this.parent || this.tentative_parent || this.has_placeholder_parent);
+    return !!(this.parent || this.has_placeholder_parent);
   }
 
   get decorators() {
@@ -142,6 +144,20 @@ export class LayoutItem {
   }
   set descendants(v) {
     this.aux_.descendants = v;
+  }
+
+  get has_placeholder_parent() {
+    return this.aux_.has_placeholder_parent;
+  }
+  set has_placeholder_parent(v) {
+    this.aux_.has_placeholder_parent = v;
+  }
+
+  get hide() {
+    return this.aux_.hide;
+  }
+  set hide(v) {
+    this.aux_.hide = v;
   }
 
   ////////////////////////////

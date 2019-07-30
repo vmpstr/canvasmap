@@ -8,11 +8,38 @@ export class Layout {
     this.items_ = [];
     this.items_by_id_ = [];
     this.tree_ = {};
-    this.last_item_ = null;
-    this.tree_is_dirty_ = true;
+    this.last_item_ = undefined;
+    this.tree_is_dirty_ = false;
+    this.needs_layout_ = false;
     this.ctx_ = ctx;
   }
 
+  ////////////////////////////
+  // Getters 
+  ////////////////////////////
+  get last_item() {
+    return this.last_item_;
+  }
+
+  get items() {
+    return this.items_;
+  }
+
+  get tree() {
+    return this.tree_;
+  }
+
+  get tree_is_dirty() {
+    return this.tree_is_dirty_;
+  }
+
+  get needs_layout() {
+    return this.needs_layout_;
+  }
+
+  ////////////////////////////
+  // Getters 
+  ////////////////////////////
   addItem(item, position) {
     // TODO(vmpstr): Since the ID may be prefixed, need to figure out the blocking stuff.
     // Probably LayoutItem needs to convert blocked/blocking ids to correct prefix based
@@ -152,18 +179,6 @@ export class Layout {
     return result;
   }
 
-  get last_item() {
-    return this.last_item_;
-  }
-
-  get items() {
-    return this.items_;
-  }
-
-  get tree() {
-    return this.tree_;
-  }
-
   startDragging(item) {
     // Start dragging essentially makes the item root and then relies on
     // placeholder code to actually position it.
@@ -198,7 +213,7 @@ export class Layout {
 
     delete item.dragging;
     delete item.drag_size;
-    this.markChildren(item, (child) => { delete child.hide; });
+    this.markChildren(item, (child) => { child.hide = false; });
   }
 
   markChildren(item, mark) {
