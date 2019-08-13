@@ -1,10 +1,12 @@
 import { RunLoop } from './run_loop.mjs';
+import { DetailsControl } from './details_control.mjs';
 
 export class SelectionControl {
-  constructor(layout) {
+  constructor(layout, details_control) {
     this.layout_ = layout;
     this.selection_candidate_ = null;
     this.selection_ = null;
+    this.detailsControl_ = details_control;
   }
 
   cancel() {
@@ -31,6 +33,7 @@ export class SelectionControl {
     this.selection_ = this.selection_candidate_;
     this.selection_candidate_ = null;
     this.selection_.markSelection("selected");
+    this.handleNewSelection();
     RunLoop.postTaskAndDraw();
   }
 
@@ -65,8 +68,14 @@ export class SelectionControl {
     if (this.selection_) {
       this.selection_.markSelection("none");
       this.selection_ = null;
+      this.detailsControl_.removeSelection();
       RunLoop.postTaskAndDraw();
     }
+  }
+
+  handleNewSelection() {
+    console.assert(this.selection_);
+    this.detailsControl_.handleNewSelection(this.selection_);
   }
 
   get selected() {
@@ -80,6 +89,7 @@ export class SelectionControl {
       this.removeSelection();
     this.selection_ = v;
     this.selection_.markSelection("selected");
+    this.handleNewSelection();
     RunLoop.postTaskAndDraw();
   }
 

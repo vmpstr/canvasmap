@@ -1,0 +1,32 @@
+@keyframes details_pane_show {
+  from { right: -400px; }
+  to { right: 0; }
+}
+@keyframes details_pane_hide {
+  from { right: 0; }
+  to { right: -400px; }
+}
+
+.details_pane {
+  background: gainsboro;
+  border: 1px solid black;
+  animation-duration: 0.2s;
+  animation-fill-mode: forwards;
+
+  position: absolute;
+  top: 0;
+  z-index: 10;
+
+  width: 400px;
+  height: 100vh;
+}
+
+.details_pane.initial {
+  right: -400px;
+}
+.details_pane.visible {
+  animation-name: details_pane_show;
+}
+.details_pane.hidden {
+  animation-name: details_pane_hide;
+}

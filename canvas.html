@@ -4,6 +4,7 @@
 body {
   background: lightblue;
   margin: 0;
+  overflow: hidden;
 }
 </style>
 
@@ -17,6 +18,7 @@ import { Rasterizer } from './src/rasterizer.mjs';
 import { DragControl } from './src/drag_control.mjs';
 import { UserItem } from './src/data_sources/special_items.mjs';
 import { SelectionControl } from './src/selection_control.mjs';
+import { DetailsControl } from './src/details_control.mjs';
 
 let app_canvas;
 let rasterizer;
@@ -24,6 +26,7 @@ let layout;
 let drag_control;
 let hover_decorator;
 let selection_control;
+let details_control;
 
 RunLoop.draw = () => {
   layout.layoutIfNeeded();
@@ -48,8 +51,10 @@ async function initialize() {
   layout = new Layout(app_canvas.ctx);
   drag_control = new DragControl(layout);
 
+  details_control = new DetailsControl();
+
   hover_decorator = null;
-  selection_control = new SelectionControl(layout);
+  selection_control = new SelectionControl(layout, details_control);
 
   const url = new URL(window.location);
   const data_source_type = url.searchParams.get("source") || "empty";

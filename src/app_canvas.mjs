@@ -15,8 +15,9 @@ export class AppCanvas {
   
   // Initialization functions.
   createCanvas() {
+    this.createStylesheet();
+
     this.canvas_ = document.createElement("canvas");
-    this.canvas_.style = "padding: 0; border: 1px solid black";
     this.canvas_.width = window.innerWidth - 2;
     this.canvas_.height = window.innerHeight - 6;
     this.canvas_.id = "app_canvas";
@@ -24,6 +25,17 @@ export class AppCanvas {
     this.ctx_.clearRect(0, 0, this.canvas_.width, this.canvas_.height);
 
     document.body.appendChild(this.canvas_);
+  }
+
+  createStylesheet() {
+    console.assert(!document.getElementById("app_canvas_stylesheet"));
+    const link = document.createElement("link");
+    link.id = "app_canvas_stylesheet";
+    link.rel = "stylesheet";
+    link.type = "text/css";
+    link.href = "stylesheets/app_canvas.css";
+    link.media = "all";
+    document.head.appendChild(link);
   }
 
   registerEventListeners() {
