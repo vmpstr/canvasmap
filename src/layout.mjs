@@ -41,6 +41,10 @@ export class Layout {
     this.needs_layout_ = v;
   }
 
+  get items_by_id() {
+    return this.items_by_id_;
+  }
+
   ////////////////////////////
   // Queries 
   ////////////////////////////
@@ -115,6 +119,26 @@ export class Layout {
     this.items_by_id_[this.last_item_.id] = this.last_item_;
     this.tree_is_dirty_ = true;
     return this.last_item_;
+  }
+
+  removeItem(item) {
+    if (item.parent)
+      this.removeChild(item.parent, item);
+    // Recursively delete all children.
+    for (let i = 0; i < item.children.length; ++i)
+      this.removeItem(item.children[i]);
+    for (let i = 0; i < this.items_.length; ++i) {
+      if (this.items_[i] == item) {
+        this.items_.splice(i, 1);
+        break;
+      }
+    }
+    if (this.last_item_ == item)
+      this.last_item_ = undefined;
+    delete this.items_by_id_[item.id];
+
+    this.rebuild();
+    this.needs_layout_ = true;
   }
 
   removeChild(item, child) {

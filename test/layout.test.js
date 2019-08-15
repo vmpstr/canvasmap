@@ -484,5 +484,63 @@ describe("Layout", () => {
     }
   })
 
+  it("can removeItem (child)", () => {
+    const app = new AppCanvas();
+    const layout = new Layout(app.ctx);
+
+    const construct = jest.fn();
+    layout.addItem(
+      {
+        local_id: 5,
+        id_namespace: "namespace",
+        construct: construct
+      }, new Point([1, 2]));
+    const first_item = layout.last_item;
+
+    layout.addItem(
+      {
+        local_id: 6,
+        id_namespace: "test",
+        construct: construct
+      }, new Point([5, 100]));
+    const second_item = layout.last_item;
+
+    layout.addItem(
+      {
+        local_id: 7,
+        id_namespace: "test",
+        construct: construct
+      }, new Point([5, 100]));
+    const third_item = layout.last_item;
+
+    expect(first_item.id).toBe("namespace5");
+    expect(second_item.id).toBe("test6");
+    expect(third_item.id).toBe("test7");
+
+    layout.appendChild(first_item, second_item);
+    layout.appendChild(second_item, third_item);
+    layout.removeItem(second_item);
+    expect(layout.tree_is_dirty).toBeFalsy();
+
+    for (let i = 0; i < 2; ++i) {
+      layout.layoutIfNeeded();
+      expect(first_item.children.length).toBe(0);
+
+      expect(first_item.parent).not.toBeDefined();
+      expect(second_item.parent).not.toBeDefined();
+      expect(third_item.parent).not.toBeDefined();
+      expect(second_item.children.length).toBe(0);
+
+      expect(layout.items).toEqual(expect.not.arrayContaining([second_item]));
+      expect(layout.items).toEqual(expect.not.arrayContaining([third_item]));
+      expect(layout.items_by_id[second_item.id]).not.toBeDefined();
+      expect(layout.items_by_id[third_item.id]).not.toBeDefined();
+
+      // Force rebuild at the end, to ensure things stay the same.
+      layout.rebuild();
+    }
+
+  })
+
   // TODO(vmpstr): Dragging and placeholder tests.
 })

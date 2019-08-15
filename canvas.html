@@ -159,12 +159,20 @@ function handleKeyUp(e) {
     need_draw = true;
   } else if (e.key == "ArrowLeft") {
     selection_control.selectParent();
+    need_draw = true;
   } else if (e.key == "ArrowRight") {
     selection_control.selectChild();
+    need_draw = true;
   } else if (e.key == "ArrowUp") {
     selection_control.selectPreviousSibling();
+    need_draw = true;
   } else if (e.key == "ArrowDown") {
     selection_control.selectNextSibling();
+    need_draw = true;
+  } else if (e.key == "Backspace" || e.key == "Delete") {
+    layout.removeItem(selected);
+    selection_control.cancel();
+    need_draw = true;
   }
 
   if (need_draw)
