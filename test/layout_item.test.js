@@ -25,6 +25,7 @@ describe("LayoutItem", () => {
     expect(item.parent).not.toBeDefined();
     expect(item.children).toStrictEqual([]);
     expect(item.selection).toEqual("none");
+    expect(item.layout_style).toEqual("default");
   })
 
   it("can layout", () => {
@@ -119,6 +120,39 @@ describe("LayoutItem", () => {
     expect(item.children).toStrictEqual([]);
     expect(item.selection).toBe("none");
     expect(item.position).toStrictEqual(new Point([1, 2]));
+  })
+
+  it("needs layout on layout_style change", () => {
+    const app = new AppCanvas();
+    const item = new LayoutItem(
+      {
+        local_id: 8,
+        id_namespace: "namespace",
+        construct: jest.fn()
+      }, new Point([11, 22]));
+
+    item.layout(app.ctx);
+    expect(item.needs_layout).toBeFalsy();
+
+    item.layout_style = "test";
+    expect(item.needs_layout).toBeTruthy();
+    item.layout(app.ctx);
+    expect(item.needs_layout).toBeFalsy();
+
+    expect(item.id).toEqual("namespace8");
+    expect(item.has_parent).toBeFalsy();
+    expect(item.decorators).toBeTruthy();
+    expect(item.label_offset).toStrictEqual(
+      [Theme.padding(item), Theme.padding(item) + 0.5 * Theme.fontSize(item)]);
+    expect(item.label_width).toBe(0);
+    expect(item.size).toStrictEqual(
+      [Theme.minWidth(item), 2 * Theme.padding(item) + Theme.fontSize(item)]);
+    expect(item.bounding_box).toStrictEqual(new Rect(new Point([11, 22]), item.size));
+    expect(item.label).toStrictEqual("");
+    expect(item.parent).toBeFalsy();
+    expect(item.children).toStrictEqual([]);
+    expect(item.selection).toBe("none");
+    expect(item.layout_style).toBe("test");
   })
 
   it("can layout with pending label", () => {

@@ -6,18 +6,20 @@ import { Point } from './geometry/point.mjs';
 import { LayoutDecoratorContainer } from './decorators/layout_decorator_container.mjs';
 
 export class LayoutItem {
-  constructor(item, position) {
+  constructor(layout, item, position) {
     this.data_item_ = item;
     this.decorators_ = new LayoutDecoratorContainer();
     this.position_ = position;
     this.label_offset_ = [0, 0];
     this.label_width_ = 0;
-    this.needs_layout_ = true;
+    this.layout_ = layout;
+    this.needs_layout = true;
     // TODO(vmpstr): Add a selection enum.
     this.selection_ = "none";
     this.label_ = "";
     this.size_ = [0, 0];
     this.children_ = [];
+    this.layout_style_ = "default";
     this.aux_ = {
       ancestors: [],
       descendants: [],
@@ -85,12 +87,20 @@ export class LayoutItem {
   ////////////////////////////
   // Getters with setters
   ////////////////////////////
+  get layout_style() {
+    return this.layout_style_;
+  }
+  set layout_style(v) {
+    this.layout_style_ = v;
+    this.needs_layout = true;
+  }
+
   get label() {
     return this.label_;
   }
   set label(v) {
     this.label_ = v;
-    this.needs_layout_ = true;
+    this.needs_layout = true;
   }
 
   get parent() {
@@ -120,16 +130,17 @@ export class LayoutItem {
   }
   set position(v) {
     this.position_ = v;
-    this.needs_layout_ = true;
+    this.needs_layout = true;
   }
 
   get needs_layout() {
     return this.needs_layout_;
   }
   set needs_layout(v) {
-    // Only this can clear layout value.
+    // Only |this| can clear layout value.
     console.assert(v);
     this.needs_layout_ = v;
+    this.layout_.needs_layout = v;
   }
 
   get ancestors() {
@@ -165,7 +176,14 @@ export class LayoutItem {
   ////////////////////////////
   layout(ctx, pending_label) {
     this.needs_layout_ = false;
+    if (this.layout_style_ == "default" || this.layout_style_ == "tree") {
+      this.layoutAsTree(ctx, pending_label);
+    } else if (this.layout_style_ == "list") {
+      this.layoutAsList(ctx, pending_label);
+    }
+  }
 
+  layoutAsTree(ctx, pending_label) {
     // If we're laying out the placeholder, then layout the held item instead and take
     // its size. This is to avoid putting decorators on placeholders.
     if (this.data_item_.local_id == "placeholder") {
@@ -180,6 +198,9 @@ export class LayoutItem {
     const height = Math.max(2 * Theme.padding(this) + Theme.fontSize(this), Theme.minHeight(this));
     this.size_ = [width, height];
     this.layoutDecorators(ctx);
+  }
+
+  layoutAsList(ctx, pending_label) {
   }
 
   layoutDecorators(ctx) {

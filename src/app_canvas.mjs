@@ -28,12 +28,15 @@ export class AppCanvas {
   }
 
   createStylesheet() {
-    console.assert(!document.getElementById("app_canvas_stylesheet"));
+    console.assert((window.process && window.process.env &&
+                    window.process.env.NODE_ENV == "test") ||
+                   !document.getElementById("app_canvas_stylesheet"));
+
     const link = document.createElement("link");
     link.id = "app_canvas_stylesheet";
     link.rel = "stylesheet";
     link.type = "text/css";
-    link.href = "stylesheets/app_canvas.css";
+    link.href = "stylesheets/app_canvas.css?a=" + (new Date()).valueOf();
     link.media = "all";
     document.head.appendChild(link);
   }

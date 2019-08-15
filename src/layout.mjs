@@ -36,6 +36,10 @@ export class Layout {
   get needs_layout() {
     return this.needs_layout_;
   }
+  set needs_layout(v) {
+    console.assert(v);
+    this.needs_layout_ = v;
+  }
 
   ////////////////////////////
   // Queries 
@@ -103,7 +107,7 @@ export class Layout {
     // TODO(vmpstr): Since the ID may be prefixed, need to figure out the
     // blocking stuff. Probably LayoutItem needs to convert blocked/blocking
     // ids to correct prefix based on item type.
-    this.items_.push(new LayoutItem(item, position));
+    this.items_.push(new LayoutItem(this, item, position));
     this.last_item_ = this.items_[this.items_.length - 1];
     // Need to layout immediately, since we might be placing an edit
     // label input right away.
@@ -356,7 +360,7 @@ export class Layout {
   addPlaceholder(held_item, parent, after_child) {
     console.assert(!this.placeholder_);
     this.placeholder_ = new LayoutItem(
-      new PlaceholderItem(held_item, parent), [0, 0]);
+      this, new PlaceholderItem(held_item, parent), [0, 0]);
     this.placeholder_.parent = parent;
     this.placeholder_.children = [];
     this.insertChild(parent, after_child, this.placeholder_);
