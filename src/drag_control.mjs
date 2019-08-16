@@ -52,13 +52,22 @@ export class DragControl {
       this.layout_.removePlaceholder();
       return true;
     }
-    let closest = candidates[0];
-    for (let i = 1; i < candidates.length; ++i) {
-      if ((candidates[i].position[1] > closest.position[1] && candidates[i].id != "placeholder") || closest.id == "placeholder")
-        closest = candidates[i];
-    }
+    let closest = undefined;
+    for (let i = 0; i < candidates.length; ++i) {
+      // If the candidate is a child of the dragged item, then it's actually
+      // hidden. We shouldn't try to root to hidden items. (this is true even if
+      // it's user hidden).
+      if (candidates[i].hide)
+        continue;
 
-    if (closest.id == "placeholder")
+      if (!closest ||
+          (candidates[i].position[1] > closest.position[1] &&
+           candidates[i].id != "placeholder") ||
+          closest.id == "placeholder") {
+        closest = candidates[i];
+      }
+    }
+    if (!closest || closest.id == "placeholder")
       return true;
     const childIndent = Math.min(Theme.childIndent(this.drag_item_) * 0.4, closest.size[0] * 0.5);
     this.layout_.removePlaceholder();

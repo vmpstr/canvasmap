@@ -3,11 +3,13 @@ import { Point } from '../src/geometry/point.mjs';
 import { AppCanvas } from '../src/app_canvas.mjs';
 import { Theme } from '../src/theme.mjs';
 import { Rect } from '../src/geometry/rect.mjs';
+import { Layout } from '../src/layout.mjs';
 
 describe("LayoutItem", () => {
   it("has a constructor", () => {
     const construct = jest.fn((item) => expect(item).toBeDefined());
     const item = new LayoutItem(
+      new Layout(),
       {
         local_id: 7,
         id_namespace: "hello",
@@ -31,6 +33,7 @@ describe("LayoutItem", () => {
   it("can layout", () => {
     const app = new AppCanvas();
     const item = new LayoutItem(
+      new Layout(app.ctx),
       {
         local_id: 8,
         id_namespace: "namespace",
@@ -58,6 +61,7 @@ describe("LayoutItem", () => {
   it("needs layout on label change", () => {
     const app = new AppCanvas();
     const item = new LayoutItem(
+      new Layout(app.ctx),
       {
         local_id: 8,
         id_namespace: "namespace",
@@ -92,6 +96,7 @@ describe("LayoutItem", () => {
   it("needs layout on position change", () => {
     const app = new AppCanvas();
     const item = new LayoutItem(
+      new Layout(app.ctx),
       {
         local_id: 8,
         id_namespace: "namespace",
@@ -125,6 +130,7 @@ describe("LayoutItem", () => {
   it("needs layout on layout_style change", () => {
     const app = new AppCanvas();
     const item = new LayoutItem(
+      new Layout(app.ctx),
       {
         local_id: 8,
         id_namespace: "namespace",
@@ -158,6 +164,7 @@ describe("LayoutItem", () => {
   it("can layout with pending label", () => {
     const app = new AppCanvas();
     const item = new LayoutItem(
+      new Layout(app.ctx),
       {
         local_id: 8,
         id_namespace: "namespace",
@@ -186,11 +193,13 @@ describe("LayoutItem", () => {
   it("can layout as a placeholder", () => {
     const app = new AppCanvas();
     const held_item = new LayoutItem(
+      new Layout(app.ctx),
       {
         construct: jest.fn()
       }, new Point([1, 2]));
 
     const item = new LayoutItem(
+      new Layout(app.ctx),
       {
         local_id: "placeholder",
         construct: jest.fn(),

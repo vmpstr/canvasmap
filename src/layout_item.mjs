@@ -183,6 +183,31 @@ export class LayoutItem {
     }
   }
 
+  // Lays out and optionally positions the item, and returns the y offset
+  // of the bottom of the last child in this item (ie the spot where the next
+  // item can go)
+  layoutSubtree(ctx, start_point) {
+    // If we're given a start_point, it means our position is restricted
+    // by the parent.
+    if (start_point !== undefined) {
+      console.assert(this.parent);
+      this.position = start_point;
+    }
+    // Note that we have to layout after positioning, so that decorators
+    // can properly position themselves during layout.
+    this.layout(ctx);
+
+
+    let child_x = this.position[0] + Theme.childIndent(this);
+    let child_y = this.position[1] + this.size[1] + Theme.childSpacing(this);
+
+    for (let i = 0; i < this.children.length; ++i) {
+      child_y = this.children[i].layoutSubtree(ctx, [child_x, child_y]);
+      child_y += Theme.childSpacing(this);
+    }
+    return child_y - Theme.childSpacing(this);
+  }
+
   layoutAsTree(ctx, pending_label) {
     // If we're laying out the placeholder, then layout the held item instead and take
     // its size. This is to avoid putting decorators on placeholders.
