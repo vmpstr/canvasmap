@@ -9,9 +9,13 @@ export class DetailsControl {
   createDetailsPane() {
     this.createStylesheet();
 
+    this.pane_toggle_ = document.createElement("div");
+    this.pane_toggle_.classList.add("details_pane_toggle", "initial");
+    this.pane_toggle_.addEventListener("click", () => { this.toggleDetailsPane(); });
+    document.body.appendChild(this.pane_toggle_);
+
     this.pane_ = document.createElement("div");
     this.pane_.classList.add("details_pane", "initial");
-
     this.pane_.appendChild(this.createLayoutStyleOptions());
 
     document.body.appendChild(this.pane_);
@@ -47,6 +51,21 @@ export class DetailsControl {
     document.head.appendChild(link);
   }
 
+  toggleDetailsPane() {
+    if (this.pane_toggle_.classList.contains("hidden") ||
+        this.pane_toggle_.classList.contains("initial")) {
+      this.pane_.classList.remove("initial", "hidden");
+      this.pane_.classList.add("visible");
+      this.pane_toggle_.classList.remove("initial", "hidden");
+      this.pane_toggle_.classList.add("visible");
+    } else {
+      this.pane_.classList.remove("initial", "visible");
+      this.pane_.classList.add("hidden");
+      this.pane_toggle_.classList.remove("initial", "visible");
+      this.pane_toggle_.classList.add("hidden");
+    }
+  }
+
   layoutStyleChanged(new_value) {
     if (this.selection_) {
       this.selection_.layout_style = new_value;
@@ -56,16 +75,11 @@ export class DetailsControl {
 
   handleNewSelection(item) {
     this.selection_ = item;
-    this.pane_.classList.remove("initial", "hidden");
-    this.pane_.classList.add("visible");
-
     this.updateDetails();
   }
 
   removeSelection() {
     this.selection_ = undefined;
-    this.pane_.classList.remove("initial", "visible");
-    this.pane_.classList.add("hidden");
   }
 
   updateDetails() {
