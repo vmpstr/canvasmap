@@ -1,0 +1,69 @@
+<!doctype html>
+
+<style>
+* {
+  user-select: none;
+}
+
+#node {
+  border: 1px solid black;
+  border-radius: 10px;
+  width: 130px;
+  height: 40px;
+
+  position: absolute;
+  top: 350px;
+  left: 150px;
+
+  display: flex;
+  justify-content: center;
+}
+
+#node > #label {
+  margin: auto;
+  display: table-cell;
+}
+
+#node > #decor {
+  position: absolute;
+  right: 0;
+  left: 0;
+  top: 0;
+  transform: translateY(-50%);
+  text-align: center;
+  border: 1px solid blue;
+}
+
+
+</style>
+
+<div draggable=true ondragstart="dragstart(event)" ondrag="drag(event)" ondragend="dragend(event)" id=node>
+  <div id=label ondblclick="dclick(event)">This is a node</div>
+  <div id=decor>X</div>
+</div>
+
+<script>
+function dragstart(e) {
+  console.log(e);
+  e.srcElement.style.opacity = "20%";
+}
+
+function drag(e) {
+  //console.log(e);
+}
+
+function dragend(e) {
+  console.log(e);
+  e.srcElement.style.opacity = "";
+}
+
+function dclick(e) {
+  e.srcElement.contentEditable = "true";
+  let range = document.createRange();//Create a range (a range is a like the selection but invisible)
+  range.selectNodeContents(e.srcElement);//Select the entire contents of the element with the range
+  //range.collapse(false);//collapse the range to the end point. false means collapse to end rather than the start
+  let selection = window.getSelection();//get the selection object (allows you to change selection)
+  selection.removeAllRanges();//remove any selections already made
+  selection.addRange(range);
+}
+</script>
