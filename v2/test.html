@@ -5,7 +5,7 @@
   user-select: none;
 }
 
-#node {
+.node {
   border: 1px solid black;
   border-radius: 10px;
   width: 130px;
@@ -19,12 +19,12 @@
   justify-content: center;
 }
 
-#node > #label {
+.node > .label {
   margin: auto;
   display: table-cell;
 }
 
-#node > #decor {
+.node > .decor {
   position: absolute;
   right: 0;
   left: 0;
@@ -37,33 +37,102 @@
 
 </style>
 
-<div draggable=true ondragstart="dragstart(event)" ondrag="drag(event)" ondragend="dragend(event)" id=node>
-  <div id=label ondblclick="dclick(event)">This is a node</div>
-  <div id=decor>X</div>
+<div draggable=true ondragstart="dragstart(event)" ondrag="drag(event)" ondragend="dragend(event)" class=node>
+  <div class=label ondblclick="dclick(event)">This is a node</div>
+</div>
+
+<div draggable=true ondragstart="dragstart(event)" ondrag="drag(event)" ondragend="dragend(event)" class=node>
+  <div class=label ondblclick="dclick(event)">This is a node</div>
+  <div class=decor>XXX</div>
 </div>
 
 <script>
+var offsetX = 0;
+var offsetY = 0;
 function dragstart(e) {
-  console.log(e);
+  let style = e.srcElement.getBoundingClientRect();
+  offsetX = style.x - e.clientX;
+  offsetY = style.y - e.clientY;
+  //console.log(style.x + " " + style.y);
+  //console.log(e.clientX + " " + e.clientY);
+  //console.log(e);
   e.srcElement.style.opacity = "20%";
 }
 
+function constrain(target) {
+  let target_bounds = target.getBoundingClientRect();
+  const nodes = document.getElementsByClassName("node");
+  for (let i = 0; i < nodes.length; ++i) {
+    // Can't constrain by yourself
+    if (target === nodes[i])
+      continue;
+
+    // TODO(vmpstr): Skip child constrain?
+
+
+
+    let node_bounds = nodes[i].getBoundingClientRect();
+    let mid = (node_bounds.left + node_bounds.right) / 2;
+    if (mid < target_bounds.left || mid > target_bounds.right)
+      continue;
+
+    if (node_bounds.bottom > target_bounds.bottom)
+      continue;
+
+    if (target_bounds.top - node_bounds.bottom > 50)
+      continue;
+
+    // TODO(vmpstr): Find closest instead?
+
+    let newx = node_bounds.left + 30;
+    let newy = node_bounds.bottom + 20;
+    target.style.left = newx + "px";
+    target.style.top = newy + "px";
+    break;
+  }
+}
+
 function drag(e) {
+  e.preventDefault();
   //console.log(e);
+  if (e.clientX != 0 || e.clientY != 0) {
+    e.target.style.left = (offsetX + e.clientX) + "px";
+    e.target.style.top = (offsetY + e.clientY) + "px";
+  }
+  constrain(e.target);
 }
 
 function dragend(e) {
-  console.log(e);
+  e.preventDefault();
+  //console.log(e);
   e.srcElement.style.opacity = "";
 }
 
 function dclick(e) {
   e.srcElement.contentEditable = "true";
-  let range = document.createRange();//Create a range (a range is a like the selection but invisible)
-  range.selectNodeContents(e.srcElement);//Select the entire contents of the element with the range
-  //range.collapse(false);//collapse the range to the end point. false means collapse to end rather than the start
-  let selection = window.getSelection();//get the selection object (allows you to change selection)
-  selection.removeAllRanges();//remove any selections already made
+  let range = document.createRange();
+  range.selectNodeContents(e.srcElement);
+  let selection = window.getSelection();
+  selection.removeAllRanges();
   selection.addRange(range);
+
+  e.srcElement.addEventListener("keydown", handleEnter);
+  e.srcElement.addEventListener("focusout", handleEnter);
 }
+
+function handleEnter(e) {
+  if (e.type === "keydown") {
+    if (e.key !== "Enter") 
+      return;
+  }
+  e.target.removeEventListener("keydown", handleEnter);
+  e.target.removeEventListener("focusout", handleEnter);
+  e.target.contentEditable = false;
+  e.preventDefault();
+}
+
+
+document.addEventListener("dragover", (e) => {
+  e.preventDefault();
+});
 </script>
