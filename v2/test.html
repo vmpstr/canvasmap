@@ -37,11 +37,11 @@
 
 </style>
 
-<div draggable=true ondragstart="dragstart(event)" ondrag="drag(event)" ondragend="dragend(event)" class=node>
+<div draggable=true ondblclick="dclick(event)" ondragstart="dragstart(event)" ondrag="drag(event)" ondragend="dragend(event)" class=node>
   <div class=label ondblclick="dclick(event)">This is a node</div>
 </div>
 
-<div draggable=true ondragstart="dragstart(event)" ondrag="drag(event)" ondragend="dragend(event)" class=node>
+<div draggable=true ondblclick="dclick(event)" ondragstart="dragstart(event)" ondrag="drag(event)" ondragend="dragend(event)" class=node>
   <div class=label ondblclick="dclick(event)">This is a node</div>
   <div class=decor>XXX</div>
 </div>
@@ -109,15 +109,23 @@ function dragend(e) {
 }
 
 function dclick(e) {
-  e.srcElement.contentEditable = "true";
+  let el = e.srcElement;
+  if (!el.classList.contains("label")) {
+    if (el.classList.contains("node")) {
+      el = el.getElementsByClassName("label")[0];
+    }
+  }
+  el.contentEditable = "true";
   let range = document.createRange();
-  range.selectNodeContents(e.srcElement);
+  range.selectNodeContents(el);
   let selection = window.getSelection();
   selection.removeAllRanges();
   selection.addRange(range);
 
   e.srcElement.addEventListener("keydown", handleEnter);
   e.srcElement.addEventListener("focusout", handleEnter);
+
+  e.preventDefault();
 }
 
 function handleEnter(e) {
