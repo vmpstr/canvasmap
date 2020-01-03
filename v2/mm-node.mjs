@@ -1,8 +1,5 @@
 window.customElements.define("mm-node", class extends HTMLElement {
   #root
-  #endEditHandler
-  #zwspCode
-
 
   constructor() {
     super();
@@ -35,12 +32,33 @@ window.customElements.define("mm-node", class extends HTMLElement {
     `;
     this.setAttribute("draggable", true);
     this.addEventListener("dblclick", () => { this.startLabelEdit(); });
-    this.#endEditHandler = (e) => { this.endLabelEdit(e); }
   }
 
-  startLabelEdit() {
+  #endLabelEdit = (e) => {
+    if (e.type === "keydown") {
+      if (e.key !== "Enter") 
+        return;
+    }
+    e.target.removeEventListener("keydown", this.#endLabelEdit);
+    e.target.removeEventListener("focusout", this.#endLabelEdit);
+    e.target.contentEditable = false;
+    // Restore ellipsis if necessary.
+    e.target.style.overflow = "";
+
+    // If we have nothing, keep the height with zero-width space.
+    if(e.target.innerText == "")
+      e.target.innerHTML = '&#x200b;'
+
+    e.preventDefault();
+  };
+
+  startLabelEdit = () => {
     const el = this.#root.querySelector(".label");
 
+    // This is somewhat optional, but if they only thing we have is
+    // a zero-width space, then selection is empty but the cursor
+    // doesn't blink... So instead, just clear it so we see the
+    // cursor blinking.
     if (el.innerText == '\u200b')
       el.innerHTML = "";
 
@@ -60,23 +78,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
     selection.addRange(range);
 
     // Add event listeners so we can stop editing.
-    el.addEventListener("keydown", this.#endEditHandler);
-    el.addEventListener("focusout", this.#endEditHandler);
-  }
-
-  endLabelEdit(e) {
-    if (e.type === "keydown") {
-      if (e.key !== "Enter") 
-        return;
-    }
-    e.target.removeEventListener("keydown", this.#endEditHandler);
-    e.target.removeEventListener("focusout", this.#endEditHandler);
-    e.target.contentEditable = false;
-    e.target.style.overflow = "";
-
-    if(e.target.innerText == "")
-      e.target.innerHTML = '&#x200b;'
-
-    e.preventDefault();
+    el.addEventListener("keydown", this.#endLabelEdit);
+    el.addEventListener("focusout", this.#endLabelEdit);
   }
 });
