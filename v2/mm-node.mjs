@@ -1,11 +1,11 @@
 window.customElements.define("mm-node", class extends HTMLElement {
-  #root
+  #map
 
   constructor() {
     super();
 
-    this.#root = this.attachShadow({ mode: 'open' });
-    this.#root.innerHTML = `
+    const shadow = this.attachShadow({ mode: 'open' });
+    shadow.innerHTML = `
       <style>
         :host {
           border: 1px solid black;
@@ -13,8 +13,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
           padding: 10px;
 
           position: absolute;
-          top: 350px;
-          left: 150px;
 
           display: flex;
           justify-content: center;
@@ -32,6 +30,10 @@ window.customElements.define("mm-node", class extends HTMLElement {
     `;
     this.setAttribute("draggable", true);
     this.addEventListener("dblclick", () => { this.startLabelEdit(); });
+  }
+
+  setMap = (map) => {
+    this.#map = map;
   }
 
   #endLabelEdit = (e) => {
@@ -53,7 +55,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
   };
 
   startLabelEdit = () => {
-    const el = this.#root.querySelector(".label");
+    const el = this.shadowRoot.querySelector(".label");
 
     // This is somewhat optional, but if they only thing we have is
     // a zero-width space, then selection is empty but the cursor
