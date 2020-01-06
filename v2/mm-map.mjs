@@ -120,7 +120,6 @@ window.customElements.define("mm-map", class extends HTMLElement {
     if (!nodes)
       return;
     nodes = JSON.parse(nodes);
-    console.log(nodes);
     for (let i = 0; i < nodes.length; ++i) {
       this.#addNodeAt(nodes[i].center[0], nodes[i].center[1], nodes[i].label);
     }
