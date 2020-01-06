@@ -17,3 +17,14 @@ body {
 
 <script src=mm-map.mjs></script>
 <script src=mm-node.mjs></script>
+
+<script>
+function handleKeyDown(e) {
+  const map = document.getElementsByTagName("mm-map")[0];
+  map.handleKeyDown(e);
+}
+
+customElements.whenDefined("mm-map").then(() => {
+  window.addEventListener("keydown", handleKeyDown);
+});
+</script>
