@@ -1,6 +1,7 @@
 window.customElements.define("mm-map", class extends HTMLElement {
-  #nodes
+  #nodes = [];
   #selectedNode = null;
+  #storage = null;
 
   constructor() {
     super();
@@ -39,7 +40,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
       this.#onDoubleClick(e);
     });
 
-    this.addEventListener
+    setInterval(() => { this.#saveToStorage(); }, 1000);
   }
 
   #onSlotChange = (e) => {
@@ -79,17 +80,23 @@ window.customElements.define("mm-map", class extends HTMLElement {
   }
 
   #onDoubleClick = (e) => {
+    const node = this.#addNodeAt(e.clientX, e.clientY);
+    node.select();
+    node.startLabelEdit();
+    e.stopPropagation();
+  }
+
+  #addNodeAt = (x, y, label) => {
     const node = document.createElement("mm-node");
     node.setMap(this);
+    node.label = label || "new task";
     // Append to the light dom so it's inspectable and gets assigned
     // to the slot.
     this.appendChild(node);
     const rect = node.getBoundingClientRect();
-    node.style.left = (e.clientX - 0.5 * rect.width) + "px";
-    node.style.top = (e.clientY - 0.5 * rect.height) + "px";
-    node.select();
-    node.startLabelEdit();
-    e.stopPropagation();
+    node.style.left = (x - 0.5 * rect.width) + "px";
+    node.style.top = (y - 0.5 * rect.height) + "px";
+    return node;
   }
 
   handleKeyDown = (e) => {
@@ -100,5 +107,38 @@ window.customElements.define("mm-map", class extends HTMLElement {
       node.deselect();
       node.remove();
     }
+  }
+
+  setStorage = (storage) => {
+    this.#storage = storage;
+  }
+
+  loadFromStorage = () => {
+    console.assert(this.#storage);
+
+    let nodes = this.#storage.getItem("nodes");
+    if (!nodes)
+      return;
+    nodes = JSON.parse(nodes);
+    console.log(nodes);
+    for (let i = 0; i < nodes.length; ++i) {
+      this.#addNodeAt(nodes[i].center[0], nodes[i].center[1], nodes[i].label);
+    }
+  }
+
+  #saveToStorage = () => {
+    if (!this.#storage)
+      return;
+
+    let nodes = [];
+    for (let i = 0; i < this.#nodes.length; ++i) {
+      const rect = this.#nodes[i].getBoundingClientRect();
+      const label = this.#nodes[i].label || "";
+      nodes.push({
+        "center" : [rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height],
+        "label" : label
+      });
+    }
+    this.#storage.setItem("nodes", JSON.stringify(nodes));
   }
 });

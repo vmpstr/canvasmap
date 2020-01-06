@@ -31,7 +31,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
           text-overflow: ellipsis;
         }
       </style>
-      <div class=label>new task</div>
+      <div class=label>${this.label}</div>
     `;
     this.setAttribute("draggable", true);
     this.addEventListener("dblclick", (e) => {
@@ -75,6 +75,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
     if(e.target.innerText == "")
       e.target.innerHTML = '&#x200b;'
 
+    this.label = e.target.innerText;
     e.preventDefault();
   };
 
