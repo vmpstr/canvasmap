@@ -3,6 +3,11 @@ window.customElements.define("mm-map", class extends HTMLElement {
   #selectedNode = null;
   #storage = null;
 
+  get adoptOffset() {
+    const rect = this.getBoundingClientRect();
+    return [rect.x, rect.y];
+  }
+
   constructor() {
     super();
   }
@@ -15,6 +20,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
     shadow.innerHTML = `
       <style>
         :host {
+          left: 50px;
           display: block;
           width: 100%;
           height: 100%;
@@ -47,9 +53,10 @@ window.customElements.define("mm-map", class extends HTMLElement {
     let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
     this.#nodes = [];
     for (let i = 0; i < nodes.length; ++i) {
-      if (nodes[i].tagName && nodes[i].tagName.toLowerCase() === "mm-node") {
+      if (nodes[i].tagName && nodes[i].tagName.toLowerCase().startsWith("mm-")) {
         this.#nodes.push(nodes[i]);
         nodes[i].setMap(this);
+        nodes[i].setParent(this);
       }
     }
   }
@@ -94,8 +101,8 @@ window.customElements.define("mm-map", class extends HTMLElement {
     // to the slot.
     this.appendChild(node);
     const rect = node.getBoundingClientRect();
-    node.style.left = (x - 0.5 * rect.width) + "px";
-    node.style.top = (y - 0.5 * rect.height) + "px";
+    node.style.left = (x - 0.5 * rect.width - this.adoptOffset[0]) + "px";
+    node.style.top = (y - 0.5 * rect.height - this.adoptOffset[1]) + "px";
     return node;
   }
 
@@ -139,5 +146,19 @@ window.customElements.define("mm-map", class extends HTMLElement {
       });
     }
     this.#storage.setItem("nodes", JSON.stringify(nodes));
+  }
+
+  onDraggedChild = (child) => {
+    const rect = child.getBoundingClientRect();
+    for (let i = 0; i < this.#nodes.length; ++i) {
+      if (this.#nodes[i] == child)
+        continue;
+      const node_rect = this.#nodes[i].getBoundingClientRect();
+      const mid = rect.x + 0.5 * rect.height;
+      if (mid > node_rect.x && mid < node_rect.x + node_rect.width &&
+          rect.y > node_rect.y && rect.y < node_rect.y + node_rect.height + 15) {
+        console.log('child under node ' + i);
+      }
+    }
   }
 });

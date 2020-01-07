@@ -1,5 +1,11 @@
 window.customElements.define("mm-node", class extends HTMLElement {
   #map
+  #parent
+
+  get adoptOffset() {
+    const rect = this.getBoundingClientRect();
+    return [rect.x, rect.y];
+  }
 
   constructor() {
     super();
@@ -56,6 +62,10 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
   setMap = (map) => {
     this.#map = map;
+  }
+
+  setParent = (parent) => {
+    this.#parent = parent;
   }
 
   #endLabelEdit = (e) => {
@@ -129,9 +139,14 @@ window.customElements.define("mm-node", class extends HTMLElement {
   #onDrag = (e) => {
     if (e.clientX == 0 && e.clientY == 0)
       return;
-    this.style.left = (this.#dragOffset[0] + e.clientX) + "px";
-    this.style.top = (this.#dragOffset[1] + e.clientY) + "px";
+    // Have to get a new adoptOffset every time, since the #parent pointer may
+    // change in response to onDraggedChild
+    const adoptOffset = this.#parent.adoptOffset;
+    this.style.left = (this.#dragOffset[0] + e.clientX - adoptOffset[0]) + "px";
+    this.style.top = (this.#dragOffset[1] + e.clientY - adoptOffset[1]) + "px";
+    this.#parent.onDraggedChild(this);
   }
+
   #onDragEnd = (e) => {
     this.style.opacity = "";
   }
