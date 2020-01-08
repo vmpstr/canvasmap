@@ -1,6 +1,7 @@
 window.customElements.define("mm-node", class extends HTMLElement {
   #map
   #parent
+  #children = []
 
   get adoptOffset() {
     const rect = this.getBoundingClientRect();
@@ -19,27 +20,35 @@ window.customElements.define("mm-node", class extends HTMLElement {
     shadow.innerHTML = `
       <style>
         :host {
-          border: 1px solid black;
-          border-radius: 10px;
-          padding: 10px;
-
-          position: absolute;
-
-          display: flex;
-          justify-content: center;
+          display: block;
         }
+
         :host > .label {
-          margin: auto;
-          display: table-cell;
           width: 100%;
+          max-width: min-content;
+
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
+          border: 1px solid black;
+          border-radius: 10px;
+          padding: 10px;
+        }
+        :host > .child_area {
+          position: relative;
+          contain: layout;
+        }
+        ::slotted(*) {
+          margin-top: 5px;
+          margin-left: 30px;
         }
       </style>
-      <div class=label>${this.label}</div>
+        <div class=label>${this.label}</div>
+      <div class=child_area>
+        <slot></slot>
+      </div>
     `;
-    this.setAttribute("draggable", true);
+    this.shadowRoot.querySelectorAll(".label")[0].setAttribute("draggable", true);
     this.addEventListener("dblclick", (e) => {
       this.startLabelEdit();
       e.stopPropagation();
@@ -79,6 +88,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
     e.target.contentEditable = false;
     // Restore ellipsis if necessary.
     e.target.style.overflow = "";
+    e.target.style.width = "";
 
     e.target.innerText = e.target.innerText.trim();
     // If we have nothing, keep the height with zero-width space.
@@ -104,6 +114,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
     el.contentEditable = true;
     // Prevent ellipsis editing.
     el.style.overflow = "visible";
+    el.style.width = "min-content";
 
     // Create a new range for all of the contents.
     const range = document.createRange();
@@ -135,6 +146,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.#dragOffset[0] = rect.x - e.clientX;
     this.#dragOffset[1] = rect.y - e.clientY;
     this.style.opacity = "20%";
+    e.stopPropagation();
   }
   #onDrag = (e) => {
     if (e.clientX == 0 && e.clientY == 0)
@@ -145,9 +157,53 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.style.left = (this.#dragOffset[0] + e.clientX - adoptOffset[0]) + "px";
     this.style.top = (this.#dragOffset[1] + e.clientY - adoptOffset[1]) + "px";
     this.#parent.onDraggedChild(this);
+    e.stopPropagation();
   }
 
   #onDragEnd = (e) => {
     this.style.opacity = "";
+    e.stopPropagation();
   }
+
+  onDraggedChild = (child) => {
+    const rect = this.getBoundingClientRect();
+    const child_rect = child.getBoundingClientRect();
+    // TODO(vmpstr): If the child is rel positioned, then the self dragging
+    // is different, since we're not really considering absolute offset here
+    // in other words adoptOffset is... wrong?
+    if (child_rect.left > rect.right ||
+        child_rect.right < rect.left ||
+        child_rect.top > rect.bottom ||
+        child_rect.bottom < rect.top) {
+      console.log('unadopting child, my');
+      console.log(child_rect);
+      console.log(rect);
+      child.style.position = '';
+      this.#parent.adoptNode(child);
+      for (let i = 0; i < this.#children.length; ++i) {
+        if (this.#children[i] == child) {
+          this.#children.splice(i, 1);
+          break;
+        }
+      }
+    } else {
+      child.style.left = '';
+      child.style.top = '';
+    }
+      
+  }
+
+  adoptNode = (child) => {
+    const rect = child.getBoundingClientRect();
+    child.remove();
+    this.appendChild(child);
+    child.setParent(this);
+    //child.style.left = (rect.x - this.adoptOffset[0]) + "px";
+    //child.style.top = (rect.y - this.adoptOffset[1]) + "px";
+      child.style.left = '';
+      child.style.top = '';
+    child.style.position = 'relative';
+    this.#children.push(child);
+  }
+
 });

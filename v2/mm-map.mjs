@@ -20,12 +20,17 @@ window.customElements.define("mm-map", class extends HTMLElement {
     shadow.innerHTML = `
       <style>
         :host {
+          display: block;
+
           left: 50px;
           display: block;
           width: 100%;
           height: 100%;
           background: lightblue;
           position: relative;
+        }
+        ::slotted(*) {
+          position: absolute;
         }
       </style>
       <slot></slot>
@@ -154,11 +159,19 @@ window.customElements.define("mm-map", class extends HTMLElement {
       if (this.#nodes[i] == child)
         continue;
       const node_rect = this.#nodes[i].getBoundingClientRect();
-      const mid = rect.x + 0.5 * rect.height;
-      if (mid > node_rect.x && mid < node_rect.x + node_rect.width &&
+      if (rect.x > node_rect.x && rect.x < node_rect.x + node_rect.width &&
           rect.y > node_rect.y && rect.y < node_rect.y + node_rect.height + 15) {
-        console.log('child under node ' + i);
+        this.#nodes[i].adoptNode(child);
       }
     }
+  }
+
+  adoptNode = (child) => {
+    const rect = child.getBoundingClientRect();
+    child.remove();
+    this.appendChild(child);
+    child.setParent(this);
+    child.style.left = (rect.x - this.adoptOffset[0]) + "px";
+    child.style.top = (rect.y - this.adoptOffset[1]) + "px";
   }
 });
