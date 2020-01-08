@@ -4,7 +4,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
   #children = []
 
   get adoptOffset() {
-    const rect = this.getBoundingClientRect();
+    const rect = this.shadowRoot.querySelector('.child_area').getBoundingClientRect();
     return [rect.x, rect.y];
   }
 
@@ -21,6 +21,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
       <style>
         :host {
           display: block;
+          background: blue;
         }
 
         :host > .label {
@@ -37,10 +38,15 @@ window.customElements.define("mm-node", class extends HTMLElement {
         :host > .child_area {
           position: relative;
           contain: layout;
+          padding-right: 30px;
+          background: green;
         }
         ::slotted(*) {
+          position: relative;
           margin-top: 5px;
-          margin-left: 30px;
+          left: 30px;
+          width: max-content;
+          background: pink;
         }
       </style>
         <div class=label>${this.label}</div>
@@ -153,7 +159,11 @@ window.customElements.define("mm-node", class extends HTMLElement {
       return;
     // Have to get a new adoptOffset every time, since the #parent pointer may
     // change in response to onDraggedChild
-    const adoptOffset = this.#parent.adoptOffset;
+    //const adoptOffset = this.#parent.adoptOffset;
+    this.style.left = this.style.top = 0;
+    const rect = this.getBoundingClientRect();
+    const adoptOffset = [rect.x, rect.y];
+
     this.style.left = (this.#dragOffset[0] + e.clientX - adoptOffset[0]) + "px";
     this.style.top = (this.#dragOffset[1] + e.clientY - adoptOffset[1]) + "px";
     this.#parent.onDraggedChild(this);
@@ -168,17 +178,21 @@ window.customElements.define("mm-node", class extends HTMLElement {
   onDraggedChild = (child) => {
     const rect = this.getBoundingClientRect();
     const child_rect = child.getBoundingClientRect();
-    // TODO(vmpstr): If the child is rel positioned, then the self dragging
-    // is different, since we're not really considering absolute offset here
-    // in other words adoptOffset is... wrong?
+    console.log('rect child');
+    console.log(rect);
+    console.log(child_rect);
+    const padding_slack = 15;// + (this.#children.length) * 30;
     if (child_rect.left > rect.right ||
         child_rect.right < rect.left ||
-        child_rect.top > rect.bottom ||
+        (child_rect.top - padding_slack) > rect.bottom ||
         child_rect.bottom < rect.top) {
-      console.log('unadopting child, my');
-      console.log(child_rect);
-      console.log(rect);
-      child.style.position = '';
+      console.log('above is out'
+        + (child_rect.left > rect.right) + " "
+        + (child_rect.right < rect.left) + " "
+        + ((child_rect.top - padding_slack) > rect.bottom) + " "
+        + (child_rect.bottom < rect.top) + " ");
+      child.style.left = '';
+      child.style.top = '';
       this.#parent.adoptNode(child);
       for (let i = 0; i < this.#children.length; ++i) {
         if (this.#children[i] == child) {
@@ -187,6 +201,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
         }
       }
     } else {
+      console.log('above is in');
       child.style.left = '';
       child.style.top = '';
     }
@@ -202,7 +217,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
     //child.style.top = (rect.y - this.adoptOffset[1]) + "px";
       child.style.left = '';
       child.style.top = '';
-    child.style.position = 'relative';
     this.#children.push(child);
   }
 

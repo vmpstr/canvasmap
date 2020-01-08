@@ -22,7 +22,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
         :host {
           display: block;
 
-          left: 50px;
+          left: 0px;
           display: block;
           width: 100%;
           height: 100%;
@@ -159,8 +159,11 @@ window.customElements.define("mm-map", class extends HTMLElement {
       if (this.#nodes[i] == child)
         continue;
       const node_rect = this.#nodes[i].getBoundingClientRect();
-      if (rect.x > node_rect.x && rect.x < node_rect.x + node_rect.width &&
-          rect.y > node_rect.y && rect.y < node_rect.y + node_rect.height + 15) {
+      if (rect.left > node_rect.left && rect.left < node_rect.right &&
+          rect.top > node_rect.top && rect.top < node_rect.bottom + 15) {
+        console.log('in');
+        console.log(rect);
+        console.log(node_rect);
         this.#nodes[i].adoptNode(child);
       }
     }
@@ -173,5 +176,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
     child.setParent(this);
     child.style.left = (rect.x - this.adoptOffset[0]) + "px";
     child.style.top = (rect.y - this.adoptOffset[1]) + "px";
+    console.log('adopted');
+    console.log(child.getBoundingClientRect());
   }
 });
