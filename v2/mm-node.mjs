@@ -53,12 +53,13 @@ window.customElements.define("mm-node", class extends HTMLElement {
         <slot></slot>
       </div>
     `;
-    this.shadowRoot.querySelectorAll(".label")[0].setAttribute("draggable", true);
+    const label = this.shadowRoot.querySelector(".label");
+    label.setAttribute("draggable", true);
     this.addEventListener("dblclick", (e) => {
       this.startLabelEdit();
       e.stopPropagation();
     });
-    this.addEventListener("click", (e) => {
+    label.addEventListener("click", (e) => {
       this.select();
       e.stopPropagation();
     });
