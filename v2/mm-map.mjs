@@ -3,11 +3,6 @@ window.customElements.define("mm-map", class extends HTMLElement {
   #selectedNode = null;
   #storage = null;
 
-  get adoptOffset() {
-    const rect = this.getBoundingClientRect();
-    return [rect.x, rect.y];
-  }
-
   constructor() {
     super();
   }
@@ -22,11 +17,10 @@ window.customElements.define("mm-map", class extends HTMLElement {
         :host {
           display: block;
 
-          left: 0px;
-          display: block;
           width: 100%;
           height: 100%;
           background: lightblue;
+
           position: relative;
         }
         ::slotted(*) {
@@ -40,7 +34,6 @@ window.customElements.define("mm-map", class extends HTMLElement {
       const slot = shadow.querySelector("slot");
       slot.addEventListener("slotchange", this.#onSlotChange);
       this.#onSlotChange();
-      this.#doInitialLayout();
     });
 
     this.addEventListener("click", (e) => {
@@ -63,15 +56,6 @@ window.customElements.define("mm-map", class extends HTMLElement {
         nodes[i].setMap(this);
         nodes[i].setParent(this);
       }
-    }
-  }
-
-  #doInitialLayout = () => {
-    let y = 0;
-    for (let i = 0; i < this.#nodes.length; ++i) {
-      this.#nodes[i].style.top = y + "px";
-      this.#nodes[i].style.left = "0px";
-      y += this.#nodes[i].getBoundingClientRect().height;
     }
   }
 
@@ -106,8 +90,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
     // to the slot.
     this.appendChild(node);
     const rect = node.getBoundingClientRect();
-    node.style.left = (x - 0.5 * rect.width - this.adoptOffset[0]) + "px";
-    node.style.top = (y - 0.5 * rect.height - this.adoptOffset[1]) + "px";
+    node.position = [x - 0.5 * rect.width, y - 0.5 * rect.height];
     return node;
   }
 
@@ -161,22 +144,14 @@ window.customElements.define("mm-map", class extends HTMLElement {
       const node_rect = this.#nodes[i].getBoundingClientRect();
       if (rect.left > node_rect.left && rect.left < node_rect.right &&
           rect.top > node_rect.top && rect.top < node_rect.bottom + 15) {
-        console.log('in');
-        console.log(rect);
-        console.log(node_rect);
         this.#nodes[i].adoptNode(child);
       }
     }
   }
 
   adoptNode = (child) => {
-    const rect = child.getBoundingClientRect();
     child.remove();
+    // This will trigger onSlotChange, which will take care the rest of state.
     this.appendChild(child);
-    child.setParent(this);
-    child.style.left = (rect.x - this.adoptOffset[0]) + "px";
-    child.style.top = (rect.y - this.adoptOffset[1]) + "px";
-    console.log('adopted');
-    console.log(child.getBoundingClientRect());
   }
 });

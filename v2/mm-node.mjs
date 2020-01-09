@@ -2,11 +2,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
   #map
   #parent
   #children = []
-
-  get adoptOffset() {
-    const rect = this.shadowRoot.querySelector('.child_area').getBoundingClientRect();
-    return [rect.x, rect.y];
-  }
+  #position = [0, 0]
 
   constructor() {
     super();
@@ -21,32 +17,35 @@ window.customElements.define("mm-node", class extends HTMLElement {
       <style>
         :host {
           display: block;
-          background: blue;
         }
-
-        :host > .label {
+        .label {
           width: 100%;
           max-width: min-content;
 
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
+
           border: 1px solid black;
           border-radius: 10px;
           padding: 10px;
         }
-        :host > .child_area {
+        .child_area {
           position: relative;
           contain: layout;
-          padding-right: 30px;
-          background: green;
+          margin-left: 30px;
         }
         ::slotted(*) {
           position: relative;
           margin-top: 5px;
-          left: 30px;
           width: max-content;
-          background: pink;
+        }
+
+        :host(.selected) > .label {
+          border-color: blue;
+        }
+        :host(.dragged) {
+          opacity: 20%;
         }
       </style>
         <div class=label>${this.label}</div>
@@ -81,6 +80,32 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
   setParent = (parent) => {
     this.#parent = parent;
+    this.#computeStyleFromPosition();
+  }
+
+  set position(v) {
+    this.#position = v;
+    this.#computeStyleFromPosition();
+  }
+
+  get position() {
+    return this.#position;
+  }
+
+  resetPosition = () => {
+    this.style.left = '0';
+    this.style.top = '0';
+    const rect = this.getBoundingClientRect();
+    this.position = [rect.x, rect.y];
+  }
+
+  #computeStyleFromPosition = () => {
+    console.assert(getComputedStyle(this).getPropertyValue("position") != "static");
+    this.style.left = '0';
+    this.style.top = '0';
+    const rect = this.getBoundingClientRect();
+    this.style.left = (this.#position[0] - rect.x) + "px";
+    this.style.top = (this.#position[1] - rect.y) + "px";
   }
 
   #endLabelEdit = (e) => {
@@ -138,12 +163,12 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
   select = () => {
     this.#map.nodeSelected(this);
-    this.style.borderColor = "blue";
+    this.classList.add('selected');
   }
 
   deselect = () => {
     this.#map.nodeDeselected(this);
-    this.style.borderColor = "";
+    this.classList.remove('selected');
   }
 
   #dragOffset = [0, 0];
@@ -151,48 +176,35 @@ window.customElements.define("mm-node", class extends HTMLElement {
     const rect = this.getBoundingClientRect();
     this.#dragOffset[0] = rect.x - e.clientX;
     this.#dragOffset[1] = rect.y - e.clientY;
-    this.style.opacity = "20%";
+    this.classList.add('dragged');
     e.stopPropagation();
   }
   #onDrag = (e) => {
     if (e.clientX == 0 && e.clientY == 0)
       return;
-    // Have to get a new adoptOffset every time, since the #parent pointer may
-    // change in response to onDraggedChild
-    //const adoptOffset = this.#parent.adoptOffset;
     this.style.left = this.style.top = 0;
     const rect = this.getBoundingClientRect();
     const adoptOffset = [rect.x, rect.y];
 
-    this.style.left = (this.#dragOffset[0] + e.clientX - adoptOffset[0]) + "px";
-    this.style.top = (this.#dragOffset[1] + e.clientY - adoptOffset[1]) + "px";
+    this.position = [this.#dragOffset[0] + e.clientX,
+                     this.#dragOffset[1] + e.clientY];
     this.#parent.onDraggedChild(this);
     e.stopPropagation();
   }
 
   #onDragEnd = (e) => {
-    this.style.opacity = "";
+    this.classList.remove('dragged');
     e.stopPropagation();
   }
 
   onDraggedChild = (child) => {
     const rect = this.getBoundingClientRect();
     const child_rect = child.getBoundingClientRect();
-    console.log('rect child');
-    console.log(rect);
-    console.log(child_rect);
-    const padding_slack = 15;// + (this.#children.length) * 30;
+    const padding_slack = 15;
     if (child_rect.left > rect.right ||
         child_rect.right < rect.left ||
         (child_rect.top - padding_slack) > rect.bottom ||
         child_rect.bottom < rect.top) {
-      console.log('above is out'
-        + (child_rect.left > rect.right) + " "
-        + (child_rect.right < rect.left) + " "
-        + ((child_rect.top - padding_slack) > rect.bottom) + " "
-        + (child_rect.bottom < rect.top) + " ");
-      child.style.left = '';
-      child.style.top = '';
       this.#parent.adoptNode(child);
       for (let i = 0; i < this.#children.length; ++i) {
         if (this.#children[i] == child) {
@@ -201,22 +213,16 @@ window.customElements.define("mm-node", class extends HTMLElement {
         }
       }
     } else {
-      console.log('above is in');
-      child.style.left = '';
-      child.style.top = '';
+      child.resetPosition();
     }
       
   }
 
   adoptNode = (child) => {
-    const rect = child.getBoundingClientRect();
     child.remove();
     this.appendChild(child);
     child.setParent(this);
-    //child.style.left = (rect.x - this.adoptOffset[0]) + "px";
-    //child.style.top = (rect.y - this.adoptOffset[1]) + "px";
-      child.style.left = '';
-      child.style.top = '';
+    child.resetPosition();
     this.#children.push(child);
   }
 
