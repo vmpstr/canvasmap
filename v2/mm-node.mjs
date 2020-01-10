@@ -3,6 +3,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
   #parent
   #children = []
   #position = [0, 0]
+  #label = ''
 
   constructor() {
     super();
@@ -85,12 +86,33 @@ window.customElements.define("mm-node", class extends HTMLElement {
   }
 
   set position(v) {
+    console.assert(v);
     this.#position = v;
     this.#computeStyleFromPosition();
   }
 
   get position() {
     return this.#position;
+  }
+
+  get label() {
+    return this.#label;
+  }
+  set label(v) {
+    this.#label = v;
+
+    // Might be setting label before connecting.
+    if (!this.shadowRoot)
+      return;
+
+    const label = this.shadowRoot.querySelector(".label");
+    label.innerHTML = v;
+  }
+
+  #createNode = () => {
+    const node = document.createElement("mm-node");
+    node.setMap(this.#map);
+    return node;
   }
 
   resetPosition = () => {
@@ -123,6 +145,8 @@ window.customElements.define("mm-node", class extends HTMLElement {
     e.target.style.width = "";
 
     e.target.innerText = e.target.innerText.trim();
+    this.#label = e.target.innerText;
+
     // If we have nothing, keep the height with zero-width space.
     if(e.target.innerText == "")
       e.target.innerHTML = '&#x200b;'
@@ -185,8 +209,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
       return;
     this.style.left = this.style.top = 0;
     const rect = this.getBoundingClientRect();
-    const adoptOffset = [rect.x, rect.y];
-
     this.position = [this.#dragOffset[0] + e.clientX,
                      this.#dragOffset[1] + e.clientY];
     this.#parent.onDraggedChild(this);
@@ -227,4 +249,27 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.#children.push(child);
   }
 
+  // Storage -------------------------------------
+  loadFromData = (data) => {
+    this.label = data.label || '<deprecated label>';
+    this.position = data.position || [0, 0];
+    for (let i = 0; i < data.nodes.length; ++i) {
+      // The order here is important since adoptNode resets the position
+      // information.
+      const node = this.#createNode();
+      node.loadFromData(data.nodes[i]);
+      this.adoptNode(node);
+    }
+  }
+
+  serializeToData = () => {
+    let data = {
+      label: this.label,
+      position: this.position,
+      nodes: []
+    };
+    for (let i = 0; i < this.#children.length; ++i)
+      data.nodes.push(this.#children[i].serializeToData());
+    return data;
+  }
 });

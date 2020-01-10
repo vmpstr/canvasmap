@@ -59,38 +59,27 @@ window.customElements.define("mm-map", class extends HTMLElement {
     }
   }
 
-  nodeSelected(node) {
-    if (this.#selectedNode)
-      this.#selectedNode.deselect();
-    this.#selectedNode = node;
-  }
-
-  nodeDeselected(node) {
-    if (this.#selectedNode == node)
-      this.#selectedNode = null;
-  }
-
   #onClick = (e) => {
     this.#selectedNode && this.#selectedNode.deselect();
     e.stopPropagation();
   }
 
   #onDoubleClick = (e) => {
-    const node = this.#addNodeAt(e.clientX, e.clientY);
+    const node = this.#addNode();
+    node.label = "new task";
+
+    const rect = node.getBoundingClientRect();
+    node.position = [e.clientX - 0.5 * rect.width, e.clientY - 0.5 * rect.height];
+
     node.select();
     node.startLabelEdit();
     e.stopPropagation();
   }
 
-  #addNodeAt = (x, y, label) => {
+  #addNode = () => {
     const node = document.createElement("mm-node");
     node.setMap(this);
-    node.label = label || "new task";
-    // Append to the light dom so it's inspectable and gets assigned
-    // to the slot.
     this.appendChild(node);
-    const rect = node.getBoundingClientRect();
-    node.position = [x - 0.5 * rect.width, y - 0.5 * rect.height];
     return node;
   }
 
@@ -102,38 +91,6 @@ window.customElements.define("mm-map", class extends HTMLElement {
       node.deselect();
       node.remove();
     }
-  }
-
-  setStorage = (storage) => {
-    this.#storage = storage;
-  }
-
-  loadFromStorage = () => {
-    console.assert(this.#storage);
-
-    let nodes = this.#storage.getItem("nodes");
-    if (!nodes)
-      return;
-    nodes = JSON.parse(nodes);
-    for (let i = 0; i < nodes.length; ++i) {
-      this.#addNodeAt(nodes[i].center[0], nodes[i].center[1], nodes[i].label);
-    }
-  }
-
-  #saveToStorage = () => {
-    if (!this.#storage)
-      return;
-
-    let nodes = [];
-    for (let i = 0; i < this.#nodes.length; ++i) {
-      const rect = this.#nodes[i].getBoundingClientRect();
-      const label = this.#nodes[i].label || "";
-      nodes.push({
-        "center" : [rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height],
-        "label" : label
-      });
-    }
-    this.#storage.setItem("nodes", JSON.stringify(nodes));
   }
 
   onDraggedChild = (child) => {
@@ -153,5 +110,46 @@ window.customElements.define("mm-map", class extends HTMLElement {
     child.remove();
     // This will trigger onSlotChange, which will take care the rest of state.
     this.appendChild(child);
+  }
+
+  // Selection -----------------------------------
+  nodeSelected(node) {
+    if (this.#selectedNode)
+      this.#selectedNode.deselect();
+    this.#selectedNode = node;
+  }
+
+  nodeDeselected(node) {
+    if (this.#selectedNode == node)
+      this.#selectedNode = null;
+  }
+
+
+  // Storage -------------------------------------
+  setStorage = (storage) => {
+    this.#storage = storage;
+  }
+
+  loadFromStorage = () => {
+    console.assert(this.#storage);
+
+    let nodes = this.#storage.getItem("nodes");
+    if (!nodes)
+      return;
+    nodes = JSON.parse(nodes);
+    for (let i = 0; i < nodes.length; ++i) {
+      const node = this.#addNode();
+      node.loadFromData(nodes[i]);
+    }
+  }
+
+  #saveToStorage = () => {
+    if (!this.#storage)
+      return;
+
+    let nodes = [];
+    for (let i = 0; i < this.#nodes.length; ++i)
+      nodes.push(this.#nodes[i].serializeToData());
+    this.#storage.setItem("nodes", JSON.stringify(nodes));
   }
 });
