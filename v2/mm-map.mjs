@@ -1,3 +1,4 @@
+const default_label = "new task";
 window.customElements.define("mm-map", class extends HTMLElement {
   #nodes = [];
   #selectedNode = null;
@@ -66,7 +67,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
 
   #onDoubleClick = (e) => {
     const node = this.#addNode();
-    node.label = "new task";
+    node.label = default_label;
 
     const rect = node.getBoundingClientRect();
     node.position = [e.clientX - 0.5 * rect.width, e.clientY - 0.5 * rect.height];
@@ -76,21 +77,54 @@ window.customElements.define("mm-map", class extends HTMLElement {
     e.stopPropagation();
   }
 
-  #addNode = () => {
+  #createNode = () => {
     const node = document.createElement("mm-node");
     node.setMap(this);
+    return node;
+  }
+
+  #addNode = () => {
+    const node = this.#createNode();
     this.appendChild(node);
     return node;
   }
 
   handleKeyDown = (e) => {
+    const node = this.#selectedNode;
+    if (!node)
+      return;
     if (e.key == "Delete" || e.key == "Backspace") {
-      const node = this.#selectedNode;
-      if (!node)
-        return;
       node.deselect();
+      node.parent.removeChild(node);
       node.remove();
+      return;
     }
+
+    let child;
+    if (e.key == "Tab" || e.key == "Enter") {
+      child = this.#createNode();
+      child.label = default_label;
+    }
+
+    // Add a child. Note that pressing enter on a root (we're parent) is
+    // the same as adding a child (not a sibling).
+    if (e.key == "Tab" || (e.key == "Enter" && node.parent == this)) {
+      node.adoptNode(child);
+    } else if (e.key == "Enter") {
+      // Add a sibling.
+      // TODO(vmpstr): Maybe should be right after the selected node?
+      node.parent.adoptNode(child);
+    }
+
+    if (child) {
+      child.select();
+      child.startLabelEdit();
+      e.preventDefault();
+    }
+  }
+
+  removeChild = (child) => {
+    // Do nothing, since we'll handle this in slot assignment changing
   }
 
   onDraggedChild = (child) => {

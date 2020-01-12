@@ -85,6 +85,10 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.#computeStyleFromPosition();
   }
 
+  get parent() {
+    return this.#parent;
+  }
+
   set position(v) {
     console.assert(v);
     this.#position = v;
@@ -229,12 +233,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
         (child_rect.top - padding_slack) > rect.bottom ||
         child_rect.bottom < rect.top) {
       this.#parent.adoptNode(child);
-      for (let i = 0; i < this.#children.length; ++i) {
-        if (this.#children[i] == child) {
-          this.#children.splice(i, 1);
-          break;
-        }
-      }
+      this.removeChild(child);
     } else {
       child.resetPosition();
     }
@@ -249,10 +248,22 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.#children.push(child);
   }
 
+  removeChild = (child) => {
+    for (let i = 0; i < this.#children.length; ++i) {
+      if (this.#children[i] == child) {
+        this.#children.splice(i, 1);
+        break;
+      }
+    }
+  }
+
   // Storage -------------------------------------
   loadFromData = (data) => {
     this.label = data.label || '<deprecated label>';
     this.position = data.position || [0, 0];
+    // TODO(vmpstr): backcompat.
+    if (!data.nodes)
+      return;
     for (let i = 0; i < data.nodes.length; ++i) {
       // The order here is important since adoptNode resets the position
       // information.
