@@ -254,8 +254,19 @@ window.customElements.define("mm-node", class extends HTMLElement {
         this.insertBefore(child, next_item);
       else
         this.appendChild(child);
+      // We need to do this so the serializing remembers the order.
+      this.#repopulateChildren();
     }
       
+  }
+
+  #repopulateChildren = () => {
+    let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
+    this.#children = [];
+    for (let i = 0; i < nodes.length; ++i) {
+      if (nodes[i].tagName && nodes[i].tagName.toLowerCase().startsWith("mm-"))
+        this.#children.push(nodes[i]);
+    }
   }
 
   adoptNode = (child) => {
