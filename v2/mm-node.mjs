@@ -235,7 +235,25 @@ window.customElements.define("mm-node", class extends HTMLElement {
       this.#parent.adoptNode(child);
       this.removeChild(child);
     } else {
+      let child_index = -1;
+      let next_item;
+      let distance = 1e6+1;
+      for (let i = 0; i < this.#children.length; ++i) {
+        const next_item_rect = this.#children[i].getBoundingClientRect();
+        if (next_item_rect.y > child_rect.y) {
+          const local_distance = next_item_rect.y - child_rect.y;
+          if (local_distance < distance) {
+            distance = local_distance;
+            next_item = this.#children[i];
+          }
+        }
+      }
       child.resetPosition();
+      child.remove();
+      if (next_item)
+        this.insertBefore(child, next_item);
+      else
+        this.appendChild(child);
     }
       
   }
