@@ -50,9 +50,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
           position: relative;
         }
         .ew_drag_handle {
-          /* debug */
-          background: blue;
-
           position: absolute;
           top: 15%;
           right: -2px;
@@ -62,7 +59,9 @@ window.customElements.define("mm-node", class extends HTMLElement {
         .ew_drag_handle:hover {
           cursor: ew-resize;
         }
-
+        .ew_drag_handle.hidden {
+          display: none;
+        }
 
         :host(.selected) .label {
           border-color: blue;
@@ -81,7 +80,11 @@ window.customElements.define("mm-node", class extends HTMLElement {
     `;
     const label = this.shadowRoot.querySelector(".label");
     label.setAttribute("draggable", true);
-    this.addEventListener("dblclick", (e) => {
+
+    const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
+    drag_handle.setAttribute("draggable", true);
+
+    label.addEventListener("dblclick", (e) => {
       this.startLabelEdit();
       e.stopPropagation();
     });
@@ -90,15 +93,29 @@ window.customElements.define("mm-node", class extends HTMLElement {
       e.stopPropagation();
     });
 
-    this.addEventListener("dragstart", (e) => {
+    label.addEventListener("dragstart", (e) => {
       this.#onDragStart(e);
     });
-    this.addEventListener("drag", (e) => {
+    label.addEventListener("drag", (e) => {
       this.#onDrag(e);
     });
-    this.addEventListener("dragend", (e) => {
+    label.addEventListener("dragend", (e) => {
       this.#onDragEnd(e);
     });
+
+    drag_handle.addEventListener("dblclick", (e) => {
+      this.#onDragHandleDoubleClick(e);
+    });
+    drag_handle.addEventListener("dragstart", (e) => {
+      this.#onDragHandleStart(e);
+    });
+    drag_handle.addEventListener("drag", (e) => {
+      this.#onDragHandle(e);
+    });
+    drag_handle.addEventListener("dragend", (e) => {
+      this.#onDragHandleEnd(e);
+    });
+
   }
 
   setMap = (map) => {
@@ -163,12 +180,13 @@ window.customElements.define("mm-node", class extends HTMLElement {
   #endLabelEdit = (e) => {
     if (e.type === "keydown") {
       e.stopPropagation();
-      if (e.key !== "Enter") 
+      if (e.key !== "Enter")
         return;
     }
     e.target.removeEventListener("keydown", this.#endLabelEdit);
     e.target.removeEventListener("focusout", this.#endLabelEdit);
     e.target.contentEditable = false;
+    this.shadowRoot.querySelector('.ew_drag_handle').classList.remove('hidden');
     // Restore ellipsis if necessary.
     e.target.style.overflow = "";
     e.target.style.width = "";
@@ -197,6 +215,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
     // First make this contentEditable,
     // so that the selection selects proper contents.
     el.contentEditable = true;
+    this.shadowRoot.querySelector('.ew_drag_handle').classList.add('hidden');
     // Prevent ellipsis editing.
     el.style.overflow = "visible";
     el.style.width = "min-content";
@@ -249,6 +268,34 @@ window.customElements.define("mm-node", class extends HTMLElement {
     e.stopPropagation();
   }
 
+  #labelContainerInitialWidth;
+  #onDragHandleStart = (e) => {
+    this.#labelContainerInitialWidth =
+      this.shadowRoot.querySelector('.label_holder').getBoundingClientRect().width;
+    this.#dragOffset[0] = -e.clientX;
+    this.#dragOffset[1] = -e.clientY;
+    e.stopPropagation();
+  }
+  #onDragHandle = (e) => {
+    if (e.clientX == 0 && e.clientY == 0)
+      return;
+
+    let new_width =
+      this.#labelContainerInitialWidth + (e.clientX + this.#dragOffset[0]);
+    if (new_width < 10)
+      new_width = 10;
+
+    this.shadowRoot.querySelector(".label_holder").style.width = new_width + "px";
+    e.stopPropagation();
+  }
+  #onDragHandleEnd = (e) => {
+    e.stopPropagation();
+  }
+  #onDragHandleDoubleClick = (e) => {
+    this.shadowRoot.querySelector(".label_holder").style.width = "";
+    e.stopPropagation();
+  }
+
   onDraggedChild = (child) => {
     const rect = this.getBoundingClientRect();
     const child_rect = child.getBoundingClientRect();
@@ -297,7 +344,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
       // We need to do this so the serializing remembers the order.
       this.#repopulateChildren();
     }
-      
   }
 
   #repopulateChildren = () => {
