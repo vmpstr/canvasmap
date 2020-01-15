@@ -231,29 +231,44 @@ window.customElements.define("mm-node", class extends HTMLElement {
     if (child_rect.left > rect.right ||
         child_rect.right < rect.left ||
         (child_rect.top - padding_slack) > rect.bottom ||
-        child_rect.bottom < rect.top) {
+        child_rect.bottom < rect.top ||
+        // If our parent isn't our map (ie we're a child of something
+        // then if the x is to our x's left, reparent up.
+        // TODO(vmpstr): this might not be true for other non-tree maps.
+        (this.#parent != this.#map && child_rect.x < rect.x)) {
       this.#parent.adoptNode(child);
       this.removeChild(child);
     } else {
       let child_index = -1;
-      let next_item;
-      let distance = 1e6+1;
+      let next_item = null;
+      let next_distance = 1e6;
+      let previous_item = null;
+      let previous_distance = 1e6;
       for (let i = 0; i < this.#children.length; ++i) {
         const next_item_rect = this.#children[i].getBoundingClientRect();
         if (next_item_rect.y > child_rect.y) {
           const local_distance = next_item_rect.y - child_rect.y;
-          if (local_distance < distance) {
-            distance = local_distance;
+          if (local_distance < next_distance) {
+            next_distance = local_distance;
             next_item = this.#children[i];
+          }
+        } else if (next_item_rect.y < child_rect.y && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
+          const local_distance = child_rect.y - next_item_rect.y;
+          if (local_distance < previous_distance) {
+            previous_distance = local_distance;
+            previous_item = this.#children[i];
           }
         }
       }
-      child.resetPosition();
       child.remove();
-      if (next_item)
+      if (previous_item) {
+        previous_item.adoptNode(child);
+      } else {
+        // next_item may be null.
         this.insertBefore(child, next_item);
-      else
-        this.appendChild(child);
+      }
+      child.resetPosition();
+
       // We need to do this so the serializing remembers the order.
       this.#repopulateChildren();
     }
@@ -270,6 +285,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
   }
 
   adoptNode = (child) => {
+    // Need to know where to position the child.
     child.remove();
     this.appendChild(child);
     child.setParent(this);
