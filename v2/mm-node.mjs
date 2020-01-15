@@ -20,6 +20,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
           display: block;
         }
         .label {
+          box-sizing: border-box;
           width: 100%;
           max-width: min-content;
 
@@ -41,15 +42,39 @@ window.customElements.define("mm-node", class extends HTMLElement {
           margin-top: 5px;
           width: max-content;
         }
+        .label_holder {
+          width: 100%;
+          max-width: min-content;
+          min-width: 20px;
 
-        :host(.selected) > .label {
+          position: relative;
+        }
+        .ew_drag_handle {
+          /* debug */
+          background: blue;
+
+          position: absolute;
+          top: 15%;
+          right: -2px;
+          width: 5px;
+          height: 70%;
+        }
+        .ew_drag_handle:hover {
+          cursor: ew-resize;
+        }
+
+
+        :host(.selected) .label {
           border-color: blue;
         }
         :host(.dragged) {
           opacity: 20%;
         }
       </style>
-        <div class=label>${this.label}</div>
+        <div class=label_holder>
+          <div class=label>${this.label}</div>
+          <div class=ew_drag_handle></div>
+        </div>
       <div class=child_area>
         <slot></slot>
       </div>
