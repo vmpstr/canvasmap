@@ -113,6 +113,10 @@ window.customElements.define("mm-node", class extends HTMLElement {
       this.#onDragHandleEnd(e);
     });
 
+    if (this.#from_data && this.#from_data.label_width) {
+      const label_holder = this.shadowRoot.querySelector(".label_holder");
+      label_holder.style.width = this.#from_data.label_width;
+    }
   }
 
   setMap = (map) => {
@@ -371,9 +375,19 @@ window.customElements.define("mm-node", class extends HTMLElement {
   }
 
   // Storage -------------------------------------
+  #from_data
   loadFromData = (data) => {
     this.label = data.label || '<deprecated label>';
     this.position = data.position || [0, 0];
+    if (data.label_width) {
+      if (this.shadowRoot) {
+        this.shadowRoot.querySelector(".label_holder").style.width = data.label_width;
+      } else {
+        if (!this.#from_data)
+          this.#from_data = {};
+        this.#from_data['label_width'] = data.label_width;
+      }
+    }
     // TODO(vmpstr): backcompat.
     if (!data.nodes)
       return;
@@ -392,6 +406,9 @@ window.customElements.define("mm-node", class extends HTMLElement {
       position: this.position,
       nodes: []
     };
+    const label_holder = this.shadowRoot && this.shadowRoot.querySelector(".label_holder");
+    if (label_holder && label_holder.style.width)
+      data['label_width'] = label_holder.style.width;
     for (let i = 0; i < this.#children.length; ++i)
       data.nodes.push(this.#children[i].serializeToData());
     return data;
