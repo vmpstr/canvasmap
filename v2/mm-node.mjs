@@ -103,9 +103,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
       this.#onDragEnd(e);
     });
 
-    drag_handle.addEventListener("dblclick", (e) => {
-      this.#onDragHandleDoubleClick(e);
-    });
     drag_handle.addEventListener("dragstart", (e) => {
       this.#onDragHandleStart(e);
     });
@@ -285,14 +282,14 @@ window.customElements.define("mm-node", class extends HTMLElement {
     if (new_width < 10)
       new_width = 10;
 
-    this.shadowRoot.querySelector(".label_holder").style.width = new_width + "px";
+    const label_holder = this.shadowRoot.querySelector(".label_holder");
+    label_holder.style.width = new_width + "px";
+    // Reset if we're trying to expand past the max-width.
+    if (label_holder.getBoundingClientRect().width < new_width)
+      label_holder.style.width = "";
     e.stopPropagation();
   }
   #onDragHandleEnd = (e) => {
-    e.stopPropagation();
-  }
-  #onDragHandleDoubleClick = (e) => {
-    this.shadowRoot.querySelector(".label_holder").style.width = "";
     e.stopPropagation();
   }
 
