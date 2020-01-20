@@ -4,14 +4,17 @@ window.customElements.define("mm-node", class extends HTMLElement {
   #children = []
   #position = [0, 0]
   #label = ''
+  #childResizeObserver;
 
   constructor() {
     super();
   }
 
   connectedCallback() {
-    if (this.shadowRoot)
+    if (this.shadowRoot) {
+      this.#computeEdges();
       return;
+    }
 
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.innerHTML = `
@@ -49,6 +52,24 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
           position: relative;
         }
+        .parent_edge {
+          position: absolute;
+          bottom: 50%;
+          right: 100%;
+          width: 15px;
+          height: 30%;
+          border-bottom: 1px solid black;
+          border-left: 1px solid black;
+          border-radius: 0px 0px 0px 10px;
+        }
+        .child_edge {
+          position: absolute;
+          top: 100%;
+          border-left: 1px solid black;
+          width: 1px;
+          left: 14px;
+          height: 50px;
+        }
         .ew_drag_handle {
           position: absolute;
           top: 15%;
@@ -71,6 +92,8 @@ window.customElements.define("mm-node", class extends HTMLElement {
         }
       </style>
         <div class=label_holder>
+          <div class=parent_edge></div>
+          <div class=child_edge></div>
           <div class=label>${this.label}</div>
           <div class=ew_drag_handle></div>
         </div>
@@ -117,6 +140,14 @@ window.customElements.define("mm-node", class extends HTMLElement {
       const label_holder = this.shadowRoot.querySelector(".label_holder");
       label_holder.style.width = this.#from_data.label_width;
     }
+
+    this.#childResizeObserver = new ResizeObserver(this.#onChildSizeChanged);
+
+    const slot = shadow.querySelector("slot");
+    slot.addEventListener("slotchange", this.#onSlotChange);
+
+    this.#computeEdges();
+
   }
 
   setMap = (map) => {
@@ -126,6 +157,53 @@ window.customElements.define("mm-node", class extends HTMLElement {
   setParent = (parent) => {
     this.#parent = parent;
     this.#computeStyleFromPosition();
+    this.#computeEdges();
+  }
+
+  #onSlotChange = () => {
+    for (let i = 0; i < this.#children.length; ++i) {
+      this.#childResizeObserver.unobserve(this.#children[i]);
+    }
+    this.#repopulateChildren();
+    for (let i = 0; i < this.#children.length; ++i) {
+      this.#childResizeObserver.observe(this.#children[i]);
+    }
+    this.#computeEdges();
+  }
+
+  #onChildSizeChanged = () => {
+    this.#computeEdges();
+  }
+
+  #computeEdges = () => {
+    if (!this.shadowRoot || !this.#parent)
+      return;
+    if (this.#parent.has_child_edges) {
+      this.shadowRoot.querySelector(".parent_edge").style.display = "";
+    } else {
+      this.shadowRoot.querySelector(".parent_edge").style.display = "none";
+    }
+
+    if (this.#children.length) {
+      this.shadowRoot.querySelector(".child_edge").style.display = "";
+      const last_child = this.#children[this.#children.length - 1];
+      let extent = last_child.getBoundingClientRect().top + last_child.parent_edge_offset - this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().bottom;
+      this.shadowRoot.querySelector(".child_edge").style.height = extent + "px";
+    } else {
+      this.shadowRoot.querySelector(".child_edge").style.display = "none";
+    }
+  }
+
+  get parent_edge_offset() {
+    if (!this.shadowRoot)
+      return 0;
+    return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
+           this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().top;
+  }
+
+
+  get has_child_edges() {
+    return true;
   }
 
   get parent() {
@@ -180,7 +258,10 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
   #endLabelEdit = (e) => {
     if (e.type === "keydown") {
-      e.stopPropagation();
+      // Propagate tab, since we might do something like add a child.
+      // TODO(vmpstr): Whitelist propagatable keys. Arrow keys?
+      if (e.key !== "Tab")
+        e.stopPropagation();
       if (e.key !== "Enter")
         return;
     }
@@ -310,7 +391,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
         // TODO(vmpstr): this might not be true for other non-tree maps.
         (this.#parent != this.#map && child_rect.x < rect.x)) {
       this.#parent.adoptNode(child);
-      this.removeChild(child);
     } else {
       let child_index = -1;
       let next_item = null;
@@ -341,9 +421,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
         this.insertBefore(child, next_item);
       }
       child.resetPosition();
-
-      // We need to do this so the serializing remembers the order.
-      this.#repopulateChildren();
     }
   }
 
@@ -359,19 +436,9 @@ window.customElements.define("mm-node", class extends HTMLElement {
   adoptNode = (child) => {
     // Need to know where to position the child.
     child.remove();
-    this.appendChild(child);
     child.setParent(this);
+    this.appendChild(child);
     child.resetPosition();
-    this.#children.push(child);
-  }
-
-  removeChild = (child) => {
-    for (let i = 0; i < this.#children.length; ++i) {
-      if (this.#children[i] == child) {
-        this.#children.splice(i, 1);
-        break;
-      }
-    }
   }
 
   // Storage -------------------------------------
