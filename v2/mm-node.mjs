@@ -5,6 +5,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
   #position = [0, 0]
   #label = ''
   #childResizeObserver;
+  #childrenHidden = false;
 
   constructor() {
     super();
@@ -43,6 +44,12 @@ window.customElements.define("mm-node", class extends HTMLElement {
           contain: layout;
           margin-left: 30px;
         }
+        .child_area.hidden {
+          min-height: 10px;
+        }
+        .child_area.hidden > * {
+          display: none;
+        }
         ::slotted(*) {
           position: relative;
           margin-top: 5px;
@@ -73,6 +80,26 @@ window.customElements.define("mm-node", class extends HTMLElement {
           left: 14px;
           height: 50px;
         }
+        .child_toggle {
+          position: absolute;
+          top: 100%;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          left: 9px;
+          background: powderblue;
+          border: 1px solid black;
+          z-index: 1;
+        }
+        .child_toggle:hover {
+          cursor: pointer;
+        }
+        .child_toggle.collapsed:hover {
+          background: springgreen;
+        }
+        .child_toggle.expanded:hover {
+          background: indianred;
+        }
         .ew_drag_handle {
           position: absolute;
           top: 15%;
@@ -97,6 +124,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
         <div class=label_holder>
           <div class=parent_edge></div>
           <div class=child_edge></div>
+          <div class="child_toggle expanded"></div>
           <div class=label>${this.label}</div>
           <div class=ew_drag_handle></div>
         </div>
@@ -150,6 +178,17 @@ window.customElements.define("mm-node", class extends HTMLElement {
     const slot = shadow.querySelector("slot");
     slot.addEventListener("slotchange", this.#onSlotChange);
 
+    const child_toggle = this.shadowRoot.querySelector(".child_toggle");
+    child_toggle.addEventListener("click", (e) => {
+      this.#onChildToggle(e);
+    });
+
+    if (this.#childrenHidden) {
+      this.shadowRoot.querySelector(".child_area").classList.add("hidden");
+      this.#map.didHideChildren(this);
+    } else {
+      this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
+    }
     this.#computeEdges();
 
   }
@@ -179,6 +218,23 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.#computeEdges();
   }
 
+  #onChildToggle = (e) => {
+    this.#childrenHidden = !this.#childrenHidden;
+    if (!this.shadowRoot)
+      return;
+
+    if (this.#childrenHidden) {
+      this.shadowRoot.querySelector(".child_area").classList.add("hidden");
+      this.#map.didHideChildren(this);
+    } else {
+      this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
+    }
+    this.#computeEdges();
+
+    if (e)
+      e.stopPropagation();
+  }
+
   #computeEdges = () => {
     if (!this.shadowRoot || !this.#parent)
       return;
@@ -188,7 +244,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
       this.shadowRoot.querySelector(".parent_edge").style.display = "none";
     }
 
-    if (this.#children.length) {
+    if (this.#children.length && !this.#childrenHidden) {
       this.shadowRoot.querySelector(".child_edge").style.display = "";
       const last_child = this.#children[this.#children.length - 1];
       let extent = last_child.getBoundingClientRect().top + last_child.parent_edge_offset - this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().bottom;
@@ -196,6 +252,19 @@ window.customElements.define("mm-node", class extends HTMLElement {
     } else {
       this.shadowRoot.querySelector(".child_edge").style.display = "none";
     }
+
+    const toggle = this.shadowRoot.querySelector(".child_toggle");
+    if (this.#children.length)
+      toggle.style.display = "";
+    else
+      toggle.style.display = "none";
+
+    toggle.classList.remove("expanded");
+    toggle.classList.remove("collapsed");
+    if (this.#childrenHidden)
+      toggle.classList.add("collapsed");
+    else
+      toggle.classList.add("expanded");
   }
 
   get parent_edge_offset() {
@@ -470,12 +539,15 @@ window.customElements.define("mm-node", class extends HTMLElement {
       node.loadFromData(data.nodes[i]);
       this.adoptNode(node);
     }
+    if (data.children_hidden)
+      this.#onChildToggle();
   }
 
   serializeToData = () => {
     let data = {
       label: this.label,
       position: this.position,
+      children_hidden: this.#childrenHidden,
       nodes: []
     };
     const label_holder = this.shadowRoot && this.shadowRoot.querySelector(".label_holder");

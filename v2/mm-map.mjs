@@ -158,6 +158,18 @@ window.customElements.define("mm-map", class extends HTMLElement {
       this.#selectedNode = null;
   }
 
+  didHideChildren(node) {
+    if (!this.#selectedNode)
+      return;
+    let ancestor = this.#selectedNode.parent;
+    while (ancestor) {
+      if (ancestor == node) {
+        this.#selectedNode.deselect();
+        break;
+      }
+      ancestor = ancestor.parent;
+    }
+  }
 
   // Storage -------------------------------------
   setStorage = (storage) => {
