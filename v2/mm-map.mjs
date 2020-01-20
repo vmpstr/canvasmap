@@ -109,10 +109,10 @@ window.customElements.define("mm-map", class extends HTMLElement {
     // Add a child. Note that pressing enter on a root (we're parent) is
     // the same as adding a child (not a sibling).
     if (e.key == "Tab" || (e.key == "Enter" && node.parent == this)) {
+      node.unhideChildren();
       node.adoptNode(child);
     } else if (e.key == "Enter") {
       // Add a sibling.
-      // TODO(vmpstr): Maybe should be right after the selected node?
       node.parent.adoptNode(child);
     }
 
@@ -135,6 +135,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
       const node_rect = this.#nodes[i].getBoundingClientRect();
       if (rect.left > node_rect.left && rect.left < node_rect.right &&
           rect.top > node_rect.top && rect.top < node_rect.bottom + 15) {
+        this.#nodes[i].unhideChildren();
         this.#nodes[i].adoptNode(child);
       }
     }

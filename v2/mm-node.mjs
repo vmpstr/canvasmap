@@ -235,6 +235,11 @@ window.customElements.define("mm-node", class extends HTMLElement {
       e.stopPropagation();
   }
 
+  unhideChildren = () => {
+    if (this.#childrenHidden)
+      this.#onChildToggle();
+  }
+
   #computeEdges = () => {
     if (!this.shadowRoot || !this.#parent)
       return;
@@ -274,6 +279,9 @@ window.customElements.define("mm-node", class extends HTMLElement {
            this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().top;
   }
 
+  get children_hidden() {
+    return this.#childrenHidden;
+  }
 
   get has_child_edges() {
     return true;
@@ -489,6 +497,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
       }
       child.remove();
       if (previous_item) {
+        previous_item.unhideChildren();
         previous_item.adoptNode(child);
       } else {
         // next_item may be null.
