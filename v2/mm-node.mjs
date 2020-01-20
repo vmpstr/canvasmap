@@ -106,6 +106,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
     `;
     const label = this.shadowRoot.querySelector(".label");
     label.setAttribute("draggable", true);
+    label.setAttribute("title", this.label);
 
     const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
     drag_handle.setAttribute("draggable", true);
@@ -235,6 +236,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
     const label = this.shadowRoot.querySelector(".label");
     label.innerHTML = v;
+    label.title = v;
   }
 
   #createNode = () => {
