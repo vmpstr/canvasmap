@@ -35,6 +35,9 @@ window.customElements.define("mm-node", class extends HTMLElement {
           border-radius: 10px;
           padding: 10px;
         }
+        .label:hover {
+          box-shadow: 0 0 2px 0;
+        }
         .child_area {
           position: relative;
           contain: layout;
