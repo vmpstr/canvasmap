@@ -182,6 +182,9 @@ window.customElements.define("mm-node", class extends HTMLElement {
     child_toggle.addEventListener("click", (e) => {
       this.#onChildToggle(e);
     });
+    child_toggle.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+    });
 
     if (this.#childrenHidden) {
       this.shadowRoot.querySelector(".child_area").classList.add("hidden");
@@ -231,8 +234,10 @@ window.customElements.define("mm-node", class extends HTMLElement {
     }
     this.#computeEdges();
 
-    if (e)
+    if (e) {
+      e.preventDefault();
       e.stopPropagation();
+    }
   }
 
   unhideChildren = () => {
