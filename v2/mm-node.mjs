@@ -116,6 +116,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
         :host(.selected) .label {
           border-color: blue;
+          box-shadow: 0 0 2px 0 blue;
         }
         :host(.dragged) {
           opacity: 20%;
