@@ -121,6 +121,33 @@ window.customElements.define("mm-map", class extends HTMLElement {
       child.startLabelEdit();
       e.preventDefault();
     }
+
+    // Arrow navigation.
+    if (e.key == "ArrowLeft") {
+      if (node.parent != this)
+        node.parent.select();
+    } else if (e.key == "ArrowRight") {
+      if (node.unhideChildren())
+        node.firstChild.select();
+    } else if (e.key == "ArrowDown") {
+      if (node.parent != this) {
+        const next = node.parent.nextChild(node);
+        if (next)
+          next.select();
+        else if (node.unhideChildren())
+          node.firstChild.select();
+      } else if (node.unhideChildren()) {
+        node.firstChild.select();
+      }
+    } else if (e.key == "ArrowUp") {
+      if (node.parent != this) {
+        const prev = node.parent.prevChild(node);
+        if (prev)
+          prev.select();
+        else
+          node.parent.select();
+      }
+    }
   }
 
   removeChild = (child) => {

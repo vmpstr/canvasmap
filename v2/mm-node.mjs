@@ -116,7 +116,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
         :host(.selected) .label {
           border-color: blue;
-          box-shadow: 0 0 2px 0 blue;
+          box-shadow: 0 0 3px 0 blue;
         }
         :host(.dragged) {
           opacity: 20%;
@@ -244,6 +244,29 @@ window.customElements.define("mm-node", class extends HTMLElement {
   unhideChildren = () => {
     if (this.#childrenHidden)
       this.#onChildToggle();
+    return this.#children.length > 0;
+  }
+
+  get firstChild() {
+    if (this.#children.length)
+      return this.#children[0];
+    return null;
+  }
+
+  nextChild = (child) => {
+    for (let i = 0; i < this.#children.length - 1; ++i) {
+      if (this.#children[i] == child)
+        return this.#children[i + 1];
+    }
+    return null;
+  }
+
+  prevChild = (child) => {
+    for (let i = 1; i < this.#children.length; ++i) {
+      if (this.#children[i] == child)
+        return this.#children[i - 1];
+    }
+    return null;
   }
 
   #computeEdges = () => {
