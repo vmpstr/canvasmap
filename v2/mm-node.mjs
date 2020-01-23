@@ -145,8 +145,8 @@ window.customElements.define("mm-node", class extends HTMLElement {
       e.stopPropagation();
     });
     label.addEventListener("click", (e) => {
-      this.select();
-      e.stopPropagation();
+      if (e.target == label)
+        this.select();
     });
 
     label.addEventListener("dragstart", (e) => {

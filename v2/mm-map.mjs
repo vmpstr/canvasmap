@@ -27,7 +27,20 @@ window.customElements.define("mm-map", class extends HTMLElement {
         ::slotted(*) {
           position: absolute;
         }
+
+        /* contextmenu formatting */
+        li > div:first-child {
+          float: left;
+        }
+        li > div:last-child {
+          contain: layout;
+          text-align: right;
+        }
       </style>
+      <mm-context-menu id=context>
+        <li id="tree"><div>Add tree node</div><div>dblclick</div></li>
+        <li id="scroller"><div>Add scroller node</div><div>Shift+dblclick</div></li>
+      </mm-context-menu>
       <slot></slot>
     `;
 
@@ -44,8 +57,33 @@ window.customElements.define("mm-map", class extends HTMLElement {
     this.addEventListener("dblclick", (e) => {
       this.#onDoubleClick(e);
     });
+    
+    this.addEventListener("contextmenu", (e) => {
+      this.#onContextMenu(e);
+    });
+
+    customElements.whenDefined("mm-context-menu").then(() => {
+      shadow.querySelector("#context").client = this;
+    });
 
     setInterval(() => { this.#saveToStorage(); }, 1000);
+  }
+
+  onContextMenuSelected = (item) => {
+    const context = this.shadowRoot.querySelector("#context");
+    if (item.id == "tree") {
+      this.#addTreeNodeForUserAt(context.position[0], context.position[1]);
+    }
+
+  }
+
+  #onContextMenu = (e) => {
+    if (e.target == this) {
+      this.shadowRoot.querySelector("#context").showAt(e.clientX, e.clientY);
+      e.preventDefault();
+    } else {
+      this.shadowRoot.querySelector("#context").hide();
+    }
   }
 
   #onSlotChange = (e) => {
@@ -61,20 +99,25 @@ window.customElements.define("mm-map", class extends HTMLElement {
   }
 
   #onClick = (e) => {
-    this.#selectedNode && this.#selectedNode.deselect();
-    e.stopPropagation();
+    if (e.target == this)
+      this.#selectedNode && this.#selectedNode.deselect();
+    this.shadowRoot.querySelector("#context").hide();
   }
 
   #onDoubleClick = (e) => {
-    const node = this.#addNode();
+    this.#addTreeNodeForUserAt(e.clientX, e.clientY);
+    e.stopPropagation();
+  }
+
+  #addTreeNodeForUserAt = (x, y) => {
+    const node = this.#addTreeNode();
     node.label = default_label;
 
     const rect = node.getBoundingClientRect();
-    node.position = [e.clientX - 0.5 * rect.width, e.clientY - 0.5 * rect.height];
+    node.position = [x - 0.5 * rect.width, y - 0.5 * rect.height];
 
     node.select();
     node.startLabelEdit();
-    e.stopPropagation();
   }
 
   #createNode = () => {
@@ -83,7 +126,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
     return node;
   }
 
-  #addNode = () => {
+  #addTreeNode = () => {
     const node = this.#createNode();
     this.appendChild(node);
     return node;
@@ -212,7 +255,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
       return;
     nodes = JSON.parse(nodes);
     for (let i = 0; i < nodes.length; ++i) {
-      const node = this.#addNode();
+      const node = this.#addTreeNode();
       node.loadFromData(nodes[i]);
     }
   }
