@@ -27,6 +27,9 @@ window.customElements.define("mm-map", class extends HTMLElement {
         ::slotted(*) {
           position: absolute;
         }
+        div {
+          height: 100%;
+        }
 
         /* contextmenu formatting */
         li > div:first-child {
@@ -41,6 +44,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
         <li id="tree"><div>Add tree node</div><div>dblclick</div></li>
         <li id="scroller"><div>Add scroller node</div><div>Shift+dblclick</div></li>
       </mm-context-menu>
+      <div id=self></div>
       <slot></slot>
     `;
 
@@ -50,15 +54,15 @@ window.customElements.define("mm-map", class extends HTMLElement {
       this.#onSlotChange();
     });
 
-    this.addEventListener("click", (e) => {
+    this.shadowRoot.addEventListener("click", (e) => {
       this.#onClick(e);
     });
 
-    this.addEventListener("dblclick", (e) => {
+    this.shadowRoot.addEventListener("dblclick", (e) => {
       this.#onDoubleClick(e);
     });
     
-    this.addEventListener("contextmenu", (e) => {
+    this.shadowRoot.addEventListener("contextmenu", (e) => {
       this.#onContextMenu(e);
     });
 
@@ -78,7 +82,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
   }
 
   #onContextMenu = (e) => {
-    if (e.target == this) {
+    if (e.target.id == "self") {
       this.shadowRoot.querySelector("#context").showAt(e.clientX, e.clientY);
       e.preventDefault();
     } else {
@@ -99,7 +103,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
   }
 
   #onClick = (e) => {
-    if (e.target == this)
+    if (e.target.id == "self")
       this.#selectedNode && this.#selectedNode.deselect();
     this.shadowRoot.querySelector("#context").hide();
   }

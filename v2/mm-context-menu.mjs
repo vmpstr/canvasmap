@@ -1,6 +1,4 @@
 window.customElements.define("mm-context-menu", class extends HTMLElement {
-  #nodes;
-  #handlers;
   #client;
   #position;
 
@@ -45,8 +43,16 @@ window.customElements.define("mm-context-menu", class extends HTMLElement {
       </style>
       <ul><slot></slot></ul>
     `;
-    const slot = shadow.querySelector("slot");
-    slot.addEventListener("slotchange", this.#onSlotChange);
+    this.shadowRoot.addEventListener("click", (e) => {
+      let target = e.target;
+      let parent = target.parentElement;
+      while (parent && parent != this) {
+        target = parent;
+        parent = target.parentElement;
+      }
+      if (parent)
+        this.#onClick(target);
+    });
   }
 
   set client(v) {
@@ -71,25 +77,5 @@ window.customElements.define("mm-context-menu", class extends HTMLElement {
   #onClick = (item) => {
     if (this.#client)
       this.#client.onContextMenuSelected(item);
-  }
-
-  #onSlotChange = (e) => {
-    if (this.#nodes) {
-      for (let i = 0; i < this.#nodes.length; ++i) {
-        this.#nodes[i].removeEventListener("click", this.#handlers[i]);
-      }
-    }
-    let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
-    this.#nodes = [];
-    this.#handlers = [];
-    for (let i = 0; i < nodes.length; ++i) {
-      if (nodes[i].addEventListener) {
-        this.#handlers.push(() => {
-          this.#onClick(nodes[i]);
-        });
-        nodes[i].addEventListener("click", this.#handlers[this.#handlers.length - 1]);
-        this.#nodes.push(nodes[i]);
-      }
-    }
   }
 });
