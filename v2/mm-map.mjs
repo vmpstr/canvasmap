@@ -77,6 +77,8 @@ window.customElements.define("mm-map", class extends HTMLElement {
     const context = this.shadowRoot.querySelector("#context");
     if (item.id == "tree") {
       this.#addTreeNodeForUserAt(context.position[0], context.position[1]);
+    } else if (item.id == "scroller") {
+      this.#addScrollerNodeForUserAt(context.position[0], context.position[1]);
     }
 
   }
@@ -109,7 +111,11 @@ window.customElements.define("mm-map", class extends HTMLElement {
   }
 
   #onDoubleClick = (e) => {
-    this.#addTreeNodeForUserAt(e.clientX, e.clientY);
+    if (e.shiftKey) {
+      this.#addScrollerNodeForUserAt(e.clientX, e.clientY);
+    } else {
+      this.#addTreeNodeForUserAt(e.clientX, e.clientY);
+    }
     e.stopPropagation();
   }
 
@@ -122,6 +128,9 @@ window.customElements.define("mm-map", class extends HTMLElement {
 
     node.select();
     node.startLabelEdit();
+  }
+
+  #addScrollerNodeForUserAt = (x, y) => {
   }
 
   #createNode = () => {
