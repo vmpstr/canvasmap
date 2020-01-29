@@ -131,16 +131,36 @@ window.customElements.define("mm-map", class extends HTMLElement {
   }
 
   #addScrollerNodeForUserAt = (x, y) => {
+    const node = this.#addScrollerNode();
+    node.label = default_label;
+
+    const rect = node.getBoundingClientRect();
+    node.position = [x - 0.5 * rect.width, y - 0.5 * rect.height];
+
+    node.select();
+    node.startLabelEdit();
   }
 
-  #createNode = () => {
+  #createTreeNode = () => {
     const node = document.createElement("mm-node");
     node.setMap(this);
     return node;
   }
 
+  #createScrollerNode = () => {
+    const node = document.createElement("mm-scroller-node");
+    node.setMap(this);
+    return node;
+  }
+
   #addTreeNode = () => {
-    const node = this.#createNode();
+    const node = this.#createTreeNode();
+    this.appendChild(node);
+    return node;
+  }
+
+  #addScrollerNode = () => {
+    const node = this.#createScrollerNode();
     this.appendChild(node);
     return node;
   }
@@ -158,7 +178,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
 
     let child;
     if (e.key == "Tab" || e.key == "Enter") {
-      child = this.#createNode();
+      child = this.#createTreeNode();
       child.label = default_label;
     }
 

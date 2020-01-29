@@ -10,12 +10,14 @@ body {
 <script src=mm-map.mjs></script>
 <script src=mm-node.mjs></script>
 <script src=mm-context-menu.mjs></script>
+<script src=mm-scroller-node.mjs></script>
 
 <script>
 const promises = [
   customElements.whenDefined("mm-map"),
   customElements.whenDefined("mm-node"),
-  customElements.whenDefined("mm-context-menu")
+  customElements.whenDefined("mm-context-menu"),
+  customElements.whenDefined("mm-scroller-node")
 ];
 
 Promise.all(promises).then(() => {
