@@ -29,7 +29,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
 
           border: 1px solid black;
           border-radius: 10px;
-          padding: 10px;
+          padding: 5px 10px 5px 10px;
 
           position: relative;
         }
@@ -43,9 +43,14 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           text-overflow: ellipsis;
         }
         .child_area {
+          margin-top: 5px;
           position: relative;
           contain: layout;
-          margin-left: 30px;
+          /* debug */
+          background: pink;
+          overflow-y: auto;
+          overflow-x: hidden;
+          max-height: 100px;
         }
         .child_area.hidden {
           min-height: 10px;
@@ -75,21 +80,13 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           border-left: 1px solid black;
           border-radius: 0px 0px 0px 10px;
         }
-        .child_edge {
-          position: absolute;
-          top: 100%;
-          border-left: 1px solid black;
-          width: 1px;
-          left: 14px;
-          height: 50px;
-        }
         .child_toggle {
           position: absolute;
-          top: 100%;
+          left: calc(50% - 5px);
+          top: -5px;
           width: 10px;
           height: 10px;
           border-radius: 50%;
-          left: 9px;
           background: powderblue;
           border: 1px solid black;
           z-index: 1;
@@ -124,14 +121,22 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
         :host(.dragged) {
           opacity: 20%;
         }
+        .divider {
+          width: calc(100% + 20px);
+          border-top: 1px solid grey;
+          margin-left: -10px;
+          margin-top: 5px;
+          position: relative;
+        }
       </style>
       <div class=container>
         <div class=label_holder>
           <div class=parent_edge></div>
-          <div class=child_edge></div>
-          <div class="child_toggle expanded"></div>
           <div class=label>${this.label}</div>
           <div class=ew_drag_handle></div>
+        </div>
+        <div class=divider>
+          <div class="child_toggle expanded"></div>
         </div>
         <div class=child_area>
           <slot></slot>
@@ -284,15 +289,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       this.shadowRoot.querySelector(".parent_edge").style.display = "none";
     }
 
-    if (this.#children.length && !this.#childrenHidden) {
-      this.shadowRoot.querySelector(".child_edge").style.display = "";
-      const last_child = this.#children[this.#children.length - 1];
-      let extent = last_child.getBoundingClientRect().top + last_child.parent_edge_offset - this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().bottom;
-      this.shadowRoot.querySelector(".child_edge").style.height = extent + "px";
-    } else {
-      this.shadowRoot.querySelector(".child_edge").style.display = "none";
-    }
-
     const toggle = this.shadowRoot.querySelector(".child_toggle");
     if (this.#children.length)
       toggle.style.display = "";
@@ -316,10 +312,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
 
   get children_hidden() {
     return this.#childrenHidden;
-  }
-
-  get has_child_edges() {
-    return true;
   }
 
   get parent() {
