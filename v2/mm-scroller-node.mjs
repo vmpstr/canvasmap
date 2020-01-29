@@ -74,7 +74,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           position: absolute;
           bottom: 50%;
           right: 100%;
-          width: 15px;
+          width: 16px;
           height: 30%;
           border-bottom: 1px solid black;
           border-left: 1px solid black;
@@ -130,8 +130,8 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
         }
       </style>
       <div class=container>
+        <div class=parent_edge></div>
         <div class=label_holder>
-          <div class=parent_edge></div>
           <div class=label>${this.label}</div>
           <div class=ew_drag_handle></div>
         </div>
@@ -307,7 +307,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     if (!this.shadowRoot)
       return 0;
     return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
-           this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().top;
+           this.shadowRoot.querySelector(".container").getBoundingClientRect().top;
   }
 
   get children_hidden() {
