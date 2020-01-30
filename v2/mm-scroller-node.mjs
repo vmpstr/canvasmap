@@ -29,7 +29,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
 
           border: 1px solid black;
           border-radius: 10px;
-          padding: 5px 10px 5px 10px;
+          padding: 5px 0 5px 0;
 
           position: relative;
         }
@@ -46,14 +46,16 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           margin-top: 5px;
           position: relative;
           contain: layout;
-          /* debug */
-          background: pink;
           overflow-y: auto;
           overflow-x: hidden;
-          max-height: 100px;
-        }
-        .child_area.hidden {
+          padding-left: 10px;
+          padding-right: 10px;
+
           min-height: 10px;
+
+          /* debug */
+          background: rgba(0, 0, 0, 0.05);
+          max-height: 100px;
         }
         .child_area.hidden > * {
           display: none;
@@ -69,6 +71,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           min-width: 20px;
 
           position: relative;
+          padding: 0 10px 0 10px;
         }
         .parent_edge {
           position: absolute;
@@ -102,15 +105,28 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
         }
         .ew_drag_handle {
           position: absolute;
-          top: 15%;
+          top: 10px;
           right: -2px;
           width: 5px;
-          height: 70%;
+          height: calc(100% - 20px);
         }
         .ew_drag_handle:hover {
           cursor: ew-resize;
         }
         .ew_drag_handle.hidden {
+          display: none;
+        }
+        .ns_drag_handle {
+          position: absolute;
+          left: 10px;
+          bottom: -2px;
+          height: 5px;
+          width: calc(100% - 20px);
+        }
+        .ns_drag_handle:hover {
+          cursor: ns-resize;
+        }
+        .ns_drag_handle.hidden {
           display: none;
         }
 
@@ -122,9 +138,8 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           opacity: 20%;
         }
         .divider {
-          width: calc(100% + 20px);
+          width: 100%;
           border-top: 1px solid grey;
-          margin-left: -10px;
           margin-top: 5px;
           position: relative;
         }
@@ -133,7 +148,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
         <div class=parent_edge></div>
         <div class=label_holder>
           <div class=label>${this.label}</div>
-          <div class=ew_drag_handle></div>
         </div>
         <div class=divider>
           <div class="child_toggle expanded"></div>
@@ -141,10 +155,15 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
         <div class=child_area>
           <slot></slot>
         </div>
+        <div class=ew_drag_handle></div>
+        <div class=ns_drag_handle></div>
       </div>
     `;
 
     const container = this.shadowRoot.querySelector(".container");
+    const label = this.shadowRoot.querySelector(".label");
+    const child_area = this.shadowRoot.querySelector(".child_area");
+
     container.setAttribute("draggable", true);
     container.addEventListener("dragstart", (e) => {
       this.#onDragStart(e);
@@ -156,20 +175,18 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       this.#onDragEnd(e);
     });
     container.addEventListener("click", (e) => {
-      if (e.target == container)
+      if (e.target == container || e.target == label || e.target == child_area)
         this.select();
     });
 
-    const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
-    drag_handle.setAttribute("draggable", true);
-
-    const label = this.shadowRoot.querySelector(".label");
     label.setAttribute("title", this.label);
     label.addEventListener("dblclick", (e) => {
       this.startLabelEdit();
       e.stopPropagation();
     });
 
+    const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
+    drag_handle.setAttribute("draggable", true);
     drag_handle.addEventListener("dragstart", (e) => {
       this.#onDragHandleStart(e);
     });
