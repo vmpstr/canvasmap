@@ -24,6 +24,9 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           display: block;
         }
         .container {
+          display: flex;
+          flex-direction: column;
+
           box-sizing: border-box;
           width: 100%;
 
@@ -32,6 +35,8 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           padding: 5px 0 5px 0;
 
           position: relative;
+          overflow: hidden;
+          max-width: max-content;
         }
         .container:hover {
           box-shadow: 0 0 2px 0;
@@ -53,9 +58,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
 
           min-height: 10px;
 
-          /* debug */
           background: rgba(0, 0, 0, 0.05);
-          max-height: 100px;
         }
         .child_area.hidden > * {
           display: none;
@@ -185,16 +188,28 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       e.stopPropagation();
     });
 
-    const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
+    let drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
     drag_handle.setAttribute("draggable", true);
     drag_handle.addEventListener("dragstart", (e) => {
-      this.#onDragHandleStart(e);
+      this.#onEWDragHandleStart(e);
     });
     drag_handle.addEventListener("drag", (e) => {
-      this.#onDragHandle(e);
+      this.#onEWDragHandle(e);
     });
     drag_handle.addEventListener("dragend", (e) => {
-      this.#onDragHandleEnd(e);
+      this.#onEWDragHandleEnd(e);
+    });
+
+    drag_handle = this.shadowRoot.querySelector(".ns_drag_handle");
+    drag_handle.setAttribute("draggable", true);
+    drag_handle.addEventListener("dragstart", (e) => {
+      this.#onNSDragHandleStart(e);
+    });
+    drag_handle.addEventListener("drag", (e) => {
+      this.#onNSDragHandle(e);
+    });
+    drag_handle.addEventListener("dragend", (e) => {
+      this.#onNSDragHandleEnd(e);
     });
 
     if (this.#from_data && this.#from_data.label_width) {
@@ -476,31 +491,59 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     e.stopPropagation();
   }
 
-  #labelContainerInitialWidth;
-  #onDragHandleStart = (e) => {
-    this.#labelContainerInitialWidth =
-      this.shadowRoot.querySelector('.label_holder').getBoundingClientRect().width;
+  #containerInitialWidth;
+  #onEWDragHandleStart = (e) => {
+    this.#containerInitialWidth =
+      this.shadowRoot.querySelector('.container').getBoundingClientRect().width;
     this.#dragOffset[0] = -e.clientX;
     this.#dragOffset[1] = -e.clientY;
     e.stopPropagation();
   }
-  #onDragHandle = (e) => {
+  #onEWDragHandle = (e) => {
     if (e.clientX == 0 && e.clientY == 0)
       return;
 
     let new_width =
-      this.#labelContainerInitialWidth + (e.clientX + this.#dragOffset[0]);
+      this.#containerInitialWidth + (e.clientX + this.#dragOffset[0]);
     if (new_width < 10)
       new_width = 10;
 
-    const label_holder = this.shadowRoot.querySelector(".label_holder");
-    label_holder.style.width = new_width + "px";
+    const container = this.shadowRoot.querySelector(".container");
+    container.style.width = new_width + "px";
     // Reset if we're trying to expand past the max-width.
-    if (label_holder.getBoundingClientRect().width < new_width)
-      label_holder.style.width = "";
+    if (container.getBoundingClientRect().width < new_width)
+      container.style.width = "";
     e.stopPropagation();
   }
-  #onDragHandleEnd = (e) => {
+  #onEWDragHandleEnd = (e) => {
+    e.stopPropagation();
+  }
+
+  #containerInitialHeight;
+  #onNSDragHandleStart = (e) => {
+    this.#containerInitialHeight =
+      this.shadowRoot.querySelector('.container').getBoundingClientRect().height;
+    this.#dragOffset[0] = -e.clientX;
+    this.#dragOffset[1] = -e.clientY;
+    e.stopPropagation();
+  }
+  #onNSDragHandle = (e) => {
+    if (e.clientX == 0 && e.clientY == 0)
+      return;
+
+    let new_height =
+      this.#containerInitialHeight + (e.clientY + this.#dragOffset[1]);
+    if (new_height < 10)
+      new_height = 10;
+
+    const container = this.shadowRoot.querySelector(".container");
+    container.style.maxHeight = new_height + "px";
+    // Reset if we're trying to expand past the max-height.
+    if (container.getBoundingClientRect().height < new_height)
+      container.style.maxHeight = "";
+    e.stopPropagation();
+  }
+  #onNSDragHandleEnd = (e) => {
     e.stopPropagation();
   }
 
