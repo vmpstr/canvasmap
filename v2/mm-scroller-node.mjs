@@ -37,6 +37,8 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           position: relative;
           overflow: hidden;
           max-width: max-content;
+          min-width: 30px;
+          min-height: 30px;
         }
         .container:hover {
           box-shadow: 0 0 2px 0;
@@ -70,7 +72,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
         }
         .label_holder {
           max-width: min-content;
-          min-width: 20px;
 
           position: relative;
           padding: 0 10px 0 10px;
@@ -159,9 +160,9 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
         <div class=child_area>
           <slot></slot>
         </div>
-        <div class=ew_drag_handle></div>
-        <div class=ns_drag_handle></div>
       </div>
+      <div class=ew_drag_handle></div>
+      <div class=ns_drag_handle></div>
     `;
 
     const container = this.shadowRoot.querySelector(".container");
@@ -510,8 +511,8 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
 
     let new_width =
       this.#containerInitialWidth + (e.clientX + this.#dragOffset[0]);
-    if (new_width < 10)
-      new_width = 10;
+    if (new_width < 30)
+      new_width = 30;
 
     const container = this.shadowRoot.querySelector(".container");
     container.style.width = new_width + "px";
