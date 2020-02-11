@@ -26,6 +26,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
         }
         ::slotted(*) {
           position: absolute;
+          will-change: transform;
         }
         div {
           height: 100%;
@@ -288,7 +289,11 @@ window.customElements.define("mm-map", class extends HTMLElement {
       return;
     nodes = JSON.parse(nodes);
     for (let i = 0; i < nodes.length; ++i) {
-      const node = this.#addTreeNode();
+      let node;
+      if (!nodes[i].type || nodes[i].type == "node")
+        node = this.#addTreeNode();
+      else if (nodes[i].type == "scroller")
+        node = this.#addScrollerNode();
       node.loadFromData(nodes[i]);
     }
   }

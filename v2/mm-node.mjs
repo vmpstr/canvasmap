@@ -170,7 +170,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
       this.#onDragHandleEnd(e);
     });
 
-    if (this.#from_data && this.#from_data.label_width) {
+    if (this.#from_data) {
       const label_holder = this.shadowRoot.querySelector(".label_holder");
       label_holder.style.width = this.#from_data.label_width;
     }
@@ -346,8 +346,12 @@ window.customElements.define("mm-node", class extends HTMLElement {
     label.title = v;
   }
 
-  #createNode = () => {
-    const node = document.createElement("mm-node");
+  #createNode = (type) => {
+    let node;
+    if (!type || type == "node")
+      node = document.createElement("mm-node");
+    else if (type == "scroller")
+      node = document.createElement("mm-scroller-node");
     node.setMap(this.#map);
     return node;
   }
@@ -559,14 +563,12 @@ window.customElements.define("mm-node", class extends HTMLElement {
   loadFromData = (data) => {
     this.label = data.label || '<deprecated label>';
     this.position = data.position || [0, 0];
-    if (data.label_width) {
-      if (this.shadowRoot) {
-        this.shadowRoot.querySelector(".label_holder").style.width = data.label_width;
-      } else {
-        if (!this.#from_data)
-          this.#from_data = {};
-        this.#from_data['label_width'] = data.label_width;
-      }
+    if (this.shadowRoot) {
+      this.shadowRoot.querySelector(".label_holder").style.width = data.label_width;
+    } else {
+      if (!this.#from_data)
+        this.#from_data = {};
+      this.#from_data['label_width'] = data.label_width;
     }
     // TODO(vmpstr): backcompat.
     if (!data.nodes)
@@ -574,7 +576,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
     for (let i = 0; i < data.nodes.length; ++i) {
       // The order here is important since adoptNode resets the position
       // information.
-      const node = this.#createNode();
+      const node = this.#createNode(data.nodes[i].type);
       node.loadFromData(data.nodes[i]);
       this.adoptNode(node);
     }
@@ -585,6 +587,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
   serializeToData = () => {
     let data = {
       label: this.label,
+      type: 'node',
       position: this.position,
       children_hidden: this.#childrenHidden,
       nodes: []

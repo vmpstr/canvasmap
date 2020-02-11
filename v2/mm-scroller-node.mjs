@@ -213,9 +213,9 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       this.#onNSDragHandleEnd(e);
     });
 
-    if (this.#from_data && this.#from_data.label_width) {
-      const label_holder = this.shadowRoot.querySelector(".label_holder");
-      label_holder.style.width = this.#from_data.label_width;
+    if (this.#from_data) {
+      container.style.width = this.#from_data.container_width;
+      container.style.maxHeight = this.#from_data.container_maxheight;
     }
 
     this.#childResizeObserver = new ResizeObserver(this.#onChildSizeChanged);
@@ -376,8 +376,12 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     label.title = v;
   }
 
-  #createNode = () => {
-    const node = document.createElement("mm-node");
+  #createNode = (type) => {
+    let node;
+    if (!type || type == "node")
+      node = document.createElement("mm-node");
+    else if (type == "scroller")
+      node = document.createElement("mm-scroller-node");
     node.setMap(this.#map);
     return node;
   }
@@ -617,22 +621,24 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
   loadFromData = (data) => {
     this.label = data.label || '<deprecated label>';
     this.position = data.position || [0, 0];
-    if (data.label_width) {
-      if (this.shadowRoot) {
-        this.shadowRoot.querySelector(".label_holder").style.width = data.label_width;
-      } else {
-        if (!this.#from_data)
-          this.#from_data = {};
-        this.#from_data['label_width'] = data.label_width;
-      }
+    if (this.shadowRoot) {
+      const container = this.shadowRoot.querySelector(".container");
+      container.style.width = data.container_width;
+      container.style.maxHeight = data.container_maxheight;
+    } else {
+      if (!this.#from_data)
+        this.#from_data = {};
+      this.#from_data['container_width'] = data.container_width;
+      this.#from_data['container_maxheight'] = data.container_maxheight;
     }
+
     // TODO(vmpstr): backcompat.
     if (!data.nodes)
       return;
     for (let i = 0; i < data.nodes.length; ++i) {
       // The order here is important since adoptNode resets the position
       // information.
-      const node = this.#createNode();
+      const node = this.#createNode(data.nodes[i].type);
       node.loadFromData(data.nodes[i]);
       this.adoptNode(node);
     }
@@ -643,13 +649,17 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
   serializeToData = () => {
     let data = {
       label: this.label,
+      type: 'scroller',
       position: this.position,
       children_hidden: this.#childrenHidden,
       nodes: []
     };
-    const label_holder = this.shadowRoot && this.shadowRoot.querySelector(".label_holder");
-    if (label_holder && label_holder.style.width)
-      data['label_width'] = label_holder.style.width;
+    const container = this.shadowRoot.querySelector(".container");
+    if (container && container.style.width)
+      data['container_width'] = container.style.width;
+    if (container && container.style.maxHeight)
+      data['container_maxheight'] = container.style.maxHeight;
+
     for (let i = 0; i < this.#children.length; ++i)
       data.nodes.push(this.#children[i].serializeToData());
     return data;
