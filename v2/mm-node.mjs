@@ -107,8 +107,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
           width: 5px;
           height: 70%;
           opacity: 0.01;
-        }
-        .ew_drag_handle:hover {
           cursor: ew-resize;
         }
         .ew_drag_handle.hidden {

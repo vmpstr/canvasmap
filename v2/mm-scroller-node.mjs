@@ -38,7 +38,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           overflow: hidden;
           max-width: max-content;
           min-width: 30px;
-          min-height: 30px;
+          min-height: 45px;
         }
         .container:hover {
           box-shadow: 0 0 2px 0;
@@ -106,16 +106,23 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
         .child_toggle.expanded:hover {
           background: indianred;
         }
+        .nwse_drag_handle {
+          position: absolute;
+          bottom: -3px;
+          right: -3px;
+          width: 20px;
+          height: 20px;
+          cursor: nwse-resize;
+          opacity: 0.01;
+        }
         .ew_drag_handle {
           position: absolute;
           top: 10px;
-          right: -2px;
-          width: 5px;
+          right: -3px;
+          width: 7px;
           height: calc(100% - 20px);
-          opacity: 0.01;
-        }
-        .ew_drag_handle:hover {
           cursor: ew-resize;
+          opacity: 0.01;
         }
         .ew_drag_handle.hidden {
           display: none;
@@ -123,16 +130,11 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
         .ns_drag_handle {
           position: absolute;
           left: 10px;
-          bottom: -2px;
-          height: 5px;
+          bottom: -3px;
+          height: 7px;
           width: calc(100% - 20px);
-          opacity: 0.01;
-        }
-        .ns_drag_handle:hover {
           cursor: ns-resize;
-        }
-        .ns_drag_handle.hidden {
-          display: none;
+          opacity: 0.01;
         }
 
         :host(.selected) .container {
@@ -163,6 +165,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       </div>
       <div class=ew_drag_handle></div>
       <div class=ns_drag_handle></div>
+      <div class=nwse_drag_handle></div>
     `;
 
     const container = this.shadowRoot.querySelector(".container");
@@ -193,25 +196,37 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     let drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
     drag_handle.setAttribute("draggable", true);
     drag_handle.addEventListener("dragstart", (e) => {
-      this.#onEWDragHandleStart(e);
+      this.#onDragHandleStart(e, "ew");
     });
     drag_handle.addEventListener("drag", (e) => {
-      this.#onEWDragHandle(e);
+      this.#onDragHandle(e);
     });
     drag_handle.addEventListener("dragend", (e) => {
-      this.#onEWDragHandleEnd(e);
+      this.#onDragHandleEnd(e);
     });
 
     drag_handle = this.shadowRoot.querySelector(".ns_drag_handle");
     drag_handle.setAttribute("draggable", true);
     drag_handle.addEventListener("dragstart", (e) => {
-      this.#onNSDragHandleStart(e);
+      this.#onDragHandleStart(e, "ns");
     });
     drag_handle.addEventListener("drag", (e) => {
-      this.#onNSDragHandle(e);
+      this.#onDragHandle(e);
     });
     drag_handle.addEventListener("dragend", (e) => {
-      this.#onNSDragHandleEnd(e);
+      this.#onDragHandleEnd(e);
+    });
+
+    drag_handle = this.shadowRoot.querySelector(".nwse_drag_handle");
+    drag_handle.setAttribute("draggable", true);
+    drag_handle.addEventListener("dragstart", (e) => {
+      this.#onDragHandleStart(e, "nwse");
+    });
+    drag_handle.addEventListener("drag", (e) => {
+      this.#onDragHandle(e);
+    });
+    drag_handle.addEventListener("dragend", (e) => {
+      this.#onDragHandleEnd(e);
     });
 
     if (this.#from_data) {
@@ -497,62 +512,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     e.stopPropagation();
   }
 
-  #containerInitialWidth;
-  #onEWDragHandleStart = (e) => {
-    this.#containerInitialWidth =
-      this.shadowRoot.querySelector('.container').getBoundingClientRect().width;
-    this.#dragOffset[0] = -e.clientX;
-    this.#dragOffset[1] = -e.clientY;
-    e.stopPropagation();
-  }
-  #onEWDragHandle = (e) => {
-    if (e.clientX == 0 && e.clientY == 0)
-      return;
-
-    let new_width =
-      this.#containerInitialWidth + (e.clientX + this.#dragOffset[0]);
-    if (new_width < 30)
-      new_width = 30;
-
-    const container = this.shadowRoot.querySelector(".container");
-    container.style.width = new_width + "px";
-    // Reset if we're trying to expand past the max-width.
-    if (container.getBoundingClientRect().width < new_width)
-      container.style.width = "";
-    e.stopPropagation();
-  }
-  #onEWDragHandleEnd = (e) => {
-    e.stopPropagation();
-  }
-
-  #containerInitialHeight;
-  #onNSDragHandleStart = (e) => {
-    this.#containerInitialHeight =
-      this.shadowRoot.querySelector('.container').getBoundingClientRect().height;
-    this.#dragOffset[0] = -e.clientX;
-    this.#dragOffset[1] = -e.clientY;
-    e.stopPropagation();
-  }
-  #onNSDragHandle = (e) => {
-    if (e.clientX == 0 && e.clientY == 0)
-      return;
-
-    let new_height =
-      this.#containerInitialHeight + (e.clientY + this.#dragOffset[1]);
-    if (new_height < 10)
-      new_height = 10;
-
-    const container = this.shadowRoot.querySelector(".container");
-    container.style.maxHeight = new_height + "px";
-    // Reset if we're trying to expand past the max-height.
-    if (container.getBoundingClientRect().height < new_height)
-      container.style.maxHeight = "";
-    e.stopPropagation();
-  }
-  #onNSDragHandleEnd = (e) => {
-    e.stopPropagation();
-  }
-
   onDraggedChild = (child) => {
     const rect = this.getBoundingClientRect();
     const child_rect = child.getBoundingClientRect();
@@ -615,6 +574,47 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     child.setParent(this);
     this.appendChild(child);
     child.resetPosition();
+  }
+
+  // Drag handles --------------------------------
+  #containerInitialWidth;
+  #containerInitialHeight;
+  #dragHandleMode;
+  #onDragHandleStart = (e, mode) => {
+    this.#dragHandleMode = mode;
+    const rect = this.shadowRoot.querySelector(".container").getBoundingClientRect();
+    this.#containerInitialWidth = rect.width;
+    this.#containerInitialHeight = rect.height;
+    this.#dragOffset[0] = -e.clientX;
+    this.#dragOffset[1] = -e.clientY;
+    e.stopPropagation();
+  }
+  #onDragHandle = (e) => {
+    if (e.clientX == 0 && e.clientY == 0)
+      return;
+
+    let new_width =
+      this.#containerInitialWidth + (e.clientX + this.#dragOffset[0]);
+    let new_height =
+      this.#containerInitialHeight + (e.clientY + this.#dragOffset[1]);
+
+    const container = this.shadowRoot.querySelector(".container");
+    if (this.#dragHandleMode == "ew" || this.#dragHandleMode == "nwse") {
+      container.style.width = new_width + "px";
+      // Reset if we're trying to expand past the max-width.
+      if (container.getBoundingClientRect().width < new_width)
+        container.style.width = "";
+    }
+    if (this.#dragHandleMode == "ns" || this.#dragHandleMode == "nwse") {
+      container.style.maxHeight = new_height + "px";
+      // Reset if we're trying to expand past the max-height.
+      if (container.getBoundingClientRect().height < new_height)
+        container.style.maxHeight = "";
+    }
+    e.stopPropagation();
+  }
+  #onDragHandleEnd = (e) => {
+    e.stopPropagation();
   }
 
   // Storage -------------------------------------
