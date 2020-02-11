@@ -57,6 +57,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           overflow-x: hidden;
           padding-left: 10px;
           padding-right: 10px;
+          padding-bottom: 5px;
 
           min-height: 10px;
 
