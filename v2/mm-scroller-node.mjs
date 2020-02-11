@@ -69,7 +69,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           width: max-content;
         }
         .label_holder {
-          width: 100%;
           max-width: min-content;
           min-width: 20px;
 
@@ -80,7 +79,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           position: absolute;
           bottom: 50%;
           right: 100%;
-          width: 16px;
+          width: 15px;
           height: 30%;
           border-bottom: 1px solid black;
           border-left: 1px solid black;
@@ -112,6 +111,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           right: -2px;
           width: 5px;
           height: calc(100% - 20px);
+          opacity: 0.01;
         }
         .ew_drag_handle:hover {
           cursor: ew-resize;
@@ -125,6 +125,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           bottom: -2px;
           height: 5px;
           width: calc(100% - 20px);
+          opacity: 0.01;
         }
         .ns_drag_handle:hover {
           cursor: ns-resize;
@@ -147,8 +148,8 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           position: relative;
         }
       </style>
+      <div class=parent_edge></div>
       <div class=container>
-        <div class=parent_edge></div>
         <div class=label_holder>
           <div class=label>${this.label}</div>
         </div>
