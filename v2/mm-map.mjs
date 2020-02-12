@@ -1,3 +1,5 @@
+import * as Nodes from "./nodes.mjs";
+
 const default_label = "new task";
 window.customElements.define("mm-map", class extends HTMLElement {
   #nodes = [];
@@ -28,7 +30,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
           position: absolute;
           will-change: transform;
         }
-        div {
+        #self {
           height: 100%;
         }
 
@@ -42,46 +44,26 @@ window.customElements.define("mm-map", class extends HTMLElement {
         }
       </style>
       <mm-context-menu id=context>
-        <li id="tree"><div>Add tree node</div><div>dblclick</div></li>
+        <li id="node"><div>Add tree node</div><div>dblclick</div></li>
         <li id="scroller"><div>Add scroller node</div><div>Shift+dblclick</div></li>
       </mm-context-menu>
       <div id=self></div>
       <slot></slot>
     `;
 
-    customElements.whenDefined("mm-node").then(() => {
-      const slot = shadow.querySelector("slot");
-      slot.addEventListener("slotchange", this.#onSlotChange);
-      this.#onSlotChange();
-    });
+    shadow.addEventListener("click", this.#onClick);
+    shadow.addEventListener("dblclick", this.#onDoubleClick);
+    shadow.addEventListener("contextmenu", this.#onContextMenu);
 
-    this.shadowRoot.addEventListener("click", (e) => {
-      this.#onClick(e);
-    });
-
-    this.shadowRoot.addEventListener("dblclick", (e) => {
-      this.#onDoubleClick(e);
-    });
-    
-    this.shadowRoot.addEventListener("contextmenu", (e) => {
-      this.#onContextMenu(e);
-    });
-
-    customElements.whenDefined("mm-context-menu").then(() => {
-      shadow.querySelector("#context").client = this;
-    });
+    shadow.querySelector("slot").addEventListener("slotchange", this.#onSlotChange);
+    shadow.querySelector("#context").client = this;
 
     setInterval(() => { this.#saveToStorage(); }, 1000);
   }
 
   onContextMenuSelected = (item) => {
     const context = this.shadowRoot.querySelector("#context");
-    if (item.id == "tree") {
-      this.#addTreeNodeForUserAt(context.position[0], context.position[1]);
-    } else if (item.id == "scroller") {
-      this.#addScrollerNodeForUserAt(context.position[0], context.position[1]);
-    }
-
+    this.#addNodeForUserAt(item.id, context.position[0], context.position[1]);
   }
 
   #onContextMenu = (e) => {
@@ -97,7 +79,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
     let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
     this.#nodes = [];
     for (let i = 0; i < nodes.length; ++i) {
-      if (nodes[i].tagName && nodes[i].tagName.toLowerCase().startsWith("mm-")) {
+      if (Nodes.isKnownTag(nodes[i].tagName)) {
         this.#nodes.push(nodes[i]);
         nodes[i].setMap(this);
         nodes[i].setParent(this);
@@ -112,16 +94,13 @@ window.customElements.define("mm-map", class extends HTMLElement {
   }
 
   #onDoubleClick = (e) => {
-    if (e.shiftKey) {
-      this.#addScrollerNodeForUserAt(e.clientX, e.clientY);
-    } else {
-      this.#addTreeNodeForUserAt(e.clientX, e.clientY);
-    }
+    let type = e.shiftKey ? "scroller" : "node";
+    this.#addNodeForUserAt(type, e.clientX, e.clientY);
     e.stopPropagation();
   }
 
-  #addTreeNodeForUserAt = (x, y) => {
-    const node = this.#addTreeNode();
+  #addNodeForUserAt = (type, x, y) => {
+    const node = Nodes.addNode(type, this, this);
     node.label = default_label;
 
     const rect = node.getBoundingClientRect();
@@ -129,41 +108,6 @@ window.customElements.define("mm-map", class extends HTMLElement {
 
     node.select();
     node.startLabelEdit();
-  }
-
-  #addScrollerNodeForUserAt = (x, y) => {
-    const node = this.#addScrollerNode();
-    node.label = default_label;
-
-    const rect = node.getBoundingClientRect();
-    node.position = [x - 0.5 * rect.width, y - 0.5 * rect.height];
-
-    node.select();
-    node.startLabelEdit();
-  }
-
-  #createTreeNode = () => {
-    const node = document.createElement("mm-node");
-    node.setMap(this);
-    return node;
-  }
-
-  #createScrollerNode = () => {
-    const node = document.createElement("mm-scroller-node");
-    node.setMap(this);
-    return node;
-  }
-
-  #addTreeNode = () => {
-    const node = this.#createTreeNode();
-    this.appendChild(node);
-    return node;
-  }
-
-  #addScrollerNode = () => {
-    const node = this.#createScrollerNode();
-    this.appendChild(node);
-    return node;
   }
 
   handleKeyDown = (e) => {
@@ -179,7 +123,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
 
     let child;
     if (e.key == "Tab" || e.key == "Enter") {
-      child = this.#createTreeNode();
+      child = Nodes.createNode("node", this);
       child.label = default_label;
     }
 
@@ -289,11 +233,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
       return;
     nodes = JSON.parse(nodes);
     for (let i = 0; i < nodes.length; ++i) {
-      let node;
-      if (!nodes[i].type || nodes[i].type == "node")
-        node = this.#addTreeNode();
-      else if (nodes[i].type == "scroller")
-        node = this.#addScrollerNode();
+      const node = Nodes.addNode(nodes[i].type || "node", this, this);
       node.loadFromData(nodes[i]);
     }
   }

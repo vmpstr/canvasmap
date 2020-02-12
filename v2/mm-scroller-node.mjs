@@ -150,6 +150,10 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
           border-top: 1px solid grey;
           margin-top: 5px;
           position: relative;
+
+          /* fix flex making the height 0.99 -> 0 */
+          box-sizing: border-box;
+          min-height: 2px;
         }
       </style>
       <div class=parent_edge></div>
