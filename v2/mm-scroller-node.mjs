@@ -1,3 +1,5 @@
+import * as Nodes from "./nodes.mjs";
+
 window.customElements.define("mm-scroller-node", class extends HTMLElement {
   #map
   #parent
@@ -397,16 +399,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     label.title = v;
   }
 
-  #createNode = (type) => {
-    let node;
-    if (!type || type == "node")
-      node = document.createElement("mm-node");
-    else if (type == "scroller")
-      node = document.createElement("mm-scroller-node");
-    node.setMap(this.#map);
-    return node;
-  }
-
   resetPosition = () => {
     this.style.left = '0';
     this.style.top = '0';
@@ -568,7 +560,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
     this.#children = [];
     for (let i = 0; i < nodes.length; ++i) {
-      if (nodes[i].tagName && nodes[i].tagName.toLowerCase().startsWith("mm-"))
+      if (Nodes.isKnownTag(nodes[i].tagName))
         this.#children.push(nodes[i]);
     }
   }
@@ -644,7 +636,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     for (let i = 0; i < data.nodes.length; ++i) {
       // The order here is important since adoptNode resets the position
       // information.
-      const node = this.#createNode(data.nodes[i].type);
+      const node = Nodes.createNode(data.nodes[i].type, this.#map);
       node.loadFromData(data.nodes[i]);
       this.adoptNode(node);
     }
