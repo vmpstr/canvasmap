@@ -14,7 +14,13 @@ body {
 <script type=module src=mm-context-menu.mjs></script>
 <script type=module src=mm-scroller-node.mjs></script>
 
-<script>
+<script type=module>
+import { UndoStack } from "./undo-stack.mjs";
+
+// TODO(vmpstr): This won't work with multiple undo stacks.
+// Figure out the right spot for the undo stack.
+window.gUndoStack = new UndoStack();
+
 const promises = [
   customElements.whenDefined("mm-map"),
   customElements.whenDefined("mm-node"),
@@ -25,7 +31,11 @@ const promises = [
 Promise.all(promises).then(() => {
   const map = document.createElement("mm-map");
   document.body.appendChild(map);
-  window.addEventListener("keydown", (e) => { map.handleKeyDown(e); });
+  window.addEventListener("keydown", (e) => {
+    if (gUndoStack.handleKeyDown(e))
+      return;
+    map.handleKeyDown(e);
+  });
   map.setStorage(window.localStorage);
   map.loadFromStorage();
 });

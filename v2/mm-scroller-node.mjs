@@ -441,9 +441,13 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
 
     this.label = e.target.innerText;
     e.preventDefault();
+
+    gUndoStack.endLabelEdit();
   };
 
   startLabelEdit = () => {
+    gUndoStack.startLabelEdit(this);
+
     const el = this.shadowRoot.querySelector(".label");
 
     // This is somewhat optional, but if they only thing we have is
