@@ -92,17 +92,15 @@ class MoveTransaction extends Transaction {
 
   apply() {
     super.target.map = this.#new_data.map;
-    // The order here is important since fixed position parents will reset position.
-    super.target.position = this.#new_data.position;
     this.#new_data.parent.adoptNode(super.target, this.#new_data.ordinal);
+    super.target.position = this.#new_data.position;
     super.target.select();
   }
 
   undo() {
     super.target.map = this.#old_data.map;
-    // The order here is important since fixed position parents will reset position.
-    super.target.position = this.#old_data.position;
     this.#old_data.parent.adoptNode(super.target, this.#old_data.ordinal);
+    super.target.position = this.#old_data.position;
     super.target.select();
   }
 
