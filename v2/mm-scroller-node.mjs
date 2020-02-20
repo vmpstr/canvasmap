@@ -264,8 +264,11 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
 
   }
 
-  setMap = (map) => {
-    this.#map = map;
+  set map(v) {
+    this.#map = v;
+  }
+  get map() {
+    return this.#map;
   }
 
   setParent = (parent) => {
@@ -491,6 +494,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
 
   #dragOffset = [0, 0];
   #onDragStart = (e) => {
+    gUndoStack.startNodeDrag(this);
     const rect = this.getBoundingClientRect();
     this.#dragOffset[0] = rect.x - e.clientX;
     this.#dragOffset[1] = rect.y - e.clientY;
@@ -511,6 +515,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
   #onDragEnd = (e) => {
     this.classList.remove('dragged');
     e.stopPropagation();
+    gUndoStack.endNodeDrag();
   }
 
   onDraggedChild = (child) => {
@@ -569,11 +574,15 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     }
   }
 
-  adoptNode = (child) => {
+  adoptNode = (child, ordinal) => {
+    if (ordinal === undefined)
+      ordinal = this.children.length;
+    console.assert(ordinal <= this.children.length);
+
     // Need to know where to position the child.
     child.remove();
     child.setParent(this);
-    this.appendChild(child);
+    this.insertBefore(child, this.children[ordinal]);
     child.resetPosition();
   }
 

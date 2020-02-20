@@ -81,7 +81,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
     for (let i = 0; i < nodes.length; ++i) {
       if (Nodes.isKnownTag(nodes[i].tagName)) {
         this.#nodes.push(nodes[i]);
-        nodes[i].setMap(this);
+        nodes[i].map = this;
         nodes[i].setParent(this);
       }
     }

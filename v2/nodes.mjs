@@ -9,7 +9,7 @@ export function createNode(type, map) {
     console.log(type);
     console.assert(false);
   }
-  node.setMap(map);
+  node.map = map;
   return node;
 }
 

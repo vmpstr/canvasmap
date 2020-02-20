@@ -198,10 +198,14 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
   }
 
-  setMap = (map) => {
-    this.#map = map;
+  set map(v) {
+    this.#map = v;
+  }
+  get map() {
+    return this.#map;
   }
 
+  // You probably want adoptNode().
   setParent = (parent) => {
     this.#parent = parent;
     this.#computeStyleFromPosition();
@@ -321,14 +325,16 @@ window.customElements.define("mm-node", class extends HTMLElement {
     return this.#parent;
   }
 
+  // Position is in screen coordinates. 
+  // TODO(vmpstr): it will become hard to reason about this, so we need better
+  // spaces or explicit separation between fixed position and free nodes.
+  get position() {
+    return this.#position;
+  }
   set position(v) {
     console.assert(v);
     this.#position = v;
     this.#computeStyleFromPosition();
-  }
-
-  get position() {
-    return this.#position;
   }
 
   get label() {
@@ -438,6 +444,8 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
   #dragOffset = [0, 0];
   #onDragStart = (e) => {
+    gUndoStack.startNodeDrag(this);
+
     const rect = this.getBoundingClientRect();
     this.#dragOffset[0] = rect.x - e.clientX;
     this.#dragOffset[1] = rect.y - e.clientY;
@@ -458,6 +466,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
   #onDragEnd = (e) => {
     this.classList.remove('dragged');
     e.stopPropagation();
+    gUndoStack.endNodeDrag();
   }
 
   #labelContainerInitialWidth;
@@ -544,11 +553,15 @@ window.customElements.define("mm-node", class extends HTMLElement {
     }
   }
 
-  adoptNode = (child) => {
+  adoptNode = (child, ordinal) => {
+    if (ordinal === undefined)
+      ordinal = this.children.length;
+    console.assert(ordinal <= this.children.length);
+
     // Need to know where to position the child.
     child.remove();
     child.setParent(this);
-    this.appendChild(child);
+    this.insertBefore(child, this.children[ordinal]);
     child.resetPosition();
   }
 
