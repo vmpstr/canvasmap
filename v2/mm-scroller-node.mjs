@@ -591,6 +591,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
   #containerInitialHeight;
   #dragHandleMode;
   #onDragHandleStart = (e, mode) => {
+    gUndoStack.startSizeHandleDrag(this);
     this.#dragHandleMode = mode;
     const rect = this.shadowRoot.querySelector(".container").getBoundingClientRect();
     this.#containerInitialWidth = rect.width;
@@ -612,19 +613,33 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     if (this.#dragHandleMode == "ew" || this.#dragHandleMode == "nwse") {
       container.style.width = new_width + "px";
       // Reset if we're trying to expand past the max-width.
-      if (container.getBoundingClientRect().width < new_width)
+      if (container.getBoundingClientRect().width + 10 < new_width)
         container.style.width = "";
     }
     if (this.#dragHandleMode == "ns" || this.#dragHandleMode == "nwse") {
       container.style.maxHeight = new_height + "px";
       // Reset if we're trying to expand past the max-height.
-      if (container.getBoundingClientRect().height < new_height)
+      if (container.getBoundingClientRect().height + 10 < new_height)
         container.style.maxHeight = "";
     }
     e.stopPropagation();
   }
   #onDragHandleEnd = (e) => {
     e.stopPropagation();
+    gUndoStack.endSizeHandleDrag();
+  }
+
+  getSizingInfo() {
+    const container = this.shadowRoot.querySelector(".container");
+    return {
+      width: container.style.width,
+      maxHeight: container.style.maxHeight
+    };
+  }
+  setSizingInfo(info) {
+    const container = this.shadowRoot.querySelector(".container");
+    container.style.width = info.width;
+    container.style.maxHeight = info.maxHeight;
   }
 
   // Storage -------------------------------------

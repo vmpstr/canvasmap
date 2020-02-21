@@ -101,10 +101,15 @@ window.customElements.define("mm-map", class extends HTMLElement {
 
   #addNodeForUserAt = (type, x, y) => {
     const node = Nodes.addNode(type, this, this);
+
     node.label = default_label;
 
     const rect = node.getBoundingClientRect();
     node.position = [x - 0.5 * rect.width, y - 0.5 * rect.height];
+
+    // Needs to happen before label edit, since
+    // that will start a new transaction.
+    gUndoStack.didCreate(node);
 
     node.select();
     node.startLabelEdit();
@@ -115,8 +120,8 @@ window.customElements.define("mm-map", class extends HTMLElement {
     if (!node)
       return;
     if (e.key == "Delete" || e.key == "Backspace") {
+      gUndoStack.willDelete(node);
       node.deselect();
-      node.parent.removeChild(node);
       node.remove();
       return;
     }
@@ -138,6 +143,10 @@ window.customElements.define("mm-map", class extends HTMLElement {
     }
 
     if (child) {
+      // Needs to happen before label edit, since
+      // that will start a new transaction.
+      gUndoStack.didCreate(child);
+
       child.select();
       child.startLabelEdit();
       e.preventDefault();
@@ -169,10 +178,6 @@ window.customElements.define("mm-map", class extends HTMLElement {
           node.parent.select();
       }
     }
-  }
-
-  removeChild = (child) => {
-    // Do nothing, since we'll handle this in slot assignment changing
   }
 
   onDraggedChild = (child) => {

@@ -63,18 +63,8 @@ function child_ordinal(child, parent) {
 }
 
 class MoveTransaction extends Transaction {
-  #old_data = {
-    map: null,
-    parent: null,
-    position: [0, 0],
-    ordinal: -1
-  };
-  #new_data = {
-    map: null,
-    parent: null,
-    position: [0, 0],
-    ordinal: -1
-  };
+  #old_data;
+  #new_data;
 
   constructor(target) {
     super(target);
@@ -92,15 +82,15 @@ class MoveTransaction extends Transaction {
 
   apply() {
     super.target.map = this.#new_data.map;
-    this.#new_data.parent.adoptNode(super.target, this.#new_data.ordinal);
     super.target.position = this.#new_data.position;
+    this.#new_data.parent.adoptNode(super.target, this.#new_data.ordinal);
     super.target.select();
   }
 
   undo() {
     super.target.map = this.#old_data.map;
-    this.#old_data.parent.adoptNode(super.target, this.#old_data.ordinal);
     super.target.position = this.#old_data.position;
+    this.#old_data.parent.adoptNode(super.target, this.#old_data.ordinal);
     super.target.select();
   }
 
@@ -111,6 +101,93 @@ class MoveTransaction extends Transaction {
            this.#old_data.position[0] != this.#new_data.position[0] ||
            this.#old_data.position[1] != this.#new_data.position[1] ||
            this.#old_data.ordinal != this.#new_data.ordinal;
+  }
+};
+
+class CreateTransaction extends Transaction {
+  #data;
+
+  constructor(target) {
+    super(target);
+  }
+
+  apply() {
+    super.target.map = this.#data.map;
+    super.target.position = this.#data.position;
+    this.#data.parent.adoptNode(super.target, this.#data.ordinal);
+    super.target.select();
+  }
+
+  undo() {
+    super.target.remove();
+  }
+
+  done() {
+    this.#data = {
+      map: super.target.map,
+      parent: super.target.parent,
+      position: super.target.position.slice(),
+      ordinal: child_ordinal(super.target, super.target.parent)
+    };
+    return true;
+  }
+};
+
+class DeleteTransaction extends Transaction {
+  #data;
+
+  constructor(target) {
+    super(target);
+    this.#data = {
+      map: super.target.map,
+      parent: super.target.parent,
+      position: super.target.position.slice(),
+      ordinal: child_ordinal(super.target, super.target.parent)
+    };
+  }
+
+  apply() {
+    super.target.remove();
+  }
+
+  undo() {
+    super.target.map = this.#data.map;
+    super.target.position = this.#data.position;
+    this.#data.parent.adoptNode(super.target, this.#data.ordinal);
+    super.target.select();
+  }
+
+  done() {
+    this.#data = {
+      map: super.target.map,
+      parent: super.target.parent,
+      position: super.target.position.slice(),
+      ordinal: child_ordinal(super.target, super.target.parent)
+    };
+    return true;
+  }
+};
+
+class SizeHandleDragTransaction extends Transaction {
+  #old_info;
+  #new_info;
+
+  constructor(target) {
+    super(target);
+    this.#old_info = super.target.getSizingInfo();
+  }
+
+  apply() {
+    super.target.setSizingInfo(this.#new_info);
+  }
+
+  undo() {
+    super.target.setSizingInfo(this.#old_info);
+  }
+
+  done() {
+    this.#new_info = super.target.getSizingInfo();
+    return true;
   }
 };
 
@@ -155,6 +232,27 @@ export class UndoStack {
   endNodeDrag() {
     this.#recordTransaction();
   }
+
+  didCreate(target) {
+    console.assert(!this.#current_transaction);
+    this.#current_transaction = new CreateTransaction(target);
+    this.#recordTransaction();
+  }
+
+  willDelete(target) {
+    console.assert(!this.#current_transaction);
+    this.#current_transaction = new DeleteTransaction(target);
+    this.#recordTransaction();
+  }
+
+  startSizeHandleDrag(target) {
+    console.assert(!this.#current_transaction);
+    this.#current_transaction = new SizeHandleDragTransaction(target);
+  }
+  endSizeHandleDrag() {
+    this.#recordTransaction();
+  }
+
 
   #recordTransaction = () => {
     console.assert(this.#current_transaction);

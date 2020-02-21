@@ -15,6 +15,7 @@ export function createNode(type, map) {
 
 export function addNode(type, parent, map) {
   const node = createNode(type, map);
+  node.setParent(parent);
   parent.appendChild(node);
   return node;
 }

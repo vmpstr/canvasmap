@@ -471,6 +471,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
   #labelContainerInitialWidth;
   #onDragHandleStart = (e) => {
+    gUndoStack.startSizeHandleDrag(this);
     this.#labelContainerInitialWidth =
       this.shadowRoot.querySelector('.label_holder').getBoundingClientRect().width;
     this.#dragOffset[0] = -e.clientX;
@@ -489,12 +490,23 @@ window.customElements.define("mm-node", class extends HTMLElement {
     const label_holder = this.shadowRoot.querySelector(".label_holder");
     label_holder.style.width = new_width + "px";
     // Reset if we're trying to expand past the max-width.
-    if (label_holder.getBoundingClientRect().width < new_width)
+    if (label_holder.getBoundingClientRect().width + 10 < new_width)
       label_holder.style.width = "";
     e.stopPropagation();
   }
   #onDragHandleEnd = (e) => {
     e.stopPropagation();
+    gUndoStack.endSizeHandleDrag();
+  }
+
+  getSizingInfo() {
+    return {
+      label_width: this.shadowRoot.querySelector(".label_holder").style.width
+    };
+  }
+  setSizingInfo(info) {
+    this.shadowRoot.querySelector(".label_holder").style.width =
+      info.label_width;
   }
 
   onDraggedChild = (child) => {
