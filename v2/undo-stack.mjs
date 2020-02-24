@@ -1,3 +1,5 @@
+import * as Nodes from "./nodes.mjs";
+
 class Transaction {
   #target = null;
 
@@ -53,15 +55,6 @@ class LabelChangeTransaction extends Transaction {
   }
 };
 
-function child_ordinal(child, parent) {
-  const children = parent.children;
-  for (let i = 0; i < children.length; ++i) {
-    if (children[i] == child)
-      return i;
-  }
-  return -1;
-}
-
 class MoveTransaction extends Transaction {
   #old_data;
   #new_data;
@@ -76,7 +69,7 @@ class MoveTransaction extends Transaction {
       map: super.target.map,
       parent: super.target.parent,
       position: super.target.position.slice(),
-      ordinal: child_ordinal(super.target, super.target.parent)
+      ordinal: Nodes.childOrdinal(super.target, super.target.parent)
     }
   }
 
@@ -127,7 +120,7 @@ class CreateTransaction extends Transaction {
       map: super.target.map,
       parent: super.target.parent,
       position: super.target.position.slice(),
-      ordinal: child_ordinal(super.target, super.target.parent)
+      ordinal: Nodes.childOrdinal(super.target, super.target.parent)
     };
     return true;
   }
@@ -142,7 +135,7 @@ class DeleteTransaction extends Transaction {
       map: super.target.map,
       parent: super.target.parent,
       position: super.target.position.slice(),
-      ordinal: child_ordinal(super.target, super.target.parent)
+      ordinal: Nodes.childOrdinal(super.target, super.target.parent)
     };
   }
 
@@ -162,7 +155,7 @@ class DeleteTransaction extends Transaction {
       map: super.target.map,
       parent: super.target.parent,
       position: super.target.position.slice(),
-      ordinal: child_ordinal(super.target, super.target.parent)
+      ordinal: Nodes.childOrdinal(super.target, super.target.parent)
     };
     return true;
   }
@@ -228,6 +221,8 @@ export class UndoStack {
   startNodeDrag(target) {
     console.assert(!this.#current_transaction);
     this.#current_transaction = new MoveTransaction(target);
+  }
+  setNodeDragClone(clone) {
   }
   endNodeDrag() {
     this.#recordTransaction();

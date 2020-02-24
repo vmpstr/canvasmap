@@ -23,3 +23,16 @@ export function addNode(type, parent, map) {
 export function isKnownTag(tag) {
   return tag.startsWith("MM-");
 }
+
+export function childOrdinal(child, parent) {
+  const children = parent.children;
+  if (!parent || !children || !children.length)
+    return -1;
+
+  for (let i = 0; i < children.length; ++i) {
+    if (children[i] == child)
+      return i;
+  }
+  return -1;
+}
+

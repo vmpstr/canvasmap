@@ -442,21 +442,46 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.classList.remove('selected');
   }
 
-  #dragOffset = [0, 0];
-  #onDragStart = (e) => {
-    gUndoStack.startNodeDrag(this);
+  #cloneWithChildren = () => {
+    const clone = Nodes.createNode("node", this.#map);
+    clone.label = this.label;
+    for (let i = 0; i < this.#children.length; ++i)
+      clone.adoptNode(this.#children[0]);
+    return clone;
+  }
 
+  #dragOffset = [0, 0];
+  #dragCloned = false;
+  #onDragStart = (e) => {
     const rect = this.getBoundingClientRect();
     this.#dragOffset[0] = rect.x - e.clientX;
     this.#dragOffset[1] = rect.y - e.clientY;
     this.classList.add('dragged');
     e.stopPropagation();
+
+    gUndoStack.startNodeDrag(this);
+    this.#dragCloned = false;
   }
   #onDrag = (e) => {
+    let rect = this.getBoundingClientRect();
+    if (e.shiftKey && !this.#dragCloned) {
+      // Save state and move this to the map.
+      const parent = this.parent;
+      const ordinal = Nodes.childOrdinal(this, this.parent);
+      // Do we need this?
+      this.#map.adoptNode(this);
+
+      const clone = this.#cloneWithChildren();
+      parent.adoptNode(clone, ordinal);
+      clone.position = [rect.x, rect.y];
+      gUndoStack.setNodeDragClone(clone);
+    }
+    this.#dragCloned = true;
+
     if (e.clientX == 0 && e.clientY == 0)
       return;
     this.style.left = this.style.top = 0;
-    const rect = this.getBoundingClientRect();
+    rect = this.getBoundingClientRect();
     this.position = [this.#dragOffset[0] + e.clientX,
                      this.#dragOffset[1] + e.clientY];
     this.#parent.onDraggedChild(this);
