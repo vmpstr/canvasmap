@@ -11,13 +11,13 @@ body {
 }
 </style>
 
-<script type=module src=mm-map.mjs></script>
-<script type=module src=mm-node.mjs></script>
-<script type=module src=mm-context-menu.mjs></script>
-<script type=module src=mm-scroller-node.mjs></script>
+<script type=module src="./src/mm-map.mjs"></script>
+<script type=module src="./src/mm-node.mjs"></script>
+<script type=module src="./src/mm-context-menu.mjs"></script>
+<script type=module src="./src/mm-scroller-node.mjs"></script>
 
 <script type=module>
-import { UndoStack } from "./undo-stack.mjs";
+import { UndoStack } from "./src/undo-stack.mjs";
 
 // TODO(vmpstr): This won't work with multiple undo stacks.
 // Figure out the right spot for the undo stack.
