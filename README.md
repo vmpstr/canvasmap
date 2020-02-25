@@ -5,7 +5,7 @@ mindmap / organization tool.
 
 ### Links
 
-live demo: [here](vmpstr.github.io/canvasmap/)
+live demo: [here](https://vmpstr.github.io/canvasmap/index.html)
 
 ### Things to try
 
