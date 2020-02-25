@@ -1,5 +1,0 @@
-yarn add --dev jest
-yarn test
-
-file.js
-file.test.js
