@@ -8,7 +8,6 @@ const style = `
 .label {
   box-sizing: border-box;
   width: 100%;
-  max-width: min-content;
 
   overflow: hidden;
   white-space: nowrap;
@@ -38,8 +37,8 @@ const style = `
   width: max-content;
 }
 .label_holder {
-  width: 100%;
-  max-width: min-content;
+  width: max-content;
+  max-width: max-content;
   min-width: 20px;
 
   position: relative;
@@ -139,8 +138,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
     label.setAttribute("title", this.label);
     label.innerHTML = this.label;
 
-    const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
-    drag_handle.setAttribute("draggable", true);
 
     label.addEventListener("dblclick", (e) => {
       this.startLabelEdit();
@@ -151,14 +148,14 @@ window.customElements.define("mm-node", class extends HTMLElement {
         this.select();
     });
 
-    this.dragControl_ = new Handlers.NodeDragControl(this, label);
+    const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
+    const label_holder = this.shadowRoot.querySelector(".label_holder");
 
-    drag_handle.addEventListener("dragstart", (e) => this.onDragHandleStart_(e));
-    drag_handle.addEventListener("drag", (e) => this.onDragHandle_(e));
-    drag_handle.addEventListener("dragend", (e) => this.onDragHandleEnd_(e));
+    this.dragControl_ = new Handlers.NodeDragControl(this, label);
+    this.dragHandleControl_ = new Handlers.DragHandleControl(
+      this, label_holder, {'ew': drag_handle});
 
     if (this.fromData_) {
-      const label_holder = this.shadowRoot.querySelector(".label_holder");
       label_holder.style.width = this.fromData_.label_width;
     }
 
@@ -182,7 +179,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
       this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
     }
     this.computeEdges_();
-
   }
 
   set map(v) {
@@ -434,34 +430,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
     const clone = Nodes.createNode("node", this.map_);
     clone.label = this.label;
     return clone;
-  }
-
-  onDragHandleStart_(e) {
-    gUndoStack.startSizeHandleDrag(this);
-    this.labelContainerInitialWidth_ =
-      this.shadowRoot.querySelector('.label_holder').getBoundingClientRect().width;
-    this.dragOffset_ = [-e.clientX, -e.clientY];
-    e.stopPropagation();
-  }
-  onDragHandle_(e) {
-    if (e.clientX == 0 && e.clientY == 0)
-      return;
-
-    let new_width =
-      this.labelContainerInitialWidth_ + (e.clientX + this.dragOffset_[0]);
-    if (new_width < 10)
-      new_width = 10;
-
-    const label_holder = this.shadowRoot.querySelector(".label_holder");
-    label_holder.style.width = new_width + "px";
-    // Reset if we're trying to expand past the max-width.
-    if (label_holder.getBoundingClientRect().width + 10 < new_width)
-      label_holder.style.width = "";
-    e.stopPropagation();
-  }
-  onDragHandleEnd_(e) {
-    e.stopPropagation();
-    gUndoStack.endSizeHandleDrag();
   }
 
   getSizingInfo() {

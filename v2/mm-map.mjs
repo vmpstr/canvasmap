@@ -53,7 +53,10 @@ window.customElements.define("mm-map", class extends HTMLElement {
     shadow.addEventListener("click", (e) => this.onClick_(e));
     shadow.addEventListener("dblclick", (e) => this.onDoubleClick_(e));
     shadow.addEventListener("contextmenu", (e) => this.onContextMenu_(e));
-    shadow.addEventListener("dragover", (e) => e.preventDefault());
+    shadow.addEventListener("dragover", (e) => {
+      window.gMouseTracker = [e.clientX, e.clientY];
+      e.preventDefault();
+    });
 
     shadow.querySelector("slot").addEventListener("slotchange", (e) => this.onSlotChange_(e));
     shadow.querySelector("#context").client = this;

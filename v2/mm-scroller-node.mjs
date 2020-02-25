@@ -30,6 +30,8 @@ const style = `
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  /* workaround for ff? */
+  width: calc(100% + 5px);
 }
 .child_area {
   margin-top: 5px;
@@ -176,11 +178,16 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       <body>${body}</body>`;
 
     const container = this.shadowRoot.querySelector(".container");
-    const label = this.shadowRoot.querySelector(".label");
-    const child_area = this.shadowRoot.querySelector(".child_area");
 
     this.dragControl_ = new Handlers.NodeDragControl(this, container);
+    this.dragHandleControl_ = new Handlers.DragHandleControl(
+      this, container,
+      {'ew': this.shadowRoot.querySelector(".ew_drag_handle"),
+       'ns': this.shadowRoot.querySelector(".ns_drag_handle"),
+       'nwse': this.shadowRoot.querySelector(".nwse_drag_handle")});
 
+    const label = this.shadowRoot.querySelector(".label");
+    const child_area = this.shadowRoot.querySelector(".child_area");
     container.addEventListener("click", (e) => {
       if (e.target == container || e.target == label || e.target == child_area)
         this.select();
@@ -191,42 +198,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     label.addEventListener("dblclick", (e) => {
       this.startLabelEdit();
       e.stopPropagation();
-    });
-
-    let drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
-    drag_handle.setAttribute("draggable", true);
-    drag_handle.addEventListener("dragstart", (e) => {
-      this.onDragHandleStart_(e, "ew");
-    });
-    drag_handle.addEventListener("drag", (e) => {
-      this.onDragHandle_(e);
-    });
-    drag_handle.addEventListener("dragend", (e) => {
-      this.onDragHandleEnd_(e);
-    });
-
-    drag_handle = this.shadowRoot.querySelector(".ns_drag_handle");
-    drag_handle.setAttribute("draggable", true);
-    drag_handle.addEventListener("dragstart", (e) => {
-      this.onDragHandleStart_(e, "ns");
-    });
-    drag_handle.addEventListener("drag", (e) => {
-      this.onDragHandle_(e);
-    });
-    drag_handle.addEventListener("dragend", (e) => {
-      this.onDragHandleEnd_(e);
-    });
-
-    drag_handle = this.shadowRoot.querySelector(".nwse_drag_handle");
-    drag_handle.setAttribute("draggable", true);
-    drag_handle.addEventListener("dragstart", (e) => {
-      this.onDragHandleStart_(e, "nwse");
-    });
-    drag_handle.addEventListener("drag", (e) => {
-      this.onDragHandle_(e);
-    });
-    drag_handle.addEventListener("dragend", (e) => {
-      this.onDragHandleEnd_(e);
     });
 
     if (this.fromData_) {
@@ -558,45 +529,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     child.setParent(this);
     this.insertBefore(child, this.children[ordinal]);
     child.resetPosition();
-  }
-
-  // Drag handles --------------------------------
-  onDragHandleStart_(e, mode) {
-    gUndoStack.startSizeHandleDrag(this);
-    this.dragHandleMode_ = mode;
-    const rect = this.shadowRoot.querySelector(".container").getBoundingClientRect();
-    this.containerInitialWidth_ = rect.width;
-    this.containerInitialHeight_ = rect.height;
-    this.dragOffset_ = [-e.clientX, -e.clientY];
-    e.stopPropagation();
-  }
-  onDragHandle_(e) {
-    if (e.clientX == 0 && e.clientY == 0)
-      return;
-
-    let new_width =
-      this.containerInitialWidth_ + (e.clientX + this.dragOffset_[0]);
-    let new_height =
-      this.containerInitialHeight_ + (e.clientY + this.dragOffset_[1]);
-
-    const container = this.shadowRoot.querySelector(".container");
-    if (this.dragHandleMode_ == "ew" || this.dragHandleMode_ == "nwse") {
-      container.style.width = new_width + "px";
-      // Reset if we're trying to expand past the max-width.
-      if (container.getBoundingClientRect().width + 10 < new_width)
-        container.style.width = "";
-    }
-    if (this.dragHandleMode_ == "ns" || this.dragHandleMode_ == "nwse") {
-      container.style.maxHeight = new_height + "px";
-      // Reset if we're trying to expand past the max-height.
-      if (container.getBoundingClientRect().height + 10 < new_height)
-        container.style.maxHeight = "";
-    }
-    e.stopPropagation();
-  }
-  onDragHandleEnd_(e) {
-    e.stopPropagation();
-    gUndoStack.endSizeHandleDrag();
   }
 
   getSizingInfo() {
