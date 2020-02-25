@@ -2,12 +2,11 @@ import * as Nodes from "./nodes.mjs";
 
 const default_label = "new task";
 window.customElements.define("mm-map", class extends HTMLElement {
-  #nodes = [];
-  #selectedNode = null;
-  #storage = null;
-
   constructor() {
     super();
+    this.nodes_ = [];
+    this.selectedNode_ = null;
+    this.storage_ = null;
   }
 
   connectedCallback() {
@@ -51,22 +50,24 @@ window.customElements.define("mm-map", class extends HTMLElement {
       <slot></slot>
     `;
 
-    shadow.addEventListener("click", this.#onClick);
-    shadow.addEventListener("dblclick", this.#onDoubleClick);
-    shadow.addEventListener("contextmenu", this.#onContextMenu);
+    shadow.addEventListener("click", (e) => this.onClick_(e));
+    shadow.addEventListener("dblclick", (e) => this.onDoubleClick_(e));
+    shadow.addEventListener("contextmenu", (e) => this.onContextMenu_(e));
+    shadow.addEventListener("dragover", (e) => e.preventDefault());
 
-    shadow.querySelector("slot").addEventListener("slotchange", this.#onSlotChange);
+    shadow.querySelector("slot").addEventListener("slotchange", (e) => this.onSlotChange_(e));
     shadow.querySelector("#context").client = this;
 
-    setInterval(() => { this.#saveToStorage(); }, 1000);
+    setInterval(() => this.saveToStorage_(), 1000);
+
   }
 
-  onContextMenuSelected = (item) => {
+  onContextMenuSelected(item) {
     const context = this.shadowRoot.querySelector("#context");
-    this.#addNodeForUserAt(item.id, context.position[0], context.position[1]);
+    this.addNodeForUserAt_(item.id, context.position[0], context.position[1]);
   }
 
-  #onContextMenu = (e) => {
+  onContextMenu_(e) {
     if (e.target.id == "self") {
       this.shadowRoot.querySelector("#context").showAt(e.clientX, e.clientY);
       e.preventDefault();
@@ -75,31 +76,31 @@ window.customElements.define("mm-map", class extends HTMLElement {
     }
   }
 
-  #onSlotChange = (e) => {
+  onSlotChange_(e) {
     let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
-    this.#nodes = [];
+    this.nodes_ = [];
     for (let i = 0; i < nodes.length; ++i) {
       if (Nodes.isKnownTag(nodes[i].tagName)) {
-        this.#nodes.push(nodes[i]);
+        this.nodes_.push(nodes[i]);
         nodes[i].map = this;
         nodes[i].setParent(this);
       }
     }
   }
 
-  #onClick = (e) => {
+  onClick_(e) {
     if (e.target.id == "self")
-      this.#selectedNode && this.#selectedNode.deselect();
+      this.selectedNode_ && this.selectedNode_.deselect();
     this.shadowRoot.querySelector("#context").hide();
   }
 
-  #onDoubleClick = (e) => {
+  onDoubleClick_(e) {
     let type = e.shiftKey ? "scroller" : "node";
-    this.#addNodeForUserAt(type, e.clientX, e.clientY);
+    this.addNodeForUserAt_(type, e.clientX, e.clientY);
     e.stopPropagation();
   }
 
-  #addNodeForUserAt = (type, x, y) => {
+  addNodeForUserAt_(type, x, y) {
     const node = Nodes.addNode(type, this, this);
 
     node.label = default_label;
@@ -115,8 +116,8 @@ window.customElements.define("mm-map", class extends HTMLElement {
     node.startLabelEdit();
   }
 
-  handleKeyDown = (e) => {
-    const node = this.#selectedNode;
+  handleKeyDown(e) {
+    const node = this.selectedNode_;
     if (!node)
       return;
     if (e.key == "Delete" || e.key == "Backspace") {
@@ -180,45 +181,46 @@ window.customElements.define("mm-map", class extends HTMLElement {
     }
   }
 
-  onDraggedChild = (child) => {
+  onDraggedChild(child) {
     const rect = child.getBoundingClientRect();
-    for (let i = 0; i < this.#nodes.length; ++i) {
-      if (this.#nodes[i] == child)
+    for (let i = 0; i < this.nodes_.length; ++i) {
+      if (this.nodes_[i] == child)
         continue;
-      const node_rect = this.#nodes[i].getBoundingClientRect();
+      const node_rect = this.nodes_[i].getBoundingClientRect();
       if (rect.left > node_rect.left && rect.left < node_rect.right &&
           rect.top > node_rect.top && rect.top < node_rect.bottom + 15) {
-        this.#nodes[i].unhideChildren();
-        this.#nodes[i].adoptNode(child);
+        this.nodes_[i].unhideChildren();
+        this.nodes_[i].adoptNode(child);
       }
     }
   }
 
-  adoptNode = (child) => {
+  adoptNode(child) {
     child.remove();
+    child.setParent(this);
     // This will trigger onSlotChange, which will take care the rest of state.
     this.appendChild(child);
   }
 
   // Selection -----------------------------------
   nodeSelected(node) {
-    if (this.#selectedNode)
-      this.#selectedNode.deselect();
-    this.#selectedNode = node;
+    if (this.selectedNode_)
+      this.selectedNode_.deselect();
+    this.selectedNode_ = node;
   }
 
   nodeDeselected(node) {
-    if (this.#selectedNode == node)
-      this.#selectedNode = null;
+    if (this.selectedNode_ == node)
+      this.selectedNode_ = null;
   }
 
   didHideChildren(node) {
-    if (!this.#selectedNode)
+    if (!this.selectedNode_)
       return;
-    let ancestor = this.#selectedNode.parent;
+    let ancestor = this.selectedNode_.parent;
     while (ancestor) {
       if (ancestor == node) {
-        this.#selectedNode.deselect();
+        this.selectedNode_.deselect();
         break;
       }
       ancestor = ancestor.parent;
@@ -226,14 +228,14 @@ window.customElements.define("mm-map", class extends HTMLElement {
   }
 
   // Storage -------------------------------------
-  setStorage = (storage) => {
-    this.#storage = storage;
+  setStorage(storage) {
+    this.storage_ = storage;
   }
 
-  loadFromStorage = () => {
-    console.assert(this.#storage);
+  loadFromStorage() {
+    console.assert(this.storage_);
 
-    let nodes = this.#storage.getItem("nodes");
+    let nodes = this.storage_.getItem("nodes");
     if (!nodes)
       return;
     nodes = JSON.parse(nodes);
@@ -243,13 +245,13 @@ window.customElements.define("mm-map", class extends HTMLElement {
     }
   }
 
-  #saveToStorage = () => {
-    if (!this.#storage)
+  saveToStorage_() {
+    if (!this.storage_)
       return;
 
     let nodes = [];
-    for (let i = 0; i < this.#nodes.length; ++i)
-      nodes.push(this.#nodes[i].serializeToData());
-    this.#storage.setItem("nodes", JSON.stringify(nodes));
+    for (let i = 0; i < this.nodes_.length; ++i)
+      nodes.push(this.nodes_[i].serializeToData());
+    this.storage_.setItem("nodes", JSON.stringify(nodes));
   }
 });

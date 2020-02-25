@@ -1,142 +1,143 @@
 import * as Nodes from "./nodes.mjs";
+import * as Handlers from "./handlers.mjs";
+
+const style = `
+:host {
+  display: block;
+}
+.label {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: min-content;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 10px;
+}
+.label:hover {
+  box-shadow: 0 0 2px 0;
+}
+.child_area {
+  position: relative;
+  contain: layout;
+  margin-left: 30px;
+}
+.child_area.hidden {
+  min-height: 10px;
+}
+.child_area.hidden > * {
+  display: none;
+}
+::slotted(*) {
+  position: relative;
+  margin-top: 5px;
+  width: max-content;
+}
+.label_holder {
+  width: 100%;
+  max-width: min-content;
+  min-width: 20px;
+
+  position: relative;
+}
+.parent_edge {
+  position: absolute;
+  bottom: 50%;
+  right: 100%;
+  width: 15px;
+  height: 30%;
+  border-bottom: 1px solid black;
+  border-left: 1px solid black;
+  border-radius: 0px 0px 0px 10px;
+}
+.child_edge {
+  position: absolute;
+  top: 100%;
+  border-left: 1px solid black;
+  width: 1px;
+  left: 14px;
+  height: 50px;
+}
+.child_toggle {
+  position: absolute;
+  top: 100%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  left: 9px;
+  background: powderblue;
+  border: 1px solid black;
+  z-index: 1;
+}
+.child_toggle:hover {
+  cursor: pointer;
+}
+.child_toggle.collapsed:hover {
+  background: springgreen;
+}
+.child_toggle.expanded:hover {
+  background: indianred;
+}
+.ew_drag_handle {
+  position: absolute;
+  top: 15%;
+  right: -2px;
+  width: 5px;
+  height: 70%;
+  opacity: 0.01;
+  cursor: ew-resize;
+}
+.ew_drag_handle.hidden {
+  display: none;
+}
+
+:host(.selected) .label {
+  border-color: blue;
+  box-shadow: 0 0 3px 0 blue;
+}
+:host(.dragged) {
+  opacity: 40%;
+}`;
+
+const body = `
+<div class=label_holder>
+  <div class=parent_edge></div>
+  <div class=child_edge></div>
+  <div class="child_toggle expanded"></div>
+  <div class=label></div>
+  <div class=ew_drag_handle></div>
+</div>
+<div class=child_area>
+  <slot></slot>
+</div>`;
 
 window.customElements.define("mm-node", class extends HTMLElement {
-  #map
-  #parent
-  #children = []
-  #position = [0, 0]
-  #label = ''
-  #childResizeObserver;
-  #childrenHidden = false;
-
   constructor() {
     super();
+    this.children_ = []
+    this.position_ = [0, 0]
+    this.label_ = ''
+    this.childrenHidden_ = false;
   }
 
   connectedCallback() {
     if (this.shadowRoot) {
-      this.#computeEdges();
+      this.computeEdges_();
       return;
     }
 
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.innerHTML = `
-      <style>
-        :host {
-          display: block;
-        }
-        .label {
-          box-sizing: border-box;
-          width: 100%;
-          max-width: min-content;
+      <style>${style}</style>
+      <body>${body}</body>`;
 
-          overflow: hidden;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-
-          border: 1px solid black;
-          border-radius: 10px;
-          padding: 10px;
-        }
-        .label:hover {
-          box-shadow: 0 0 2px 0;
-        }
-        .child_area {
-          position: relative;
-          contain: layout;
-          margin-left: 30px;
-        }
-        .child_area.hidden {
-          min-height: 10px;
-        }
-        .child_area.hidden > * {
-          display: none;
-        }
-        ::slotted(*) {
-          position: relative;
-          margin-top: 5px;
-          width: max-content;
-        }
-        .label_holder {
-          width: 100%;
-          max-width: min-content;
-          min-width: 20px;
-
-          position: relative;
-        }
-        .parent_edge {
-          position: absolute;
-          bottom: 50%;
-          right: 100%;
-          width: 15px;
-          height: 30%;
-          border-bottom: 1px solid black;
-          border-left: 1px solid black;
-          border-radius: 0px 0px 0px 10px;
-        }
-        .child_edge {
-          position: absolute;
-          top: 100%;
-          border-left: 1px solid black;
-          width: 1px;
-          left: 14px;
-          height: 50px;
-        }
-        .child_toggle {
-          position: absolute;
-          top: 100%;
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          left: 9px;
-          background: powderblue;
-          border: 1px solid black;
-          z-index: 1;
-        }
-        .child_toggle:hover {
-          cursor: pointer;
-        }
-        .child_toggle.collapsed:hover {
-          background: springgreen;
-        }
-        .child_toggle.expanded:hover {
-          background: indianred;
-        }
-        .ew_drag_handle {
-          position: absolute;
-          top: 15%;
-          right: -2px;
-          width: 5px;
-          height: 70%;
-          opacity: 0.01;
-          cursor: ew-resize;
-        }
-        .ew_drag_handle.hidden {
-          display: none;
-        }
-
-        :host(.selected) .label {
-          border-color: blue;
-          box-shadow: 0 0 3px 0 blue;
-        }
-        :host(.dragged) {
-          opacity: 20%;
-        }
-      </style>
-        <div class=label_holder>
-          <div class=parent_edge></div>
-          <div class=child_edge></div>
-          <div class="child_toggle expanded"></div>
-          <div class=label>${this.label}</div>
-          <div class=ew_drag_handle></div>
-        </div>
-      <div class=child_area>
-        <slot></slot>
-      </div>
-    `;
     const label = this.shadowRoot.querySelector(".label");
-    label.setAttribute("draggable", true);
     label.setAttribute("title", this.label);
+    label.innerHTML = this.label;
 
     const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
     drag_handle.setAttribute("draggable", true);
@@ -150,95 +151,81 @@ window.customElements.define("mm-node", class extends HTMLElement {
         this.select();
     });
 
-    label.addEventListener("dragstart", (e) => {
-      this.#onDragStart(e);
-    });
-    label.addEventListener("drag", (e) => {
-      this.#onDrag(e);
-    });
-    label.addEventListener("dragend", (e) => {
-      this.#onDragEnd(e);
-    });
+    this.dragControl_ = new Handlers.NodeDragControl(this, label);
 
-    drag_handle.addEventListener("dragstart", (e) => {
-      this.#onDragHandleStart(e);
-    });
-    drag_handle.addEventListener("drag", (e) => {
-      this.#onDragHandle(e);
-    });
-    drag_handle.addEventListener("dragend", (e) => {
-      this.#onDragHandleEnd(e);
-    });
+    drag_handle.addEventListener("dragstart", (e) => this.onDragHandleStart_(e));
+    drag_handle.addEventListener("drag", (e) => this.onDragHandle_(e));
+    drag_handle.addEventListener("dragend", (e) => this.onDragHandleEnd_(e));
 
-    if (this.#from_data) {
+    if (this.fromData_) {
       const label_holder = this.shadowRoot.querySelector(".label_holder");
-      label_holder.style.width = this.#from_data.label_width;
+      label_holder.style.width = this.fromData_.label_width;
     }
 
-    this.#childResizeObserver = new ResizeObserver(this.#onChildSizeChanged);
+    this.childResizeObserver_ = new ResizeObserver((e) => this.onChildSizeChanged_(e));
 
     const slot = shadow.querySelector("slot");
-    slot.addEventListener("slotchange", this.#onSlotChange);
+    slot.addEventListener("slotchange", (e) => this.onSlotChange_(e));
 
     const child_toggle = this.shadowRoot.querySelector(".child_toggle");
     child_toggle.addEventListener("click", (e) => {
-      this.#onChildToggle(e);
+      this.onChildToggle_(e);
     });
     child_toggle.addEventListener("dblclick", (e) => {
       e.stopPropagation();
     });
 
-    if (this.#childrenHidden) {
+    if (this.childrenHidden_) {
       this.shadowRoot.querySelector(".child_area").classList.add("hidden");
-      this.#map.didHideChildren(this);
+      this.map_.didHideChildren(this);
     } else {
       this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
     }
-    this.#computeEdges();
+    this.computeEdges_();
 
   }
 
   set map(v) {
-    this.#map = v;
+    this.map_ = v;
   }
   get map() {
-    return this.#map;
+    return this.map_;
   }
 
   // You probably want adoptNode().
-  setParent = (parent) => {
-    this.#parent = parent;
-    this.#computeStyleFromPosition();
-    this.#computeEdges();
+  setParent(parent) {
+    this.parent_ = parent;
+    this.computeStyleFromPosition_();
+    this.computeEdges_();
   }
 
-  #onSlotChange = () => {
-    for (let i = 0; i < this.#children.length; ++i) {
-      this.#childResizeObserver.unobserve(this.#children[i]);
+  onSlotChange_() {
+    for (let i = 0; i < this.children_.length; ++i) {
+      this.childResizeObserver_.unobserve(this.children_[i]);
     }
-    this.#repopulateChildren();
-    for (let i = 0; i < this.#children.length; ++i) {
-      this.#childResizeObserver.observe(this.#children[i]);
+    this.repopulateChildren_();
+    for (let i = 0; i < this.children_.length; ++i) {
+      this.childResizeObserver_.observe(this.children_[i]);
     }
-    this.#computeEdges();
+    this.computeEdges_();
   }
 
-  #onChildSizeChanged = () => {
-    this.#computeEdges();
+  onChildSizeChanged_() {
+    this.computeEdges_();
   }
 
-  #onChildToggle = (e) => {
-    this.#childrenHidden = !this.#childrenHidden;
+  onChildToggle_(e) {
+    this.childrenHidden_ = !this.childrenHidden_;
     if (!this.shadowRoot)
       return;
 
-    if (this.#childrenHidden) {
+    if (this.childrenHidden_) {
       this.shadowRoot.querySelector(".child_area").classList.add("hidden");
-      this.#map.didHideChildren(this);
+      this.map_.didHideChildren(this);
     } else {
       this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
     }
-    this.#computeEdges();
+    this.computeEdges_();
 
     if (e) {
       e.preventDefault();
@@ -246,46 +233,46 @@ window.customElements.define("mm-node", class extends HTMLElement {
     }
   }
 
-  unhideChildren = () => {
-    if (this.#childrenHidden)
-      this.#onChildToggle();
-    return this.#children.length > 0;
+  unhideChildren() {
+    if (this.childrenHidden_)
+      this.onChildToggle_();
+    return this.children_.length > 0;
   }
 
   get firstChild() {
-    if (this.#children.length)
-      return this.#children[0];
+    if (this.children_.length)
+      return this.children_[0];
     return null;
   }
 
-  nextChild = (child) => {
-    for (let i = 0; i < this.#children.length - 1; ++i) {
-      if (this.#children[i] == child)
-        return this.#children[i + 1];
+  nextChild(child) {
+    for (let i = 0; i < this.children_.length - 1; ++i) {
+      if (this.children_[i] == child)
+        return this.children_[i + 1];
     }
     return null;
   }
 
-  prevChild = (child) => {
-    for (let i = 1; i < this.#children.length; ++i) {
-      if (this.#children[i] == child)
-        return this.#children[i - 1];
+  prevChild(child) {
+    for (let i = 1; i < this.children_.length; ++i) {
+      if (this.children_[i] == child)
+        return this.children_[i - 1];
     }
     return null;
   }
 
-  #computeEdges = () => {
-    if (!this.shadowRoot || !this.#parent)
+  computeEdges_() {
+    if (!this.shadowRoot || !this.parent_)
       return;
-    if (this.#parent.has_child_edges) {
+    if (this.parent_.has_child_edges) {
       this.shadowRoot.querySelector(".parent_edge").style.display = "";
     } else {
       this.shadowRoot.querySelector(".parent_edge").style.display = "none";
     }
 
-    if (this.#children.length && !this.#childrenHidden) {
+    if (this.children_.length && !this.childrenHidden_) {
       this.shadowRoot.querySelector(".child_edge").style.display = "";
-      const last_child = this.#children[this.#children.length - 1];
+      const last_child = this.children_[this.children_.length - 1];
       let extent = last_child.getBoundingClientRect().top + last_child.parent_edge_offset - this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().bottom;
       this.shadowRoot.querySelector(".child_edge").style.height = extent + "px";
     } else {
@@ -293,14 +280,14 @@ window.customElements.define("mm-node", class extends HTMLElement {
     }
 
     const toggle = this.shadowRoot.querySelector(".child_toggle");
-    if (this.#children.length)
+    if (this.children_.length)
       toggle.style.display = "";
     else
       toggle.style.display = "none";
 
     toggle.classList.remove("expanded");
     toggle.classList.remove("collapsed");
-    if (this.#childrenHidden)
+    if (this.childrenHidden_)
       toggle.classList.add("collapsed");
     else
       toggle.classList.add("expanded");
@@ -314,7 +301,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
   }
 
   get children_hidden() {
-    return this.#childrenHidden;
+    return this.childrenHidden_;
   }
 
   get has_child_edges() {
@@ -322,26 +309,26 @@ window.customElements.define("mm-node", class extends HTMLElement {
   }
 
   get parent() {
-    return this.#parent;
+    return this.parent_;
   }
 
   // Position is in screen coordinates. 
   // TODO(vmpstr): it will become hard to reason about this, so we need better
   // spaces or explicit separation between fixed position and free nodes.
   get position() {
-    return this.#position;
+    return this.position_;
   }
   set position(v) {
     console.assert(v);
-    this.#position = v;
-    this.#computeStyleFromPosition();
+    this.position_ = v;
+    this.computeStyleFromPosition_();
   }
 
   get label() {
-    return this.#label;
+    return this.label_;
   }
   set label(v) {
-    this.#label = v;
+    this.label_ = v;
 
     // Might be setting label before connecting.
     if (!this.shadowRoot)
@@ -352,23 +339,23 @@ window.customElements.define("mm-node", class extends HTMLElement {
     label.title = v;
   }
 
-  resetPosition = () => {
+  resetPosition() {
     this.style.left = '0';
     this.style.top = '0';
     const rect = this.getBoundingClientRect();
     this.position = [rect.x, rect.y];
   }
 
-  #computeStyleFromPosition = () => {
+  computeStyleFromPosition_() {
     console.assert(getComputedStyle(this).getPropertyValue("position") != "static");
     this.style.left = '0';
     this.style.top = '0';
     const rect = this.getBoundingClientRect();
-    this.style.left = (this.#position[0] - rect.x) + "px";
-    this.style.top = (this.#position[1] - rect.y) + "px";
+    this.style.left = (this.position_[0] - rect.x) + "px";
+    this.style.top = (this.position_[1] - rect.y) + "px";
   }
 
-  #endLabelEdit = (e) => {
+  endLabelEdit_(e) {
     if (e.type === "keydown") {
       // Propagate tab, since we might do something like add a child.
       // TODO(vmpstr): Whitelist propagatable keys. Arrow keys?
@@ -377,8 +364,8 @@ window.customElements.define("mm-node", class extends HTMLElement {
       if (e.key !== "Enter")
         return;
     }
-    e.target.removeEventListener("keydown", this.#endLabelEdit);
-    e.target.removeEventListener("focusout", this.#endLabelEdit);
+    e.target.removeEventListener("keydown", this.endLabelEditHandle_);
+    e.target.removeEventListener("focusout", this.endLabelEditHandle_);
     e.target.contentEditable = false;
     this.shadowRoot.querySelector('.ew_drag_handle').classList.remove('hidden');
     // Restore ellipsis if necessary.
@@ -386,11 +373,11 @@ window.customElements.define("mm-node", class extends HTMLElement {
     e.target.style.width = "";
 
     e.target.innerText = e.target.innerText.trim();
-    this.#label = e.target.innerText;
+    this.label_ = e.target.innerText;
 
     // If we have nothing, keep the height with zero-width space.
     if(e.target.innerText == "")
-      e.target.innerHTML = '&#x200b;'
+      e.target.innerHTML = '&x_200b;'
 
     this.label = e.target.innerText;
     e.preventDefault();
@@ -398,7 +385,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
     gUndoStack.endLabelEdit();
   };
 
-  startLabelEdit = () => {
+  startLabelEdit() {
     gUndoStack.startLabelEdit(this);
 
     const el = this.shadowRoot.querySelector(".label");
@@ -428,87 +415,40 @@ window.customElements.define("mm-node", class extends HTMLElement {
     selection.addRange(range);
 
     // Add event listeners so we can stop editing.
-    el.addEventListener("keydown", this.#endLabelEdit);
-    el.addEventListener("focusout", this.#endLabelEdit);
+    this.endLabelEditHandle_ = (e) => this.endLabelEdit_(e);
+    el.addEventListener("keydown", this.endLabelEditHandle_);
+    el.addEventListener("focusout", this.endLabelEditHandle_);
   }
 
-  select = () => {
-    this.#map.nodeSelected(this);
+  select() {
+    this.map_.nodeSelected(this);
     this.classList.add('selected');
   }
 
-  deselect = () => {
-    this.#map.nodeDeselected(this);
+  deselect() {
+    this.map_.nodeDeselected(this);
     this.classList.remove('selected');
   }
 
-  #cloneWithChildren = () => {
-    const clone = Nodes.createNode("node", this.#map);
+  clone() {
+    const clone = Nodes.createNode("node", this.map_);
     clone.label = this.label;
-    for (let i = 0; i < this.#children.length; ++i)
-      clone.adoptNode(this.#children[0]);
     return clone;
   }
 
-  #dragOffset = [0, 0];
-  #dragCloned = false;
-  #onDragStart = (e) => {
-    const rect = this.getBoundingClientRect();
-    this.#dragOffset[0] = rect.x - e.clientX;
-    this.#dragOffset[1] = rect.y - e.clientY;
-    this.classList.add('dragged');
-    e.stopPropagation();
-
-    gUndoStack.startNodeDrag(this);
-    this.#dragCloned = false;
-  }
-  #onDrag = (e) => {
-    let rect = this.getBoundingClientRect();
-    if (e.shiftKey && !this.#dragCloned) {
-      // Save state and move this to the map.
-      const parent = this.parent;
-      const ordinal = Nodes.childOrdinal(this, this.parent);
-      // Do we need this?
-      this.#map.adoptNode(this);
-
-      const clone = this.#cloneWithChildren();
-      parent.adoptNode(clone, ordinal);
-      clone.position = [rect.x, rect.y];
-      gUndoStack.setNodeDragClone(clone);
-    }
-    this.#dragCloned = true;
-
-    if (e.clientX == 0 && e.clientY == 0)
-      return;
-    this.style.left = this.style.top = 0;
-    rect = this.getBoundingClientRect();
-    this.position = [this.#dragOffset[0] + e.clientX,
-                     this.#dragOffset[1] + e.clientY];
-    this.#parent.onDraggedChild(this);
-    e.stopPropagation();
-  }
-
-  #onDragEnd = (e) => {
-    this.classList.remove('dragged');
-    e.stopPropagation();
-    gUndoStack.endNodeDrag();
-  }
-
-  #labelContainerInitialWidth;
-  #onDragHandleStart = (e) => {
+  onDragHandleStart_(e) {
     gUndoStack.startSizeHandleDrag(this);
-    this.#labelContainerInitialWidth =
+    this.labelContainerInitialWidth_ =
       this.shadowRoot.querySelector('.label_holder').getBoundingClientRect().width;
-    this.#dragOffset[0] = -e.clientX;
-    this.#dragOffset[1] = -e.clientY;
+    this.dragOffset_ = [-e.clientX, -e.clientY];
     e.stopPropagation();
   }
-  #onDragHandle = (e) => {
+  onDragHandle_(e) {
     if (e.clientX == 0 && e.clientY == 0)
       return;
 
     let new_width =
-      this.#labelContainerInitialWidth + (e.clientX + this.#dragOffset[0]);
+      this.labelContainerInitialWidth_ + (e.clientX + this.dragOffset_[0]);
     if (new_width < 10)
       new_width = 10;
 
@@ -519,7 +459,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
       label_holder.style.width = "";
     e.stopPropagation();
   }
-  #onDragHandleEnd = (e) => {
+  onDragHandleEnd_(e) {
     e.stopPropagation();
     gUndoStack.endSizeHandleDrag();
   }
@@ -534,7 +474,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
       info.label_width;
   }
 
-  onDraggedChild = (child) => {
+  onDraggedChild(child) {
     const rect = this.getBoundingClientRect();
     const child_rect = child.getBoundingClientRect();
     const padding_slack = 15;
@@ -545,27 +485,27 @@ window.customElements.define("mm-node", class extends HTMLElement {
         // If our parent isn't our map (ie we're a child of something
         // then if the x is to our x's left, reparent up.
         // TODO(vmpstr): this might not be true for other non-tree maps.
-        (this.#parent != this.#map && child_rect.x < rect.x)) {
-      this.#parent.adoptNode(child);
+        (this.parent_ != this.map_ && child_rect.x < rect.x)) {
+      this.parent_.adoptNode(child);
     } else {
       let child_index = -1;
       let next_item = null;
       let next_distance = 1e6;
       let previous_item = null;
       let previous_distance = 1e6;
-      for (let i = 0; i < this.#children.length; ++i) {
-        const next_item_rect = this.#children[i].getBoundingClientRect();
+      for (let i = 0; i < this.children_.length; ++i) {
+        const next_item_rect = this.children_[i].getBoundingClientRect();
         if (next_item_rect.y > child_rect.y) {
           const local_distance = next_item_rect.y - child_rect.y;
           if (local_distance < next_distance) {
             next_distance = local_distance;
-            next_item = this.#children[i];
+            next_item = this.children_[i];
           }
         } else if (next_item_rect.y < child_rect.y && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
           const local_distance = child_rect.y - next_item_rect.y;
           if (local_distance < previous_distance) {
             previous_distance = local_distance;
-            previous_item = this.#children[i];
+            previous_item = this.children_[i];
           }
         }
       }
@@ -581,16 +521,16 @@ window.customElements.define("mm-node", class extends HTMLElement {
     }
   }
 
-  #repopulateChildren = () => {
+  repopulateChildren_() {
     let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
-    this.#children = [];
+    this.children_ = [];
     for (let i = 0; i < nodes.length; ++i) {
       if (Nodes.isKnownTag(nodes[i].tagName))
-        this.#children.push(nodes[i]);
+        this.children_.push(nodes[i]);
     }
   }
 
-  adoptNode = (child, ordinal) => {
+  adoptNode(child, ordinal) {
     if (ordinal === undefined)
       ordinal = this.children.length;
     console.assert(ordinal <= this.children.length);
@@ -603,16 +543,15 @@ window.customElements.define("mm-node", class extends HTMLElement {
   }
 
   // Storage -------------------------------------
-  #from_data
-  loadFromData = (data) => {
+  loadFromData(data) {
     this.label = data.label || '<deprecated label>';
     this.position = data.position || [0, 0];
     if (this.shadowRoot) {
       this.shadowRoot.querySelector(".label_holder").style.width = data.label_width;
     } else {
-      if (!this.#from_data)
-        this.#from_data = {};
-      this.#from_data['label_width'] = data.label_width;
+      if (!this.fromData_)
+        this.fromData_ = {};
+      this.fromData_['label_width'] = data.label_width;
     }
     // TODO(vmpstr): backcompat.
     if (!data.nodes)
@@ -620,27 +559,27 @@ window.customElements.define("mm-node", class extends HTMLElement {
     for (let i = 0; i < data.nodes.length; ++i) {
       // The order here is important since adoptNode resets the position
       // information.
-      const node = Nodes.createNode(data.nodes[i].type, this.#map);
+      const node = Nodes.createNode(data.nodes[i].type, this.map_);
       node.loadFromData(data.nodes[i]);
       this.adoptNode(node);
     }
     if (data.children_hidden)
-      this.#onChildToggle();
+      this.onChildToggle_();
   }
 
-  serializeToData = () => {
+  serializeToData() {
     let data = {
       label: this.label,
       type: 'node',
       position: this.position,
-      children_hidden: this.#childrenHidden,
+      children_hidden: this.childrenHidden_,
       nodes: []
     };
     const label_holder = this.shadowRoot && this.shadowRoot.querySelector(".label_holder");
     if (label_holder && label_holder.style.width)
       data['label_width'] = label_holder.style.width;
-    for (let i = 0; i < this.#children.length; ++i)
-      data.nodes.push(this.#children[i].serializeToData());
+    for (let i = 0; i < this.children_.length; ++i)
+      data.nodes.push(this.children_[i].serializeToData());
     return data;
   }
 });

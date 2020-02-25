@@ -1,199 +1,192 @@
 import * as Nodes from "./nodes.mjs";
+import * as Handlers from "./handlers.mjs";
+
+const style = `
+:host {
+  display: block;
+}
+.container {
+  display: flex;
+  flex-direction: column;
+
+  box-sizing: border-box;
+  width: 100%;
+
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 5px 0 5px 0;
+
+  position: relative;
+  overflow: hidden;
+  max-width: max-content;
+  min-width: 30px;
+  min-height: 45px;
+}
+.container:hover {
+  box-shadow: 0 0 2px 0;
+}
+
+.label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.child_area {
+  margin-top: 5px;
+  position: relative;
+  contain: layout;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 5px;
+
+  min-height: 10px;
+
+  background: rgba(0, 0, 0, 0.05);
+}
+.child_area.hidden > * {
+  display: none;
+}
+::slotted(*) {
+  position: relative;
+  margin-top: 5px;
+  width: max-content;
+}
+.label_holder {
+  max-width: min-content;
+
+  position: relative;
+  padding: 0 10px 0 10px;
+}
+.parent_edge {
+  position: absolute;
+  bottom: 50%;
+  right: 100%;
+  width: 15px;
+  height: 30%;
+  border-bottom: 1px solid black;
+  border-left: 1px solid black;
+  border-radius: 0px 0px 0px 10px;
+}
+.child_toggle {
+  position: absolute;
+  left: calc(50% - 5px);
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: powderblue;
+  border: 1px solid black;
+  z-index: 1;
+}
+.child_toggle:hover {
+  cursor: pointer;
+}
+.child_toggle.collapsed:hover {
+  background: springgreen;
+}
+.child_toggle.expanded:hover {
+  background: indianred;
+}
+.nwse_drag_handle {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  opacity: 0.01;
+}
+.ew_drag_handle {
+  position: absolute;
+  top: 10px;
+  right: -3px;
+  width: 7px;
+  height: calc(100% - 20px);
+  cursor: ew-resize;
+  opacity: 0.01;
+}
+.ew_drag_handle.hidden {
+  display: none;
+}
+.ns_drag_handle {
+  position: absolute;
+  left: 10px;
+  bottom: -3px;
+  height: 7px;
+  width: calc(100% - 20px);
+  cursor: ns-resize;
+  opacity: 0.01;
+}
+
+:host(.selected) .container {
+  border-color: blue;
+  box-shadow: 0 0 3px 0 blue;
+}
+:host(.dragged) {
+  opacity: 40%;
+}
+.divider {
+  width: 100%;
+  border-top: 1px solid grey;
+  margin-top: 5px;
+  position: relative;
+
+  /* fix flex making the height 0.99 -> 0 */
+  box-sizing: border-box;
+  min-height: 2px;
+}`;
+
+const body = `
+<div class=parent_edge></div>
+<div class=container>
+  <div class=label_holder>
+    <div class=label></div>
+  </div>
+  <div class=divider>
+    <div class="child_toggle expanded"></div>
+  </div>
+  <div class=child_area>
+    <slot></slot>
+  </div>
+</div>
+<div class=ew_drag_handle></div>
+<div class=ns_drag_handle></div>
+<div class=nwse_drag_handle></div>`;
 
 window.customElements.define("mm-scroller-node", class extends HTMLElement {
-  #map
-  #parent
-  #children = []
-  #position = [0, 0]
-  #label = ''
-  #childResizeObserver;
-  #childrenHidden = false;
-
   constructor() {
     super();
+    this.children_ = [];
+    this.position_ = [0, 0];
+    this.label_ = '';
+    this.childrenHidden_ = false;
   }
 
   connectedCallback() {
     if (this.shadowRoot) {
-      this.#computeEdges();
+      this.computeEdges_();
       return;
     }
 
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.innerHTML = `
-      <style>
-        :host {
-          display: block;
-        }
-        .container {
-          display: flex;
-          flex-direction: column;
-
-          box-sizing: border-box;
-          width: 100%;
-
-          border: 1px solid black;
-          border-radius: 10px;
-          padding: 5px 0 5px 0;
-
-          position: relative;
-          overflow: hidden;
-          max-width: max-content;
-          min-width: 30px;
-          min-height: 45px;
-        }
-        .container:hover {
-          box-shadow: 0 0 2px 0;
-        }
-
-        .label {
-          overflow: hidden;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-        }
-        .child_area {
-          margin-top: 5px;
-          position: relative;
-          contain: layout;
-          overflow-y: auto;
-          overflow-x: hidden;
-          padding-left: 10px;
-          padding-right: 10px;
-          padding-bottom: 5px;
-
-          min-height: 10px;
-
-          background: rgba(0, 0, 0, 0.05);
-        }
-        .child_area.hidden > * {
-          display: none;
-        }
-        ::slotted(*) {
-          position: relative;
-          margin-top: 5px;
-          width: max-content;
-        }
-        .label_holder {
-          max-width: min-content;
-
-          position: relative;
-          padding: 0 10px 0 10px;
-        }
-        .parent_edge {
-          position: absolute;
-          bottom: 50%;
-          right: 100%;
-          width: 15px;
-          height: 30%;
-          border-bottom: 1px solid black;
-          border-left: 1px solid black;
-          border-radius: 0px 0px 0px 10px;
-        }
-        .child_toggle {
-          position: absolute;
-          left: calc(50% - 5px);
-          top: -5px;
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: powderblue;
-          border: 1px solid black;
-          z-index: 1;
-        }
-        .child_toggle:hover {
-          cursor: pointer;
-        }
-        .child_toggle.collapsed:hover {
-          background: springgreen;
-        }
-        .child_toggle.expanded:hover {
-          background: indianred;
-        }
-        .nwse_drag_handle {
-          position: absolute;
-          bottom: -3px;
-          right: -3px;
-          width: 20px;
-          height: 20px;
-          cursor: nwse-resize;
-          opacity: 0.01;
-        }
-        .ew_drag_handle {
-          position: absolute;
-          top: 10px;
-          right: -3px;
-          width: 7px;
-          height: calc(100% - 20px);
-          cursor: ew-resize;
-          opacity: 0.01;
-        }
-        .ew_drag_handle.hidden {
-          display: none;
-        }
-        .ns_drag_handle {
-          position: absolute;
-          left: 10px;
-          bottom: -3px;
-          height: 7px;
-          width: calc(100% - 20px);
-          cursor: ns-resize;
-          opacity: 0.01;
-        }
-
-        :host(.selected) .container {
-          border-color: blue;
-          box-shadow: 0 0 3px 0 blue;
-        }
-        :host(.dragged) {
-          opacity: 20%;
-        }
-        .divider {
-          width: 100%;
-          border-top: 1px solid grey;
-          margin-top: 5px;
-          position: relative;
-
-          /* fix flex making the height 0.99 -> 0 */
-          box-sizing: border-box;
-          min-height: 2px;
-        }
-      </style>
-      <div class=parent_edge></div>
-      <div class=container>
-        <div class=label_holder>
-          <div class=label>${this.label}</div>
-        </div>
-        <div class=divider>
-          <div class="child_toggle expanded"></div>
-        </div>
-        <div class=child_area>
-          <slot></slot>
-        </div>
-      </div>
-      <div class=ew_drag_handle></div>
-      <div class=ns_drag_handle></div>
-      <div class=nwse_drag_handle></div>
-    `;
+      <style>${style}</style>
+      <body>${body}</body>`;
 
     const container = this.shadowRoot.querySelector(".container");
     const label = this.shadowRoot.querySelector(".label");
     const child_area = this.shadowRoot.querySelector(".child_area");
 
-    container.setAttribute("draggable", true);
-    container.addEventListener("dragstart", (e) => {
-      this.#onDragStart(e);
-    });
-    container.addEventListener("drag", (e) => {
-      this.#onDrag(e);
-    });
-    container.addEventListener("dragend", (e) => {
-      this.#onDragEnd(e);
-    });
+    this.dragControl_ = new Handlers.NodeDragControl(this, container);
+
     container.addEventListener("click", (e) => {
       if (e.target == container || e.target == label || e.target == child_area)
         this.select();
     });
 
+    label.innerHTML = this.label;
     label.setAttribute("title", this.label);
     label.addEventListener("dblclick", (e) => {
       this.startLabelEdit();
@@ -203,107 +196,107 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     let drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
     drag_handle.setAttribute("draggable", true);
     drag_handle.addEventListener("dragstart", (e) => {
-      this.#onDragHandleStart(e, "ew");
+      this.onDragHandleStart_(e, "ew");
     });
     drag_handle.addEventListener("drag", (e) => {
-      this.#onDragHandle(e);
+      this.onDragHandle_(e);
     });
     drag_handle.addEventListener("dragend", (e) => {
-      this.#onDragHandleEnd(e);
+      this.onDragHandleEnd_(e);
     });
 
     drag_handle = this.shadowRoot.querySelector(".ns_drag_handle");
     drag_handle.setAttribute("draggable", true);
     drag_handle.addEventListener("dragstart", (e) => {
-      this.#onDragHandleStart(e, "ns");
+      this.onDragHandleStart_(e, "ns");
     });
     drag_handle.addEventListener("drag", (e) => {
-      this.#onDragHandle(e);
+      this.onDragHandle_(e);
     });
     drag_handle.addEventListener("dragend", (e) => {
-      this.#onDragHandleEnd(e);
+      this.onDragHandleEnd_(e);
     });
 
     drag_handle = this.shadowRoot.querySelector(".nwse_drag_handle");
     drag_handle.setAttribute("draggable", true);
     drag_handle.addEventListener("dragstart", (e) => {
-      this.#onDragHandleStart(e, "nwse");
+      this.onDragHandleStart_(e, "nwse");
     });
     drag_handle.addEventListener("drag", (e) => {
-      this.#onDragHandle(e);
+      this.onDragHandle_(e);
     });
     drag_handle.addEventListener("dragend", (e) => {
-      this.#onDragHandleEnd(e);
+      this.onDragHandleEnd_(e);
     });
 
-    if (this.#from_data) {
-      container.style.width = this.#from_data.container_width;
-      container.style.maxHeight = this.#from_data.container_maxheight;
+    if (this.fromData_) {
+      container.style.width = this.fromData_.container_width;
+      container.style.maxHeight = this.fromData_.container_maxheight;
     }
 
-    this.#childResizeObserver = new ResizeObserver(this.#onChildSizeChanged);
+    this.childResizeObserver_ = new ResizeObserver((e) => this.onChildSizeChanged_(e));
 
     const slot = shadow.querySelector("slot");
-    slot.addEventListener("slotchange", this.#onSlotChange);
+    slot.addEventListener("slotchange", (e) => this.onSlotChange_(e));
 
     const child_toggle = this.shadowRoot.querySelector(".child_toggle");
     child_toggle.addEventListener("click", (e) => {
-      this.#onChildToggle(e);
+      this.onChildToggle_(e);
     });
     child_toggle.addEventListener("dblclick", (e) => {
       e.stopPropagation();
     });
 
-    if (this.#childrenHidden) {
+    if (this.childrenHidden_) {
       this.shadowRoot.querySelector(".child_area").classList.add("hidden");
-      this.#map.didHideChildren(this);
+      this.map_.didHideChildren(this);
     } else {
       this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
     }
-    this.#computeEdges();
+    this.computeEdges_();
 
   }
 
   set map(v) {
-    this.#map = v;
+    this.map_ = v;
   }
   get map() {
-    return this.#map;
+    return this.map_;
   }
 
-  setParent = (parent) => {
-    this.#parent = parent;
-    this.#computeStyleFromPosition();
-    this.#computeEdges();
+  setParent(parent) {
+    this.parent_ = parent;
+    this.computeStyleFromPosition_();
+    this.computeEdges_();
   }
 
-  #onSlotChange = () => {
-    for (let i = 0; i < this.#children.length; ++i) {
-      this.#childResizeObserver.unobserve(this.#children[i]);
+  onSlotChange_() {
+    for (let i = 0; i < this.children_.length; ++i) {
+      this.childResizeObserver_.unobserve(this.children_[i]);
     }
-    this.#repopulateChildren();
-    for (let i = 0; i < this.#children.length; ++i) {
-      this.#childResizeObserver.observe(this.#children[i]);
+    this.repopulateChildren_();
+    for (let i = 0; i < this.children_.length; ++i) {
+      this.childResizeObserver_.observe(this.children_[i]);
     }
-    this.#computeEdges();
+    this.computeEdges_();
   }
 
-  #onChildSizeChanged = () => {
-    this.#computeEdges();
+  onChildSizeChanged_() {
+    this.computeEdges_();
   }
 
-  #onChildToggle = (e) => {
-    this.#childrenHidden = !this.#childrenHidden;
+  onChildToggle_(e) {
+    this.childrenHidden_ = !this.childrenHidden_;
     if (!this.shadowRoot)
       return;
 
-    if (this.#childrenHidden) {
+    if (this.childrenHidden_) {
       this.shadowRoot.querySelector(".child_area").classList.add("hidden");
-      this.#map.didHideChildren(this);
+      this.map_.didHideChildren(this);
     } else {
       this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
     }
-    this.#computeEdges();
+    this.computeEdges_();
 
     if (e) {
       e.preventDefault();
@@ -311,52 +304,52 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     }
   }
 
-  unhideChildren = () => {
-    if (this.#childrenHidden)
-      this.#onChildToggle();
-    return this.#children.length > 0;
+  unhideChildren() {
+    if (this.childrenHidden_)
+      this.onChildToggle_();
+    return this.children_.length > 0;
   }
 
   get firstChild() {
-    if (this.#children.length)
-      return this.#children[0];
+    if (this.children_.length)
+      return this.children_[0];
     return null;
   }
 
-  nextChild = (child) => {
-    for (let i = 0; i < this.#children.length - 1; ++i) {
-      if (this.#children[i] == child)
-        return this.#children[i + 1];
+  nextChild(child) {
+    for (let i = 0; i < this.children_.length - 1; ++i) {
+      if (this.children_[i] == child)
+        return this.children_[i + 1];
     }
     return null;
   }
 
-  prevChild = (child) => {
-    for (let i = 1; i < this.#children.length; ++i) {
-      if (this.#children[i] == child)
-        return this.#children[i - 1];
+  prevChild(child) {
+    for (let i = 1; i < this.children_.length; ++i) {
+      if (this.children_[i] == child)
+        return this.children_[i - 1];
     }
     return null;
   }
 
-  #computeEdges = () => {
-    if (!this.shadowRoot || !this.#parent)
+  computeEdges_() {
+    if (!this.shadowRoot || !this.parent_)
       return;
-    if (this.#parent.has_child_edges) {
+    if (this.parent_.has_child_edges) {
       this.shadowRoot.querySelector(".parent_edge").style.display = "";
     } else {
       this.shadowRoot.querySelector(".parent_edge").style.display = "none";
     }
 
     const toggle = this.shadowRoot.querySelector(".child_toggle");
-    if (this.#children.length)
+    if (this.children_.length)
       toggle.style.display = "";
     else
       toggle.style.display = "none";
 
     toggle.classList.remove("expanded");
     toggle.classList.remove("collapsed");
-    if (this.#childrenHidden)
+    if (this.childrenHidden_)
       toggle.classList.add("collapsed");
     else
       toggle.classList.add("expanded");
@@ -370,28 +363,28 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
   }
 
   get children_hidden() {
-    return this.#childrenHidden;
+    return this.childrenHidden_;
   }
 
   get parent() {
-    return this.#parent;
+    return this.parent_;
   }
 
   set position(v) {
     console.assert(v);
-    this.#position = v;
-    this.#computeStyleFromPosition();
+    this.position_ = v;
+    this.computeStyleFromPosition_();
   }
 
   get position() {
-    return this.#position;
+    return this.position_;
   }
 
   get label() {
-    return this.#label;
+    return this.label_;
   }
   set label(v) {
-    this.#label = v;
+    this.label_ = v;
 
     // Might be setting label before connecting.
     if (!this.shadowRoot)
@@ -402,23 +395,23 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     label.title = v;
   }
 
-  resetPosition = () => {
+  resetPosition() {
     this.style.left = '0';
     this.style.top = '0';
     const rect = this.getBoundingClientRect();
     this.position = [rect.x, rect.y];
   }
 
-  #computeStyleFromPosition = () => {
+  computeStyleFromPosition_() {
     console.assert(getComputedStyle(this).getPropertyValue("position") != "static");
     this.style.left = '0';
     this.style.top = '0';
     const rect = this.getBoundingClientRect();
-    this.style.left = (this.#position[0] - rect.x) + "px";
-    this.style.top = (this.#position[1] - rect.y) + "px";
+    this.style.left = (this.position_[0] - rect.x) + "px";
+    this.style.top = (this.position_[1] - rect.y) + "px";
   }
 
-  #endLabelEdit = (e) => {
+  endLabelEdit_(e) {
     if (e.type === "keydown") {
       // Propagate tab, since we might do something like add a child.
       // TODO(vmpstr): Whitelist propagatable keys. Arrow keys?
@@ -427,8 +420,8 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       if (e.key !== "Enter")
         return;
     }
-    e.target.removeEventListener("keydown", this.#endLabelEdit);
-    e.target.removeEventListener("focusout", this.#endLabelEdit);
+    e.target.removeEventListener("keydown", this.endLabelEditHandle_);
+    e.target.removeEventListener("focusout", this.endLabelEditHandle_);
     e.target.contentEditable = false;
     this.shadowRoot.querySelector('.ew_drag_handle').classList.remove('hidden');
     // Restore ellipsis if necessary.
@@ -436,11 +429,11 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     e.target.style.width = "";
 
     e.target.innerText = e.target.innerText.trim();
-    this.#label = e.target.innerText;
+    this.label_ = e.target.innerText;
 
     // If we have nothing, keep the height with zero-width space.
     if(e.target.innerText == "")
-      e.target.innerHTML = '&#x200b;'
+      e.target.innerHTML = '&x_200b;'
 
     this.label = e.target.innerText;
     e.preventDefault();
@@ -448,7 +441,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     gUndoStack.endLabelEdit();
   };
 
-  startLabelEdit = () => {
+  startLabelEdit() {
     gUndoStack.startLabelEdit(this);
 
     const el = this.shadowRoot.querySelector(".label");
@@ -478,47 +471,28 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     selection.addRange(range);
 
     // Add event listeners so we can stop editing.
-    el.addEventListener("keydown", this.#endLabelEdit);
-    el.addEventListener("focusout", this.#endLabelEdit);
+    this.endLabelEditHandle_ = (e) => this.endLabelEdit_(e);
+    el.addEventListener("keydown", this.endLabelEditHandle_);
+    el.addEventListener("focusout", this.endLabelEditHandle_);
   }
 
-  select = () => {
-    this.#map.nodeSelected(this);
+  select() {
+    this.map_.nodeSelected(this);
     this.classList.add('selected');
   }
 
-  deselect = () => {
-    this.#map.nodeDeselected(this);
+  deselect() {
+    this.map_.nodeDeselected(this);
     this.classList.remove('selected');
   }
 
-  #dragOffset = [0, 0];
-  #onDragStart = (e) => {
-    gUndoStack.startNodeDrag(this);
-    const rect = this.getBoundingClientRect();
-    this.#dragOffset[0] = rect.x - e.clientX;
-    this.#dragOffset[1] = rect.y - e.clientY;
-    this.classList.add('dragged');
-    e.stopPropagation();
-  }
-  #onDrag = (e) => {
-    if (e.clientX == 0 && e.clientY == 0)
-      return;
-    this.style.left = this.style.top = 0;
-    const rect = this.getBoundingClientRect();
-    this.position = [this.#dragOffset[0] + e.clientX,
-                     this.#dragOffset[1] + e.clientY];
-    this.#parent.onDraggedChild(this);
-    e.stopPropagation();
+  clone() {
+    const clone = Nodes.createNode("scroller", this.map_);
+    clone.label = this.label;
+    return clone;
   }
 
-  #onDragEnd = (e) => {
-    this.classList.remove('dragged');
-    e.stopPropagation();
-    gUndoStack.endNodeDrag();
-  }
-
-  onDraggedChild = (child) => {
+  onDraggedChild(child) {
     const rect = this.getBoundingClientRect();
     const child_rect = child.getBoundingClientRect();
     const padding_slack = 15;
@@ -529,27 +503,27 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
         // If our parent isn't our map (ie we're a child of something
         // then if the x is to our x's left, reparent up.
         // TODO(vmpstr): this might not be true for other non-tree maps.
-        (this.#parent != this.#map && child_rect.x < rect.x)) {
-      this.#parent.adoptNode(child);
+        (this.parent_ != this.map_ && child_rect.x < rect.x)) {
+      this.parent_.adoptNode(child);
     } else {
       let child_index = -1;
       let next_item = null;
       let next_distance = 1e6;
       let previous_item = null;
       let previous_distance = 1e6;
-      for (let i = 0; i < this.#children.length; ++i) {
-        const next_item_rect = this.#children[i].getBoundingClientRect();
+      for (let i = 0; i < this.children_.length; ++i) {
+        const next_item_rect = this.children_[i].getBoundingClientRect();
         if (next_item_rect.y > child_rect.y) {
           const local_distance = next_item_rect.y - child_rect.y;
           if (local_distance < next_distance) {
             next_distance = local_distance;
-            next_item = this.#children[i];
+            next_item = this.children_[i];
           }
         } else if (next_item_rect.y < child_rect.y && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
           const local_distance = child_rect.y - next_item_rect.y;
           if (local_distance < previous_distance) {
             previous_distance = local_distance;
-            previous_item = this.#children[i];
+            previous_item = this.children_[i];
           }
         }
       }
@@ -565,16 +539,16 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     }
   }
 
-  #repopulateChildren = () => {
+  repopulateChildren_() {
     let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
-    this.#children = [];
+    this.children_ = [];
     for (let i = 0; i < nodes.length; ++i) {
       if (Nodes.isKnownTag(nodes[i].tagName))
-        this.#children.push(nodes[i]);
+        this.children_.push(nodes[i]);
     }
   }
 
-  adoptNode = (child, ordinal) => {
+  adoptNode(child, ordinal) {
     if (ordinal === undefined)
       ordinal = this.children.length;
     console.assert(ordinal <= this.children.length);
@@ -587,36 +561,32 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
   }
 
   // Drag handles --------------------------------
-  #containerInitialWidth;
-  #containerInitialHeight;
-  #dragHandleMode;
-  #onDragHandleStart = (e, mode) => {
+  onDragHandleStart_(e, mode) {
     gUndoStack.startSizeHandleDrag(this);
-    this.#dragHandleMode = mode;
+    this.dragHandleMode_ = mode;
     const rect = this.shadowRoot.querySelector(".container").getBoundingClientRect();
-    this.#containerInitialWidth = rect.width;
-    this.#containerInitialHeight = rect.height;
-    this.#dragOffset[0] = -e.clientX;
-    this.#dragOffset[1] = -e.clientY;
+    this.containerInitialWidth_ = rect.width;
+    this.containerInitialHeight_ = rect.height;
+    this.dragOffset_ = [-e.clientX, -e.clientY];
     e.stopPropagation();
   }
-  #onDragHandle = (e) => {
+  onDragHandle_(e) {
     if (e.clientX == 0 && e.clientY == 0)
       return;
 
     let new_width =
-      this.#containerInitialWidth + (e.clientX + this.#dragOffset[0]);
+      this.containerInitialWidth_ + (e.clientX + this.dragOffset_[0]);
     let new_height =
-      this.#containerInitialHeight + (e.clientY + this.#dragOffset[1]);
+      this.containerInitialHeight_ + (e.clientY + this.dragOffset_[1]);
 
     const container = this.shadowRoot.querySelector(".container");
-    if (this.#dragHandleMode == "ew" || this.#dragHandleMode == "nwse") {
+    if (this.dragHandleMode_ == "ew" || this.dragHandleMode_ == "nwse") {
       container.style.width = new_width + "px";
       // Reset if we're trying to expand past the max-width.
       if (container.getBoundingClientRect().width + 10 < new_width)
         container.style.width = "";
     }
-    if (this.#dragHandleMode == "ns" || this.#dragHandleMode == "nwse") {
+    if (this.dragHandleMode_ == "ns" || this.dragHandleMode_ == "nwse") {
       container.style.maxHeight = new_height + "px";
       // Reset if we're trying to expand past the max-height.
       if (container.getBoundingClientRect().height + 10 < new_height)
@@ -624,7 +594,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     }
     e.stopPropagation();
   }
-  #onDragHandleEnd = (e) => {
+  onDragHandleEnd_(e) {
     e.stopPropagation();
     gUndoStack.endSizeHandleDrag();
   }
@@ -643,8 +613,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
   }
 
   // Storage -------------------------------------
-  #from_data
-  loadFromData = (data) => {
+  loadFromData(data) {
     this.label = data.label || '<deprecated label>';
     this.position = data.position || [0, 0];
     if (this.shadowRoot) {
@@ -652,10 +621,10 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       container.style.width = data.container_width;
       container.style.maxHeight = data.container_maxheight;
     } else {
-      if (!this.#from_data)
-        this.#from_data = {};
-      this.#from_data['container_width'] = data.container_width;
-      this.#from_data['container_maxheight'] = data.container_maxheight;
+      if (!this.fromData_)
+        this.fromData_ = {};
+      this.fromData_['container_width'] = data.container_width;
+      this.fromData_['container_maxheight'] = data.container_maxheight;
     }
 
     // TODO(vmpstr): backcompat.
@@ -664,20 +633,20 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     for (let i = 0; i < data.nodes.length; ++i) {
       // The order here is important since adoptNode resets the position
       // information.
-      const node = Nodes.createNode(data.nodes[i].type, this.#map);
+      const node = Nodes.createNode(data.nodes[i].type, this.map_);
       node.loadFromData(data.nodes[i]);
       this.adoptNode(node);
     }
     if (data.children_hidden)
-      this.#onChildToggle();
+      this.onChildToggle_();
   }
 
-  serializeToData = () => {
+  serializeToData() {
     let data = {
       label: this.label,
       type: 'scroller',
       position: this.position,
-      children_hidden: this.#childrenHidden,
+      children_hidden: this.childrenHidden_,
       nodes: []
     };
     const container = this.shadowRoot.querySelector(".container");
@@ -686,8 +655,8 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
     if (container && container.style.maxHeight)
       data['container_maxheight'] = container.style.maxHeight;
 
-    for (let i = 0; i < this.#children.length; ++i)
-      data.nodes.push(this.#children[i].serializeToData());
+    for (let i = 0; i < this.children_.length; ++i)
+      data.nodes.push(this.children_[i].serializeToData());
     return data;
   }
 });
