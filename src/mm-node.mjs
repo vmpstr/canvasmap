@@ -373,7 +373,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
 
     // If we have nothing, keep the height with zero-width space.
     if(e.target.innerText == "")
-      e.target.innerHTML = '&x_200b;'
+      e.target.innerHTML = '&#x200b;'
 
     this.label = e.target.innerText;
     e.preventDefault();
