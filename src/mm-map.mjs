@@ -167,20 +167,20 @@ window.customElements.define("mm-map", class extends HTMLElement {
         node.parent.select();
     } else if (e.key == "ArrowRight") {
       if (node.unhideChildren())
-        node.firstChild.select();
+        node.firstElementChild.select();
     } else if (e.key == "ArrowDown") {
       if (node.parent != this) {
-        const next = node.parent.nextChild(node);
+        const next = node.nextElementSibling;
         if (next)
           next.select();
         else if (node.unhideChildren())
-          node.firstChild.select();
+          node.firstElementChild.select();
       } else if (node.unhideChildren()) {
-        node.firstChild.select();
+        node.firstElementChild.select();
       }
     } else if (e.key == "ArrowUp") {
       if (node.parent != this) {
-        const prev = node.parent.prevChild(node);
+        const prev = node.previousElementSibling;
         if (prev)
           prev.select();
         else

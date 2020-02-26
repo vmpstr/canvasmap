@@ -148,7 +148,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
       label_holder.style.width = this.fromData_.label_width;
     }
 
-    this.childResizeObserver_ = new ResizeObserver((e) => this.onChildSizeChanged_(e));
+    this.childResizeObserver_ = new ResizeObserver(() => this.computeEdges_());
 
     const slot = shadow.querySelector("slot");
     slot.addEventListener("slotchange", (e) => this.onSlotChange_(e));
@@ -195,10 +195,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.computeEdges_();
   }
 
-  onChildSizeChanged_() {
-    this.computeEdges_();
-  }
-
   onChildToggle_(e) {
     this.childrenHidden_ = !this.childrenHidden_;
     if (!this.shadowRoot)
@@ -222,28 +218,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
     if (this.childrenHidden_)
       this.onChildToggle_();
     return this.children_.length > 0;
-  }
-
-  get firstChild() {
-    if (this.children_.length)
-      return this.children_[0];
-    return null;
-  }
-
-  nextChild(child) {
-    for (let i = 0; i < this.children_.length - 1; ++i) {
-      if (this.children_[i] == child)
-        return this.children_[i + 1];
-    }
-    return null;
-  }
-
-  prevChild(child) {
-    for (let i = 1; i < this.children_.length; ++i) {
-      if (this.children_[i] == child)
-        return this.children_[i - 1];
-    }
-    return null;
   }
 
   computeEdges_() {
@@ -285,13 +259,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
            this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().top;
   }
 
-  get children_hidden() {
-    return this.childrenHidden_;
-  }
-
-  get has_child_edges() {
-    return true;
-  }
+  get has_child_edges() { return true; }
 
   get parent() {
     return this.parent_;
