@@ -90,10 +90,6 @@ const style = `
   opacity: 0.01;
   cursor: ew-resize;
 }
-.ew_drag_handle.hidden {
-  display: none;
-}
-
 :host(.selected) .label {
   border-color: blue;
   box-shadow: 0 0 3px 0 blue;
@@ -119,7 +115,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
     super();
     this.children_ = []
     this.position_ = [0, 0]
-    this.label_ = ''
     this.childrenHidden_ = false;
   }
 
@@ -135,14 +130,8 @@ window.customElements.define("mm-node", class extends HTMLElement {
       <body>${body}</body>`;
 
     const label = this.shadowRoot.querySelector(".label");
-    label.setAttribute("title", this.label);
-    label.innerHTML = this.label;
+    this.labelEditor_ = new Handlers.LabelEditor(this, label);
 
-
-    label.addEventListener("dblclick", (e) => {
-      this.startLabelEdit();
-      e.stopPropagation();
-    });
     label.addEventListener("click", (e) => {
       if (e.target == label)
         this.select();
@@ -325,14 +314,8 @@ window.customElements.define("mm-node", class extends HTMLElement {
   }
   set label(v) {
     this.label_ = v;
-
-    // Might be setting label before connecting.
-    if (!this.shadowRoot)
-      return;
-
-    const label = this.shadowRoot.querySelector(".label");
-    label.innerHTML = v;
-    label.title = v;
+    if (this.labelEditor_)
+      this.labelEditor_.label = v;
   }
 
   resetPosition() {
@@ -351,69 +334,9 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.style.top = (this.position_[1] - rect.y) + "px";
   }
 
-  endLabelEdit_(e) {
-    if (e.type === "keydown") {
-      // Propagate tab, since we might do something like add a child.
-      // TODO(vmpstr): Whitelist propagatable keys. Arrow keys?
-      if (e.key !== "Tab")
-        e.stopPropagation();
-      if (e.key !== "Enter")
-        return;
-    }
-    e.target.removeEventListener("keydown", this.endLabelEditHandle_);
-    e.target.removeEventListener("focusout", this.endLabelEditHandle_);
-    e.target.contentEditable = false;
-    this.shadowRoot.querySelector('.ew_drag_handle').classList.remove('hidden');
-    // Restore ellipsis if necessary.
-    e.target.style.overflow = "";
-    e.target.style.width = "";
-
-    e.target.innerText = e.target.innerText.trim();
-    this.label_ = e.target.innerText;
-
-    // If we have nothing, keep the height with zero-width space.
-    if(e.target.innerText == "")
-      e.target.innerHTML = '&#x200b;'
-
-    this.label = e.target.innerText;
-    e.preventDefault();
-
-    gUndoStack.endLabelEdit();
-  };
-
   startLabelEdit() {
-    gUndoStack.startLabelEdit(this);
-
-    const el = this.shadowRoot.querySelector(".label");
-
-    // This is somewhat optional, but if they only thing we have is
-    // a zero-width space, then selection is empty but the cursor
-    // doesn't blink... So instead, just clear it so we see the
-    // cursor blinking.
-    if (el.innerText == '\u200b')
-      el.innerHTML = "";
-
-    // First make this contentEditable,
-    // so that the selection selects proper contents.
-    el.contentEditable = true;
-    this.shadowRoot.querySelector('.ew_drag_handle').classList.add('hidden');
-    // Prevent ellipsis editing.
-    el.style.overflow = "visible";
-    el.style.width = "min-content";
-
-    // Create a new range for all of the contents.
-    const range = document.createRange();
-    range.selectNodeContents(el);
-
-    // Replace the current selection.
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-
-    // Add event listeners so we can stop editing.
-    this.endLabelEditHandle_ = (e) => this.endLabelEdit_(e);
-    el.addEventListener("keydown", this.endLabelEditHandle_);
-    el.addEventListener("focusout", this.endLabelEditHandle_);
+    console.assert(this.labelEditor_);
+    this.labelEditor_.startLabelEdit();
   }
 
   select() {

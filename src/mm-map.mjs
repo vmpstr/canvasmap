@@ -1,6 +1,43 @@
 import * as Nodes from "./nodes.mjs";
+import * as Workarounds from "./workarounds.mjs";
 
 const default_label = "new task";
+
+const style = `
+:host {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+  background: lightblue;
+
+  position: relative;
+}
+::slotted(*) {
+  position: absolute;
+  will-change: transform;
+}
+#self {
+  height: 100%;
+}
+
+/* contextmenu formatting */
+li > div:first-child {
+  float: left;
+}
+li > div:last-child {
+  contain: layout;
+  text-align: right;
+}`;
+
+const body = `
+<mm-context-menu id=context>
+  <li id="node"><div>Add tree node</div><div>dblclick</div></li>
+  <li id="scroller"><div>Add scroller node</div><div>Shift+dblclick</div></li>
+</mm-context-menu>
+<div id=self></div>
+<slot></slot>`;
+
 window.customElements.define("mm-map", class extends HTMLElement {
   constructor() {
     super();
@@ -15,46 +52,14 @@ window.customElements.define("mm-map", class extends HTMLElement {
 
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.innerHTML = `
-      <style>
-        :host {
-          display: block;
-
-          width: 100%;
-          height: 100%;
-          background: lightblue;
-
-          position: relative;
-        }
-        ::slotted(*) {
-          position: absolute;
-          will-change: transform;
-        }
-        #self {
-          height: 100%;
-        }
-
-        /* contextmenu formatting */
-        li > div:first-child {
-          float: left;
-        }
-        li > div:last-child {
-          contain: layout;
-          text-align: right;
-        }
-      </style>
-      <mm-context-menu id=context>
-        <li id="node"><div>Add tree node</div><div>dblclick</div></li>
-        <li id="scroller"><div>Add scroller node</div><div>Shift+dblclick</div></li>
-      </mm-context-menu>
-      <div id=self></div>
-      <slot></slot>
-    `;
+      <style>${style}</style>
+      <body>${body}</body>`;
 
     shadow.addEventListener("click", (e) => this.onClick_(e));
     shadow.addEventListener("dblclick", (e) => this.onDoubleClick_(e));
     shadow.addEventListener("contextmenu", (e) => this.onContextMenu_(e));
     shadow.addEventListener("dragover", (e) => {
-      window.gMouseTracker = [e.clientX, e.clientY];
+      Workarounds.mouseTracker.dragPoint = [e.clientX, e.clientY];
       e.preventDefault();
     });
 
@@ -67,7 +72,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
 
   onContextMenuSelected(item) {
     const context = this.shadowRoot.querySelector("#context");
-    this.addNodeForUserAt_(item.id, context.position[0], context.position[1]);
+    this.addNodeForUserAt_(item.id, context.position);
   }
 
   onContextMenu_(e) {
@@ -99,17 +104,17 @@ window.customElements.define("mm-map", class extends HTMLElement {
 
   onDoubleClick_(e) {
     let type = e.shiftKey ? "scroller" : "node";
-    this.addNodeForUserAt_(type, e.clientX, e.clientY);
+    this.addNodeForUserAt_(type, [e.clientX, e.clientY]);
     e.stopPropagation();
   }
 
-  addNodeForUserAt_(type, x, y) {
+  addNodeForUserAt_(type, p) {
     const node = Nodes.addNode(type, this, this);
 
     node.label = default_label;
 
     const rect = node.getBoundingClientRect();
-    node.position = [x - 0.5 * rect.width, y - 0.5 * rect.height];
+    node.position = [p[0] - 0.5 * rect.width, p[1] - 0.5 * rect.height];
 
     // Needs to happen before label edit, since
     // that will start a new transaction.

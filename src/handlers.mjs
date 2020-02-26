@@ -1,4 +1,5 @@
 import * as Nodes from "./nodes.mjs";
+import * as Workarounds from "./workarounds.mjs";
 
 export class NodeDragControl {
   constructor(node, target) {
@@ -12,8 +13,7 @@ export class NodeDragControl {
   onDragStart_(e) {
     const rect = this.node_.getBoundingClientRect();
     this.dragOffset_ = [rect.x - e.clientX, rect.y - e.clientY];
-    // TODO(vmpstr): Change this?
-    window.gMouseTracker = [e.clientX, e.clientY];
+    Workarounds.mouseTracker.dragPoint = [e.clientX, e.clientY];
 
     e.stopPropagation();
     e.dataTransfer.setDragImage(new Image(), 0, 0);
@@ -25,7 +25,7 @@ export class NodeDragControl {
     // Workaround for FF.
     let clientPoint;
     if (e.clientX == 0 && e.clientY == 0) {
-      clientPoint = [gMouseTracker[0], gMouseTracker[1]];
+      clientPoint = Workarounds.mouseTracker.dragPoint;
     } else {
       clientPoint = [e.clientX, e.clientY];
     }
@@ -91,14 +91,14 @@ export class DragHandleControl {
     this.initialWidth_ = rect.width;
     this.initialHeight_ = rect.height;
     this.dragOffset_ = [-e.clientX, -e.clientY];
-    window.gMouseTracker = [e.clientX, e.clientY];
+    Workarounds.mouseTracker.dragPoint = [e.clientX, e.clientY];
     e.stopPropagation();
   }
   onDrag_(e) {
     // Workaround for FF.
     let clientPoint;
     if (e.clientX == 0 && e.clientY == 0) {
-      clientPoint = [gMouseTracker[0], gMouseTracker[1]];
+      clientPoint = Workarounds.mouseTracker.dragPoint;
     } else {
       clientPoint = [e.clientX, e.clientY];
     }
@@ -125,5 +125,86 @@ export class DragHandleControl {
   onDragEnd_(e) {
     e.stopPropagation();
     gUndoStack.endSizeHandleDrag();
+  }
+}
+
+export class LabelEditor {
+  constructor(node, label) {
+    this.node_ = node;
+    this.labelElement_ = label;
+    this.labelElement_.addEventListener("dblclick", (e) => this.startLabelEdit(e));
+    this.labelElement_.innerHTML = this.node_.label;
+    this.labelElement_.title = this.node_.label;
+
+    this.endLabelEdit_ = this.endLabelEdit_.bind(this);
+  }
+
+  set label(v) {
+    this.labelElement_.innerHTML = v;
+    this.labelElement_.title = v;
+  }
+
+  startLabelEdit(e) {
+    gUndoStack.startLabelEdit(this.node_);
+
+    const el = this.labelElement_;
+
+    // This is somewhat optional, but if they only thing we have is
+    // a zero-width space, then selection is empty but the cursor
+    // doesn't blink... So instead, just clear it so we see the
+    // cursor blinking.
+    if (el.innerText == '\u200b')
+      el.innerHTML = "";
+
+    // First make this contentEditable,
+    // so that the selection selects proper contents.
+    el.contentEditable = true;
+    // Prevent ellipsis editing.
+    el.style.overflow = "visible";
+    el.style.width = "min-content";
+
+    // Create a new range for all of the contents.
+    const range = document.createRange();
+    range.selectNodeContents(el);
+
+    // Replace the current selection.
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    // Add event listeners so we can stop editing.
+    el.addEventListener("keydown", this.endLabelEdit_);
+    el.addEventListener("focusout", this.endLabelEdit_);
+
+    if (e)
+      e.stopPropagation();
+  }
+
+  endLabelEdit_(e) {
+    if (e.type === "keydown") {
+      // Propagate tab, since we might do something like add a child.
+      // TODO(vmpstr): Whitelist propagatable keys. Arrow keys? Esc?
+      if (e.key !== "Tab")
+        e.stopPropagation();
+      if (e.key !== "Enter" && e.key !== "Tab")
+        return;
+    }
+    e.target.removeEventListener("keydown", this.endLabelEdit_);
+    e.target.removeEventListener("focusout", this.endLabelEdit_);
+    e.target.contentEditable = false;
+    // Restore ellipsis if necessary.
+    e.target.style.overflow = "";
+    e.target.style.width = "";
+
+    e.target.innerText = e.target.innerText.trim();
+
+    // If we have nothing, keep the height with zero-width space.
+    if(e.target.innerText == "")
+      e.target.innerHTML = '&#x200b;'
+
+    this.node_.label = e.target.innerText;
+    e.preventDefault();
+
+    gUndoStack.endLabelEdit();
   }
 }
