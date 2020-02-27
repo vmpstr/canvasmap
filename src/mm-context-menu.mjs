@@ -1,7 +1,7 @@
 const style = `
 :host {
   display: none;
-  width: 250px;
+  width: max-content;
   box-shadow: 3px 3px 4px 0px rgba(0, 0, 0, 0.5);
   position: absolute;
   background: white;
@@ -39,6 +39,7 @@ window.customElements.define("mm-context-menu", class extends HTMLElement {
       <style>${style}</style>
       <body>${body}</body>`;
     this.shadowRoot.addEventListener("click", (e) => {
+      // Find the top level child that was clicked.
       let target = e.target;
       let parent = target.parentElement;
       while (parent && parent != this) {

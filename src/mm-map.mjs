@@ -21,13 +21,14 @@ const style = `
   height: 100%;
 }
 
-/* contextmenu formatting */
+/* contextmenu formatting, move this to context menu somehow */
 li > div:first-child {
   float: left;
 }
 li > div:last-child {
   contain: layout;
   text-align: right;
+  padding-left: 10px;
 }`;
 
 const body = `
