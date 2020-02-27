@@ -1,5 +1,6 @@
 import * as Nodes from "./nodes.mjs";
 import * as Handlers from "./handlers.mjs";
+import { NodeBase } from "./node-base.mjs";
 
 const style = `
 :host {
@@ -154,13 +155,10 @@ const body = `
 <div class=ns_drag_handle></div>
 <div class=nwse_drag_handle></div>`;
 
-window.customElements.define("mm-scroller-node", class extends HTMLElement {
+window.customElements.define("mm-scroller-node", class extends NodeBase {
   // Creation and initialization ===============================================
   constructor() {
     super();
-    this.children_ = [];
-    this.position_ = [0, 0];
-    this.childrenHidden_ = false;
   }
 
   connectedCallback() {
@@ -169,11 +167,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       return;
     }
 
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot.innerHTML = `
-      <style>${style}</style>
-      <body>${body}</body>`;
-
+    this.createShadow(style, body);
     this.registerEventHandlers_();
 
     // Set state from deferred data, and children hidden flags.
@@ -196,11 +190,11 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
   }
 
   registerEventHandlers_() {
+    super.registerEventHandlers_();
+
     const container = this.shadowRoot.querySelector(".container");
     const label = this.shadowRoot.querySelector(".label");
     const child_area = this.shadowRoot.querySelector(".child_area");
-    const slot = this.shadowRoot.querySelector("slot");
-    const child_toggle = this.shadowRoot.querySelector(".child_toggle");
 
     this.dragControl_ = new Handlers.NodeDragControl(this, container);
     this.dragHandleControl_ = new Handlers.DragHandleControl(
@@ -208,62 +202,24 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       {'ew': this.shadowRoot.querySelector(".ew_drag_handle"),
        'ns': this.shadowRoot.querySelector(".ns_drag_handle"),
        'nwse': this.shadowRoot.querySelector(".nwse_drag_handle")});
-    this.labelEditor_ = new Handlers.LabelEditor(this, label);
-    this.childResizeObserver_ = new ResizeObserver(() => this.computeEdges_());
 
     // TODO(vmpstr): Clean this up; issue 11.
     container.addEventListener("click", (e) => {
       if (e.target == container || e.target == label || e.target == child_area)
         this.select();
     });
-    slot.addEventListener("slotchange", (e) => this.onSlotChange_(e));
-    child_toggle.addEventListener("click", (e) => this.onChildToggle_(e));
-    child_toggle.addEventListener("dblclick", (e) => e.stopPropagation());
   }
 
   // Getters ===================================================================
-  get has_child_edges() { return false; }
-  get label() { return this.label_; }
-  get map() { return this.map_; }
-  get parent() { return this.parent_; }
   get parent_edge_offset() {
     if (!this.shadowRoot)
       return 0;
     return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
            this.shadowRoot.querySelector(".container").getBoundingClientRect().top;
   }
-  get position() { return this.position_; }
-
-  // Setters ===================================================================
-  set label(v) {
-    this.label_ = v;
-    if (this.labelEditor_)
-      this.labelEditor_.label = v;
-  }
-  set map(v) { this.map_ = v; }
-  set position(v) {
-    console.assert(v);
-    this.position_ = v;
-    this.computeStyleFromPosition_();
-  }
-
-  // TODO(vmpstr): Audit this.
-  setParent(parent) {
-    this.parent_ = parent;
-    this.computeStyleFromPosition_();
-    this.computeEdges_();
-  }
+  get node_type() { return "scroller"; }
 
   // Event handlers ============================================================
-  onSlotChange_() {
-    for (let i = 0; i < this.children_.length; ++i)
-      this.childResizeObserver_.unobserve(this.children_[i]);
-    this.repopulateChildren_();
-    for (let i = 0; i < this.children_.length; ++i)
-      this.childResizeObserver_.observe(this.children_[i]);
-    this.computeEdges_();
-  }
-
   onChildToggle_(e) {
     this.childrenHidden_ = !this.childrenHidden_;
     if (!this.shadowRoot)
@@ -284,27 +240,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
   }
 
   // Misc ======================================================================
-  startLabelEdit() {
-    console.assert(this.labelEditor_);
-    this.labelEditor_.startLabelEdit();
-  }
-
-  select() {
-    this.map_.nodeSelected(this);
-    this.classList.add('selected');
-  }
-
-  deselect() {
-    this.map_.nodeDeselected(this);
-    this.classList.remove('selected');
-  }
-
-  unhideChildren() {
-    if (this.childrenHidden_)
-      this.onChildToggle_();
-    return this.children_.length > 0;
-  }
-
   computeEdges_() {
     if (!this.shadowRoot || !this.parent_)
       return;
@@ -326,28 +261,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       toggle.classList.add("collapsed");
     else
       toggle.classList.add("expanded");
-  }
-
-  resetPosition() {
-    this.style.left = '0';
-    this.style.top = '0';
-    const rect = this.getBoundingClientRect();
-    this.position = [rect.x, rect.y];
-  }
-
-  computeStyleFromPosition_() {
-    console.assert(getComputedStyle(this).getPropertyValue("position") != "static");
-    this.style.left = '0';
-    this.style.top = '0';
-    const rect = this.getBoundingClientRect();
-    this.style.left = (this.position_[0] - rect.x) + "px";
-    this.style.top = (this.position_[1] - rect.y) + "px";
-  }
-
-  clone() {
-    const clone = Nodes.createNode("scroller", this.map_);
-    clone.label = this.label;
-    return clone;
   }
 
   // TODO(vmpstr): This needs a refactor.
@@ -405,18 +318,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
       if (Nodes.isKnownTag(nodes[i].tagName))
         this.children_.push(nodes[i]);
     }
-  }
-
-  adoptNode(child, ordinal) {
-    if (ordinal === undefined)
-      ordinal = this.children.length;
-    console.assert(ordinal <= this.children.length);
-
-    // Need to know where to position the child.
-    child.remove();
-    child.setParent(this);
-    this.insertBefore(child, this.children[ordinal]);
-    child.resetPosition();
   }
 
   // TODO(vmpstr): Use this in storage.
