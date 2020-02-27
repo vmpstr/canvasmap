@@ -149,7 +149,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
       node.adoptNode(child);
     } else if (e.key == "Enter") {
       // Add a sibling.
-      node.parent.adoptNode(child);
+      node.parent.adoptNode(child, Nodes.childOrdinal(node, node.parent) + 1);
     }
 
     if (child) {
