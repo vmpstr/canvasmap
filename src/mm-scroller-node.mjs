@@ -54,7 +54,8 @@ const style = `
 ::slotted(*) {
   position: relative;
   margin-top: 5px;
-  width: max-content;
+  width: 100%;
+  max-width: max-content;
 }
 .label_holder {
   max-width: min-content;

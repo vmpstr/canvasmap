@@ -25,6 +25,8 @@ const style = `
   position: relative;
   contain: layout;
   margin-left: 30px;
+  width: calc(100% - 30px);
+  max-width: max-content;
 }
 .child_area.hidden {
   min-height: 10px;
@@ -35,10 +37,11 @@ const style = `
 ::slotted(*) {
   position: relative;
   margin-top: 5px;
-  width: max-content;
+  width: 100%;
+  max-width: max-content;
 }
 .label_holder {
-  width: max-content;
+  width: 100%;
   max-width: max-content;
   min-width: 20px;
 
