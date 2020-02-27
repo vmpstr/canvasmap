@@ -36,3 +36,10 @@ export function childOrdinal(child, parent) {
   return -1;
 }
 
+export function similarTypes(type) {
+  if (type == "node")
+    return ["scroller"];
+  else if (type == "scroller")
+    return ["node"];
+  console.assert(false);
+}
