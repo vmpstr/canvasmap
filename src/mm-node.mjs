@@ -111,6 +111,7 @@ const body = `
 </div>`;
 
 window.customElements.define("mm-node", class extends HTMLElement {
+  // Creation and initialization ===============================================
   constructor() {
     super();
     this.children_ = []
@@ -129,37 +130,13 @@ window.customElements.define("mm-node", class extends HTMLElement {
       <style>${style}</style>
       <body>${body}</body>`;
 
-    const label = this.shadowRoot.querySelector(".label");
-    this.labelEditor_ = new Handlers.LabelEditor(this, label);
+    this.registerEventHandlers_();
 
-    label.addEventListener("click", (e) => {
-      if (e.target == label)
-        this.select();
-    });
-
-    const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
-    const label_holder = this.shadowRoot.querySelector(".label_holder");
-
-    this.dragControl_ = new Handlers.NodeDragControl(this, label);
-    this.dragHandleControl_ = new Handlers.DragHandleControl(
-      this, label_holder, {'ew': drag_handle});
-
-    if (this.fromData_) {
-      label_holder.style.width = this.fromData_.label_width;
+    if (this.deferredData_) {
+      const label_holder = this.shadowRoot.querySelector(".label_holder");
+      label_holder.style.width = this.deferredData_.label_width;
+      delete this.deferredData_;
     }
-
-    this.childResizeObserver_ = new ResizeObserver(() => this.computeEdges_());
-
-    const slot = shadow.querySelector("slot");
-    slot.addEventListener("slotchange", (e) => this.onSlotChange_(e));
-
-    const child_toggle = this.shadowRoot.querySelector(".child_toggle");
-    child_toggle.addEventListener("click", (e) => {
-      this.onChildToggle_(e);
-    });
-    child_toggle.addEventListener("dblclick", (e) => {
-      e.stopPropagation();
-    });
 
     if (this.childrenHidden_) {
       this.shadowRoot.querySelector(".child_area").classList.add("hidden");
@@ -167,14 +144,60 @@ window.customElements.define("mm-node", class extends HTMLElement {
     } else {
       this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
     }
+
+    // Recompute the edges just in case we hid children.
     this.computeEdges_();
   }
 
-  set map(v) {
-    this.map_ = v;
+  registerEventHandlers_() {
+    const label = this.shadowRoot.querySelector(".label");
+    const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
+    const label_holder = this.shadowRoot.querySelector(".label_holder");
+    const slot = this.shadowRoot.querySelector("slot");
+    const child_toggle = this.shadowRoot.querySelector(".child_toggle");
+
+    this.dragControl_ = new Handlers.NodeDragControl(this, label);
+    this.dragHandleControl_ = new Handlers.DragHandleControl(
+      this, label_holder, {'ew': drag_handle});
+    this.labelEditor_ = new Handlers.LabelEditor(this, label);
+    this.childResizeObserver_ = new ResizeObserver(() => this.computeEdges_());
+
+    label.addEventListener("click", (e) => {
+      if (e.target == label)
+        this.select();
+    });
+    slot.addEventListener("slotchange", (e) => this.onSlotChange_(e));
+    child_toggle.addEventListener("click", (e) => this.onChildToggle_(e));
+    child_toggle.addEventListener("dblclick", (e) => e.stopPropagation());
   }
-  get map() {
-    return this.map_;
+
+  // Getters ===================================================================
+  get has_child_edges() { return true; }
+  get label() { return this.label_; }
+  get map() { return this.map_; }
+  get parent() { return this.parent_; }
+  get parent_edge_offset() {
+    if (!this.shadowRoot)
+      return 0;
+    return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
+           this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().top;
+  }
+  // Position is in screen coordinates. 
+  // TODO(vmpstr): it will become hard to reason about this, so we need better
+  // spaces or explicit separation between fixed position and free nodes.
+  get position() { return this.position_; }
+
+  // Setters ===================================================================
+  set label(v) {
+    this.label_ = v;
+    if (this.labelEditor_)
+      this.labelEditor_.label = v;
+  }
+  set map(v) { this.map_ = v; }
+  set position(v) {
+    console.assert(v);
+    this.position_ = v;
+    this.computeStyleFromPosition_();
   }
 
   // You probably want adoptNode().
@@ -184,6 +207,7 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.computeEdges_();
   }
 
+  // Event handlers ============================================================
   onSlotChange_() {
     for (let i = 0; i < this.children_.length; ++i) {
       this.childResizeObserver_.unobserve(this.children_[i]);
@@ -214,6 +238,22 @@ window.customElements.define("mm-node", class extends HTMLElement {
     }
   }
 
+  // Misc ======================================================================
+  startLabelEdit() {
+    console.assert(this.labelEditor_);
+    this.labelEditor_.startLabelEdit();
+  }
+
+  select() {
+    this.map_.nodeSelected(this);
+    this.classList.add('selected');
+  }
+
+  deselect() {
+    this.map_.nodeDeselected(this);
+    this.classList.remove('selected');
+  }
+
   unhideChildren() {
     if (this.childrenHidden_)
       this.onChildToggle_();
@@ -232,7 +272,10 @@ window.customElements.define("mm-node", class extends HTMLElement {
     if (this.children_.length && !this.childrenHidden_) {
       this.shadowRoot.querySelector(".child_edge").style.display = "";
       const last_child = this.children_[this.children_.length - 1];
-      let extent = last_child.getBoundingClientRect().top + last_child.parent_edge_offset - this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().bottom;
+      let extent =
+          last_child.getBoundingClientRect().top +
+          last_child.parent_edge_offset -
+          this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().bottom;
       this.shadowRoot.querySelector(".child_edge").style.height = extent + "px";
     } else {
       this.shadowRoot.querySelector(".child_edge").style.display = "none";
@@ -252,40 +295,6 @@ window.customElements.define("mm-node", class extends HTMLElement {
       toggle.classList.add("expanded");
   }
 
-  get parent_edge_offset() {
-    if (!this.shadowRoot)
-      return 0;
-    return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
-           this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().top;
-  }
-
-  get has_child_edges() { return true; }
-
-  get parent() {
-    return this.parent_;
-  }
-
-  // Position is in screen coordinates. 
-  // TODO(vmpstr): it will become hard to reason about this, so we need better
-  // spaces or explicit separation between fixed position and free nodes.
-  get position() {
-    return this.position_;
-  }
-  set position(v) {
-    console.assert(v);
-    this.position_ = v;
-    this.computeStyleFromPosition_();
-  }
-
-  get label() {
-    return this.label_;
-  }
-  set label(v) {
-    this.label_ = v;
-    if (this.labelEditor_)
-      this.labelEditor_.label = v;
-  }
-
   resetPosition() {
     this.style.left = '0';
     this.style.top = '0';
@@ -302,35 +311,10 @@ window.customElements.define("mm-node", class extends HTMLElement {
     this.style.top = (this.position_[1] - rect.y) + "px";
   }
 
-  startLabelEdit() {
-    console.assert(this.labelEditor_);
-    this.labelEditor_.startLabelEdit();
-  }
-
-  select() {
-    this.map_.nodeSelected(this);
-    this.classList.add('selected');
-  }
-
-  deselect() {
-    this.map_.nodeDeselected(this);
-    this.classList.remove('selected');
-  }
-
   clone() {
     const clone = Nodes.createNode("node", this.map_);
     clone.label = this.label;
     return clone;
-  }
-
-  getSizingInfo() {
-    return {
-      label_width: this.shadowRoot.querySelector(".label_holder").style.width
-    };
-  }
-  setSizingInfo(info) {
-    this.shadowRoot.querySelector(".label_holder").style.width =
-      info.label_width;
   }
 
   onDraggedChild(child) {
@@ -401,6 +385,16 @@ window.customElements.define("mm-node", class extends HTMLElement {
     child.resetPosition();
   }
 
+  getSizingInfo() {
+    return {
+      label_width: this.shadowRoot.querySelector(".label_holder").style.width
+    };
+  }
+  setSizingInfo(info) {
+    this.shadowRoot.querySelector(".label_holder").style.width =
+      info.label_width;
+  }
+
   // Storage -------------------------------------
   loadFromData(data) {
     this.label = data.label || '<deprecated label>';
@@ -408,9 +402,9 @@ window.customElements.define("mm-node", class extends HTMLElement {
     if (this.shadowRoot) {
       this.shadowRoot.querySelector(".label_holder").style.width = data.label_width;
     } else {
-      if (!this.fromData_)
-        this.fromData_ = {};
-      this.fromData_['label_width'] = data.label_width;
+      if (!this.deferredData_)
+        this.deferredData_ = {};
+      this.deferredData_['label_width'] = data.label_width;
     }
     // TODO(vmpstr): backcompat.
     if (!data.nodes)

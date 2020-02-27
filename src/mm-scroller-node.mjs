@@ -178,6 +178,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
 
     // Set state from deferred data, and children hidden flags.
     if (this.deferredData_) {
+      const container = this.shadowRoot.querySelector(".container");
       container.style.width = this.deferredData_.container_width;
       container.style.maxHeight = this.deferredData_.container_maxheight;
       delete this.deferredData_;
@@ -221,6 +222,7 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
   }
 
   // Getters ===================================================================
+  get has_child_edges() { return false; }
   get label() { return this.label_; }
   get map() { return this.map_; }
   get parent() { return this.parent_; }
@@ -231,7 +233,6 @@ window.customElements.define("mm-scroller-node", class extends HTMLElement {
            this.shadowRoot.querySelector(".container").getBoundingClientRect().top;
   }
   get position() { return this.position_; }
-  get has_child_edges() { return false; }
 
   // Setters ===================================================================
   set label(v) {
