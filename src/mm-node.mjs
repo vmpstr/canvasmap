@@ -4,7 +4,12 @@ import { NodeBase } from "./node-base.mjs";
 
 const style = `
 :host {
-  display: block;
+  display: flex;
+  flex-shrink: 1;
+}
+.container {
+  width: 100%;
+  position: relative;
 }
 .label {
   box-sizing: border-box;
@@ -39,6 +44,11 @@ const style = `
   margin-top: 5px;
   width: 100%;
   max-width: max-content;
+}
+.label_flexer {
+  display: flex;
+  flex-shrink: 1;
+  width: 100%;
 }
 .label_holder {
   width: 100%;
@@ -103,15 +113,19 @@ const style = `
 }`;
 
 const body = `
-<div class=label_holder>
-  <div class=parent_edge></div>
-  <div class=child_edge></div>
-  <div class="child_toggle expanded"></div>
-  <div class=label></div>
-  <div class=ew_drag_handle></div>
-</div>
-<div class=child_area>
-  <slot></slot>
+<div class=container>
+  <div class=label_flexer>
+    <div class=label_holder>
+      <div class=parent_edge></div>
+      <div class=child_edge></div>
+      <div class="child_toggle expanded"></div>
+      <div class=label></div>
+      <div class=ew_drag_handle></div>
+    </div>
+  </div>
+  <div class=child_area>
+    <slot></slot>
+  </div>
 </div>`;
 
 window.customElements.define("mm-node", class extends NodeBase {

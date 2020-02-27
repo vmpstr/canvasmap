@@ -4,7 +4,8 @@ import { NodeBase } from "./node-base.mjs";
 
 const style = `
 :host {
-  display: block;
+  display: flex;
+  flex-shrink: 1;
 }
 .container {
   display: flex;
