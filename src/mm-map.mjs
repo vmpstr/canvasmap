@@ -123,7 +123,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
 
     // Needs to happen before label edit, since
     // that will start a new transaction.
-    gUndoStack.didCreate(node);
+    App.undoStack.didCreate(node);
 
     node.select();
     node.startLabelEdit();
@@ -134,7 +134,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
     if (!node)
       return;
     if (e.key == "Delete" || e.key == "Backspace") {
-      gUndoStack.willDelete(node);
+      App.undoStack.willDelete(node);
       if (node.parent && node.parent.select)
         node.parent.select();
       node.deselect();
@@ -161,7 +161,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
     if (child) {
       // Needs to happen before label edit, since
       // that will start a new transaction.
-      gUndoStack.didCreate(child);
+      App.undoStack.didCreate(child);
 
       child.select();
       child.startLabelEdit();

@@ -1,3 +1,4 @@
+import * as App from "./app.mjs";
 import * as Nodes from "./nodes.mjs";
 import * as Workarounds from "./workarounds.mjs";
 
@@ -18,7 +19,7 @@ export class NodeDragControl {
     e.stopPropagation();
     e.dataTransfer.setDragImage(new Image(), 0, 0);
 
-    gUndoStack.startNodeDrag(this.node_);
+    App.undoStack.startNodeDrag(this.node_);
   }
 
   onDrag_(e) {
@@ -39,7 +40,7 @@ export class NodeDragControl {
           Nodes.childOrdinal(this.node_, this.node_.parent));
         this.dragTarget_.position = [rect.x, rect.y];
 
-        gUndoStack.setNodeDragTarget(this.dragTarget_);
+        App.undoStack.setNodeDragTarget(this.dragTarget_);
       } else {
         this.dragTarget_ = this.node_;
       }
@@ -63,7 +64,7 @@ export class NodeDragControl {
     console.assert(this.dragTarget_);
     this.dragTarget_.classList.remove('dragged');
     e.stopPropagation();
-    gUndoStack.endNodeDrag();
+    App.undoStack.endNodeDrag();
     this.dragTarget_ = null;
   }
 }
@@ -85,7 +86,7 @@ export class DragHandleControl {
   }
 
   onDragStart_(e, mode) {
-    gUndoStack.startSizeHandleDrag(this.node_);
+    App.undoStack.startSizeHandleDrag(this.node_);
     this.dragHandleMode_ = mode;
     const rect = this.target_.getBoundingClientRect();
     this.initialWidth_ = rect.width;
@@ -125,7 +126,7 @@ export class DragHandleControl {
   }
   onDragEnd_(e) {
     e.stopPropagation();
-    gUndoStack.endSizeHandleDrag();
+    App.undoStack.endSizeHandleDrag();
   }
 }
 
@@ -146,7 +147,7 @@ export class LabelEditor {
   }
 
   startLabelEdit(e) {
-    gUndoStack.startLabelEdit(this.node_);
+    App.undoStack.startLabelEdit(this.node_);
 
     const el = this.labelElement_;
 
@@ -206,6 +207,6 @@ export class LabelEditor {
     this.node_.label = e.target.innerText;
     e.preventDefault();
 
-    gUndoStack.endLabelEdit();
+    App.undoStack.endLabelEdit();
   }
 }

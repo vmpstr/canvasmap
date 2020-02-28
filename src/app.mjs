@@ -13,6 +13,7 @@ class MouseTracker {
 }
 
 export const mouseTracker = new MouseTracker;
+export const undoStack = new UndoStack;
 
 export function initialize() {
   import("./mm-map.mjs");
@@ -29,13 +30,11 @@ export function initialize() {
     customElements.whenDefined('mm-scroller-node')
   ];
 
-  window.gUndoStack = new UndoStack();
-
   Promise.all(promises).then(() => {
     const map = document.createElement('mm-map');
     document.body.appendChild(map);
     window.addEventListener('keydown', (e) => {
-      if (gUndoStack.handleKeyDown(e)) return;
+      if (undoStack.handleKeyDown(e)) return;
       map.handleKeyDown(e);
     });
     map.setStorage(window.localStorage);
