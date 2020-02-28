@@ -10,8 +10,6 @@ const style = `
   width: 100%;
   height: 100%;
   background: lightblue;
-
-  position: relative;
 }
 ::slotted(*) {
   position: absolute;
@@ -19,6 +17,8 @@ const style = `
 }
 #self {
   height: 100%;
+  overflow: auto;
+  position: relative;
 }`;
 
 const contextMenu = `
@@ -34,8 +34,9 @@ const contextMenu = `
 </mm-context-menu>`;
 
 const body = `
-<div id=self></div>
-<slot></slot>`;
+<div id=self>
+  <slot></slot>
+</div>`;
 
 window.customElements.define("mm-map", class extends HTMLElement {
   constructor() {
