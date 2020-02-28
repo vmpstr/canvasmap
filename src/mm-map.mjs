@@ -146,7 +146,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
       return;
     if (e.key == "Delete" || e.key == "Backspace") {
       gUndoStack.willDelete(node);
-      if (node.parent)
+      if (node.parent && node.parent.select)
         node.parent.select();
       node.deselect();
       node.remove();
