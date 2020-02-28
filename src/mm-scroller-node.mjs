@@ -1,3 +1,4 @@
+import * as App from "./app.mjs";
 import * as Nodes from "./nodes.mjs";
 import * as Handlers from "./handlers.mjs";
 import { NodeBase } from "./node-base.mjs";
@@ -207,8 +208,10 @@ window.customElements.define("mm-scroller-node", class extends NodeBase {
 
     // TODO(vmpstr): Clean this up; issue 11.
     container.addEventListener("click", (e) => {
-      if (e.target == container || e.target == label || e.target == child_area)
+      if (e.target == container || e.target == label || e.target == child_area) {
         this.select();
+        App.mouseTracker.handledClick(this, e);
+      }
     });
   }
 

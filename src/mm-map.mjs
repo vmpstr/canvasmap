@@ -1,3 +1,4 @@
+import * as App from "./app.mjs";
 import * as Nodes from "./nodes.mjs";
 import * as Workarounds from "./workarounds.mjs";
 
@@ -22,16 +23,14 @@ const style = `
 }`;
 
 const contextMenu = `
-<mm-context-menu id=context>
-  <mm-context-menu-item id=node>
-    <div slot=text>Add tree node</div>
-    <div slot=shortcut>dblclick</div>
-  </mm-context-menu-item>
-  <mm-context-menu-item id=scroller>
-    <div slot=text>Add scroller node</div>
-    <div slot=shortcut>Shift+dblclick</div>
-  </mm-context-menu-item>
-</mm-context-menu>`;
+<mm-context-menu-item id=node>
+  <div slot=text>Add tree node</div>
+  <div slot=shortcut>dblclick</div>
+</mm-context-menu-item>
+<mm-context-menu-item id=scroller>
+  <div slot=text>Add scroller node</div>
+  <div slot=shortcut>Shift+dblclick</div>
+</mm-context-menu-item>`;
 
 const body = `
 <div id=self>
@@ -53,44 +52,32 @@ window.customElements.define("mm-map", class extends HTMLElement {
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.innerHTML = `
       <style>${style}</style>
-      <body>${contextMenu}${body}</body>`;
+      <body>${body}</body>`;
 
     shadow.addEventListener("click", (e) => this.onClick_(e));
     shadow.addEventListener("dblclick", (e) => this.onDoubleClick_(e));
-    shadow.addEventListener("contextmenu", (e) => this.onContextMenu_(e));
     shadow.addEventListener("dragover", (e) => {
       Workarounds.mouseTracker.dragPoint = [e.clientX, e.clientY];
       e.preventDefault();
     });
 
     shadow.querySelector("slot").addEventListener("slotchange", (e) => this.onSlotChange_(e));
-    shadow.querySelector("#context").client = this;
 
     setInterval(() => this.saveToStorage_(), 1000);
 
   }
 
-  onContextMenuSelected(item) {
-    const context = this.shadowRoot.querySelector("#context");
-    this.addNodeForUserAt_(item.id, context.position);
-  }
-
-  onContextMenu_(e) {
-    if (e.target.id == "self") {
-      this.shadowRoot.querySelector("#context").showAt(e.clientX, e.clientY);
-      e.preventDefault();
-    } else {
-      this.shadowRoot.querySelector("#context").hide();
-    }
-  }
-
   get map() {
     return this;
   }
-  set context_menu(v) {
-    if (this.activeContextMenu_)
-      this.activeContextMenu_.hide();
-    this.activeContextMenu_ = v;
+
+  getContextMenu() {
+    const menu = document.createElement("mm-context-menu");
+    menu.innerHTML = contextMenu;
+    return menu;
+  }
+  onContextMenuSelected(type, position) {
+    this.addNodeForUserAt_(type, position);
   }
 
   onSlotChange_(e) {
@@ -106,9 +93,10 @@ window.customElements.define("mm-map", class extends HTMLElement {
   }
 
   onClick_(e) {
-    if (e.target.id == "self")
+    if (e.target.id == "self") {
       this.selectedNode_ && this.selectedNode_.deselect();
-    this.handledClick(e);
+      App.mouseTracker.handledClick(this, e);
+    }
   }
 
   handledClick(e) {

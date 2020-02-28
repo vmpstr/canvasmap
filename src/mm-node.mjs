@@ -1,3 +1,4 @@
+import * as App from "./app.mjs";
 import * as Nodes from "./nodes.mjs";
 import * as Handlers from "./handlers.mjs";
 import { NodeBase } from "./node-base.mjs";
@@ -113,11 +114,9 @@ const style = `
 }`;
 
 const contextMenu = `
-<mm-context-menu id=context>
-  <mm-context-menu-item id=convert>
-    <div slot=text>Convert</div>
-  </mm-context-menu-item>
-</mm-context-menu>`;
+<mm-context-menu-item id=convert>
+  <div slot=text>Convert</div>
+</mm-context-menu-item>`;
 
 const body = `
 <div class=container>
@@ -153,7 +152,7 @@ window.customElements.define("mm-node", class extends NodeBase {
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.innerHTML = `
       <style>${style}</style>
-      <body>${contextMenu}${body}</body>`;
+      <body>${body}</body>`;
 
     this.registerEventHandlers_();
 
@@ -188,11 +187,9 @@ window.customElements.define("mm-node", class extends NodeBase {
     label.addEventListener("click", (e) => {
       if (e.target == label) {
         this.select();
-        this.map.handledClick(e);
+        App.mouseTracker.handledClick(this, e);
       }
     });
-    label_holder.addEventListener("contextmenu", (e) => this.onContextMenu_(e));
-    this.shadowRoot.querySelector("#context").client = this;
   }
 
   // Getters ===================================================================
@@ -205,15 +202,15 @@ window.customElements.define("mm-node", class extends NodeBase {
   }
   get node_type() { return "node"; }
 
-  // Event handlers ============================================================
-  onContextMenu_(e) {
-    const rect = this.getBoundingClientRect();
-    this.shadowRoot.querySelector("#context").showAt(e.clientX - rect.x, e.clientY - rect.y);
-    e.preventDefault();
+  getContextMenu() {
+    const menu = document.createElement("mm-context-menu");
+    menu.innerHTML = contextMenu;
+    return menu;
   }
-  onContextMenuSelected(item) {
-    const context = this.shadowRoot.querySelector("#context");
-    console.log(item.id);
+
+  // Event handlers ============================================================
+  onContextMenuSelected(choice, position) {
+    console.log(choice);
   }
 
   onChildToggle_(e) {
