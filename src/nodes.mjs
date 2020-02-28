@@ -6,8 +6,7 @@ export function createNode(type, map) {
   else if (type == "scroller")
     node = document.createElement("mm-scroller-node");
   else {
-    console.log(type);
-    console.assert(false);
+    console.error("unknown type: " + type);
   }
   node.map = map;
   return node;
@@ -41,5 +40,5 @@ export function similarTypes(type) {
     return ["scroller"];
   else if (type == "scroller")
     return ["node"];
-  console.assert(false);
+  console.error("unknown type: " + type);
 }

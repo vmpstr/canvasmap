@@ -13,18 +13,15 @@ class Transaction {
   }
 
   apply() {
-    console.log("unimplemented apply()");
-    console.assert(false);
+    console.error("unimplemented apply()");
   }
 
   undo() {
-    console.log("unimplemented undo()");
-    console.assert(false);
+    console.error("unimplemented undo()");
   }
 
   done() {
-    console.log("unimplemented done()");
-    console.assert(false);
+    console.error("unimplemented done()");
   }
 };
 
