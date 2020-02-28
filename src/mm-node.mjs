@@ -112,6 +112,13 @@ const style = `
   opacity: 40%;
 }`;
 
+const contextMenu = `
+<mm-context-menu id=context>
+  <mm-context-menu-item id=convert>
+    <div slot=text>Convert</div>
+  </mm-context-menu-item>
+</mm-context-menu>`;
+
 const body = `
 <div class=container>
   <div class=label_flexer>
@@ -146,7 +153,7 @@ window.customElements.define("mm-node", class extends NodeBase {
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.innerHTML = `
       <style>${style}</style>
-      <body>${body}</body>`;
+      <body>${contextMenu}${body}</body>`;
 
     this.registerEventHandlers_();
 
@@ -179,9 +186,13 @@ window.customElements.define("mm-node", class extends NodeBase {
       this, label_holder, {'ew': drag_handle});
 
     label.addEventListener("click", (e) => {
-      if (e.target == label)
+      if (e.target == label) {
         this.select();
+        this.map.handledClick(e);
+      }
     });
+    label_holder.addEventListener("contextmenu", (e) => this.onContextMenu_(e));
+    this.shadowRoot.querySelector("#context").client = this;
   }
 
   // Getters ===================================================================
@@ -195,6 +206,16 @@ window.customElements.define("mm-node", class extends NodeBase {
   get node_type() { return "node"; }
 
   // Event handlers ============================================================
+  onContextMenu_(e) {
+    const rect = this.getBoundingClientRect();
+    this.shadowRoot.querySelector("#context").showAt(e.clientX - rect.x, e.clientY - rect.y);
+    e.preventDefault();
+  }
+  onContextMenuSelected(item) {
+    const context = this.shadowRoot.querySelector("#context");
+    console.log(item.id);
+  }
+
   onChildToggle_(e) {
     this.childrenHidden_ = !this.childrenHidden_;
     if (!this.shadowRoot)

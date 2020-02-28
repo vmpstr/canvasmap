@@ -19,23 +19,21 @@ const style = `
 }
 #self {
   height: 100%;
-}
-
-/* contextmenu formatting, move this to context menu somehow */
-li > div:first-child {
-  float: left;
-}
-li > div:last-child {
-  contain: layout;
-  text-align: right;
-  padding-left: 10px;
 }`;
 
-const body = `
+const contextMenu = `
 <mm-context-menu id=context>
-  <li id="node"><div>Add tree node</div><div>dblclick</div></li>
-  <li id="scroller"><div>Add scroller node</div><div>Shift+dblclick</div></li>
-</mm-context-menu>
+  <mm-context-menu-item id=node>
+    <div slot=text>Add tree node</div>
+    <div slot=shortcut>dblclick</div>
+  </mm-context-menu-item>
+  <mm-context-menu-item id=scroller>
+    <div slot=text>Add scroller node</div>
+    <div slot=shortcut>Shift+dblclick</div>
+  </mm-context-menu-item>
+</mm-context-menu>`;
+
+const body = `
 <div id=self></div>
 <slot></slot>`;
 
@@ -54,7 +52,7 @@ window.customElements.define("mm-map", class extends HTMLElement {
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.innerHTML = `
       <style>${style}</style>
-      <body>${body}</body>`;
+      <body>${contextMenu}${body}</body>`;
 
     shadow.addEventListener("click", (e) => this.onClick_(e));
     shadow.addEventListener("dblclick", (e) => this.onDoubleClick_(e));
@@ -85,6 +83,15 @@ window.customElements.define("mm-map", class extends HTMLElement {
     }
   }
 
+  get map() {
+    return this;
+  }
+  set context_menu(v) {
+    if (this.activeContextMenu_)
+      this.activeContextMenu_.hide();
+    this.activeContextMenu_ = v;
+  }
+
   onSlotChange_(e) {
     let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
     this.nodes_ = [];
@@ -100,7 +107,15 @@ window.customElements.define("mm-map", class extends HTMLElement {
   onClick_(e) {
     if (e.target.id == "self")
       this.selectedNode_ && this.selectedNode_.deselect();
-    this.shadowRoot.querySelector("#context").hide();
+    this.handledClick(e);
+  }
+
+  handledClick(e) {
+    e.stopPropagation();
+    if (this.activeContextMenu_) {
+      this.activeContextMenu_.hide();
+      this.activeContextMenu_ = null;
+    }
   }
 
   onDoubleClick_(e) {

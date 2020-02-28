@@ -6,30 +6,15 @@ const style = `
   position: absolute;
   background: white;
   z-index: 100;
-  left: 50px;
-  top: 500px;
-}
-ul {
-  list-style: none;
-  padding: 0;
-  padding-top: 3px;
-  padding-bottom: 3px;
-  margin: 0;
-}
-::slotted(li) {
-  font-family: Verdana, sans-serif;
-  font-weight: 100;
-  font-size: 8pt;
-  padding: 5px 20px 5px 20px;
-  cursor: default;
-}
-::slotted(li:hover) {
-  background: rgba(0, 0, 0, 0.2);
 }`;
 
-const body = `<ul><slot></slot></ul>`;
+const body = `<slot></slot>`;
 
 window.customElements.define("mm-context-menu", class extends HTMLElement {
+  constructor() {
+    super();
+  }
+
   connectedCallback() {
     if (this.shadowRoot)
       return;
@@ -38,8 +23,9 @@ window.customElements.define("mm-context-menu", class extends HTMLElement {
     shadow.innerHTML = `
       <style>${style}</style>
       <body>${body}</body>`;
-    this.shadowRoot.addEventListener("click", (e) => {
+    this.addEventListener("click", (e) => {
       // Find the top level child that was clicked.
+      // TODO(vmpstr): I thought ShadowDOM is supposed to hide the internals?
       let target = e.target;
       let parent = target.parentElement;
       while (parent && parent != this) {
@@ -60,6 +46,7 @@ window.customElements.define("mm-context-menu", class extends HTMLElement {
     this.style.left = x + "px";
     this.style.top = y + "px";
     this.position_ = [x, y];
+    this.client_.map.context_menu = this;
   }
 
   get position() {
@@ -75,3 +62,4 @@ window.customElements.define("mm-context-menu", class extends HTMLElement {
       this.client_.onContextMenuSelected(item);
   }
 });
+
