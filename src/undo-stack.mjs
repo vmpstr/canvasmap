@@ -128,6 +128,8 @@ class DeleteTransaction extends Transaction {
   }
 
   apply() {
+    if (super.target.parent)
+      super.target.parent.select();
     super.target.remove();
   }
 
