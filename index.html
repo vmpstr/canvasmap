@@ -13,5 +13,5 @@ body {
 </style>
 
 <script type=module>
-import("./src/app.mjs").then(app => app.initialize());
+import(`./src/app.mjs?${Date.now()}`).then(app => app.initialize());
 </script>

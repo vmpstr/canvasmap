@@ -23,11 +23,11 @@ const style = `
 }`;
 
 const contextMenu = `
-<mm-context-menu-item id=node>
+<mm-context-menu-item action=add type=node>
   <div slot=text>Add tree node</div>
   <div slot=shortcut>dblclick</div>
 </mm-context-menu-item>
-<mm-context-menu-item id=scroller>
+<mm-context-menu-item action=add type=scroller>
   <div slot=text>Add scroller node</div>
   <div slot=shortcut>Shift+dblclick</div>
 </mm-context-menu-item>`;
@@ -74,10 +74,12 @@ window.customElements.define("mm-map", class extends HTMLElement {
   getContextMenu() {
     const menu = document.createElement("mm-context-menu");
     menu.innerHTML = contextMenu;
+    menu.handler = (item, position) => this.onContextMenuChoice_(item, position);
     return menu;
   }
-  onContextMenuSelected(type, position) {
-    this.addNodeForUserAt_(type, position);
+  onContextMenuChoice_(item, position) {
+    if (item.getAttribute("action") == "add")
+      this.addNodeForUserAt_(item.getAttribute("type"), position);
   }
 
   onSlotChange_(e) {
@@ -96,14 +98,6 @@ window.customElements.define("mm-map", class extends HTMLElement {
     if (e.target.id == "self") {
       this.selectedNode_ && this.selectedNode_.deselect();
       App.mouseTracker.handledClick(this, e);
-    }
-  }
-
-  handledClick(e) {
-    e.stopPropagation();
-    if (this.activeContextMenu_) {
-      this.activeContextMenu_.hide();
-      this.activeContextMenu_ = null;
     }
   }
 

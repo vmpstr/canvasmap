@@ -1,3 +1,5 @@
+import * as App from "./app.mjs";
+
 const style = `
 :host {
   display: none;
@@ -13,6 +15,7 @@ const body = `<slot></slot>`;
 window.customElements.define("mm-context-menu", class extends HTMLElement {
   constructor() {
     super();
+    this.visible_ = false;
   }
 
   connectedCallback() {
@@ -33,33 +36,34 @@ window.customElements.define("mm-context-menu", class extends HTMLElement {
         parent = target.parentElement;
       }
       if (parent)
-        this.onClick_(target);
+        this.onClick_(target, e);
     });
   }
 
-  set client(v) {
-    this.client_ = v;
-  }
+  set handler(v) { this.handler_ = v; }
+  set control(v) { this.control_ = v; }
 
   showAt(x, y) {
     this.style.display = "block";
     this.style.left = x + "px";
     this.style.top = y + "px";
     this.position_ = [x, y];
-    this.client_.map.context_menu = this;
+    this.visible_ = true;
   }
 
-  get position() {
-    return this.position_;
-  }
+  get position() { return this.position_; }
+  get visible() { return this.visible_; }
 
   hide() {
     this.style.display = "";
+    this.visible_ = false;
   }
 
-  onClick_(item) {
-    if (this.client_)
-      this.client_.onContextMenuSelected(item);
+  onClick_(item, e) {
+    if (this.handler_)
+      this.handler_(item, this.position_);
+    this.control_.dismissMenu();
+    App.mouseTracker.handledClick(this, e);
   }
 });
 

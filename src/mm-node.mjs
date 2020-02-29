@@ -114,7 +114,7 @@ const style = `
 }`;
 
 const contextMenu = `
-<mm-context-menu-item id=convert>
+<mm-context-menu-item choice=convert>
   <div slot=text>Convert</div>
 </mm-context-menu-item>`;
 
@@ -205,13 +205,11 @@ window.customElements.define("mm-node", class extends NodeBase {
   getContextMenu() {
     const menu = document.createElement("mm-context-menu");
     menu.innerHTML = contextMenu;
+    menu.handler = (item, position) => console.log(item.getAttribute("choice"));
     return menu;
   }
 
   // Event handlers ============================================================
-  onContextMenuSelected(choice, position) {
-    console.log(choice);
-  }
 
   onChildToggle_(e) {
     this.childrenHidden_ = !this.childrenHidden_;
