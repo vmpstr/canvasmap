@@ -13,5 +13,10 @@ body {
 </style>
 
 <script type=module>
-import(`./src/app.mjs?${Date.now()}`).then(app => app.initialize());
+const debugVersion = Date.now();
+function version() {
+  return debugVersion;
+}
+
+import(`./src/app.mjs?v=${version()}`).then(app => app.initialize(version));
 </script>

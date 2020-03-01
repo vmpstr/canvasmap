@@ -1,4 +1,12 @@
-import * as App from "./app.mjs";
+let App;
+let initialized = false;
+export async function initialize(version) {
+  if (initialized)
+    return;
+  initialized = true;
+  App = await import(`./app.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+}
 
 export class ContextMenuControl {
   constructor() {

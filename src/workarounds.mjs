@@ -1,3 +1,5 @@
+export async function initialize(version) {}
+
 class MouseTracker {
   constructor() {
     this.dragPoint_ = [0, 0];

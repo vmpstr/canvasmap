@@ -1,7 +1,22 @@
-import * as App from "./app.mjs";
-import * as Nodes from "./nodes.mjs";
-import * as Handlers from "./handlers.mjs";
-import { NodeBase } from "./node-base.mjs?v2";
+let App;
+let Nodes;
+let Handlers;
+let NodeBaseModule;
+let initialized = false;
+export async function initialize(version) {
+  if (initialized)
+    return;
+  initialized = true;
+  App = await import(`./app.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  Nodes = await import(`./nodes.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  Handlers = await import(`./handlers.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  NodeBaseModule = await import(`./node-base.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  define();
+}
 
 const style = `
 :host {
@@ -166,254 +181,257 @@ const body = `
 <div class=ns_drag_handle></div>
 <div class=nwse_drag_handle></div>`;
 
-window.customElements.define("mm-scroller-node", class extends NodeBase {
-  // Creation and initialization ===============================================
-  constructor() {
-    super();
-  }
-
-  connectedCallback() {
-    if (this.shadowRoot) {
-      this.computeEdges_();
-      return;
+const define = () => {
+  console.debug("defining mm-scroller-node");
+  window.customElements.define("mm-scroller-node", class extends NodeBaseModule.NodeBase {
+    // Creation and initialization ===============================================
+    constructor() {
+      super();
     }
 
-    this.createShadow(style, body);
-    this.registerEventHandlers_();
-
-    // Set state from deferred data, and children hidden flags.
-    if (this.deferredData_) {
-      const container = this.shadowRoot.querySelector(".container");
-      container.style.width = this.deferredData_.container_width;
-      container.style.maxHeight = this.deferredData_.container_maxheight;
-      delete this.deferredData_;
-    }
-
-    if (this.childrenHidden_) {
-      this.shadowRoot.querySelector(".child_area").classList.add("hidden");
-      this.map_.didHideChildren(this);
-    } else {
-      this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
-    }
-
-    // Recompute the edges just in case we hid children.
-    this.computeEdges_();
-  }
-
-  registerEventHandlers_() {
-    super.registerEventHandlers_();
-
-    const container = this.shadowRoot.querySelector(".container");
-    const label = this.shadowRoot.querySelector(".label");
-    const child_area = this.shadowRoot.querySelector(".child_area");
-
-    this.dragControl_ = new Handlers.NodeDragControl(this, container);
-    this.dragHandleControl_ = new Handlers.DragHandleControl(
-      this, container,
-      {'ew': this.shadowRoot.querySelector(".ew_drag_handle"),
-       'ns': this.shadowRoot.querySelector(".ns_drag_handle"),
-       'nwse': this.shadowRoot.querySelector(".nwse_drag_handle")});
-
-    // TODO(vmpstr): Clean this up; issue 11.
-    container.addEventListener("click", (e) => {
-      if (e.target == container || e.target == label || e.target == child_area) {
-        this.select();
-        App.mouseTracker.handledClick(this, e);
+    connectedCallback() {
+      if (this.shadowRoot) {
+        this.computeEdges_();
+        return;
       }
-    });
-  }
 
-  // Getters ===================================================================
-  get parent_edge_offset() {
-    if (!this.shadowRoot)
-      return 0;
-    return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
-           this.shadowRoot.querySelector(".container").getBoundingClientRect().top;
-  }
-  get node_type() { return "scroller"; }
+      this.createShadow(style, body);
+      this.registerEventHandlers_();
 
-  getContextMenu() {
-    const menu = document.createElement("mm-context-menu");
-    menu.innerHTML = contextMenu;
-    menu.handler = (item, position) => this.onContextMenuItem_(item, position);
-    const submenu = menu.querySelector("#convertmenu");
-    const choices = Nodes.similarTypes(this.node_type);
-    for (let i = 0; i < choices.length; ++i) {
-      const choice = document.createElement("mm-context-menu-item");
-      choice.setAttribute("choice", choices[i]);
-      choice.innerHTML = `<div slot=text>${Nodes.prettyName(choices[i])}</div>`;
-      submenu.appendChild(choice);
-    }
-    return menu;
-  }
+      // Set state from deferred data, and children hidden flags.
+      if (this.deferredData_) {
+        const container = this.shadowRoot.querySelector(".container");
+        container.style.width = this.deferredData_.container_width;
+        container.style.maxHeight = this.deferredData_.container_maxheight;
+        delete this.deferredData_;
+      }
 
-  onContextMenuItem_(item, position) {
-    const choice = item.getAttribute("choice");
-    const clone = this.cloneWithChildrenAsType(choice);
-    this.parent.adoptNode(clone, Nodes.childOrdinal(this, this.parent));
-    this.remove();
-  }
+      if (this.childrenHidden_) {
+        this.shadowRoot.querySelector(".child_area").classList.add("hidden");
+        this.map_.didHideChildren(this);
+      } else {
+        this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
+      }
 
-  // Event handlers ============================================================
-  onChildToggle_(e) {
-    this.childrenHidden_ = !this.childrenHidden_;
-    if (!this.shadowRoot)
-      return;
-
-    if (this.childrenHidden_) {
-      this.shadowRoot.querySelector(".child_area").classList.add("hidden");
-      this.map_.didHideChildren(this);
-    } else {
-      this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
-    }
-    this.computeEdges_();
-
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }
-
-  // Misc ======================================================================
-  computeEdges_() {
-    if (!this.shadowRoot || !this.parent_)
-      return;
-    if (this.parent_.has_child_edges) {
-      this.shadowRoot.querySelector(".parent_edge").style.display = "";
-    } else {
-      this.shadowRoot.querySelector(".parent_edge").style.display = "none";
+      // Recompute the edges just in case we hid children.
+      this.computeEdges_();
     }
 
-    const toggle = this.shadowRoot.querySelector(".child_toggle");
-    if (this.children_.length)
-      toggle.style.display = "";
-    else
-      toggle.style.display = "none";
+    registerEventHandlers_() {
+      super.registerEventHandlers_();
 
-    toggle.classList.remove("expanded");
-    toggle.classList.remove("collapsed");
-    if (this.childrenHidden_)
-      toggle.classList.add("collapsed");
-    else
-      toggle.classList.add("expanded");
-  }
+      const container = this.shadowRoot.querySelector(".container");
+      const label = this.shadowRoot.querySelector(".label");
+      const child_area = this.shadowRoot.querySelector(".child_area");
 
-  // TODO(vmpstr): This needs a refactor.
-  onDraggedChild(child) {
-    const rect = this.getBoundingClientRect();
-    const child_rect = child.getBoundingClientRect();
-    const padding_slack = 15;
-    if (child_rect.left > rect.right ||
-        child_rect.right < rect.left ||
-        (child_rect.top - padding_slack) > rect.bottom ||
-        child_rect.bottom < rect.top ||
-        // If our parent isn't our map (ie we're a child of something
-        // then if the x is to our x's left, reparent up.
-        // TODO(vmpstr): this might not be true for other non-tree maps.
-        (this.parent_ != this.map_ && child_rect.x < rect.x)) {
-      this.parent_.adoptNode(child);
-    } else {
-      let child_index = -1;
-      let next_item = null;
-      let next_distance = 1e6;
-      let previous_item = null;
-      let previous_distance = 1e6;
-      for (let i = 0; i < this.children_.length; ++i) {
-        const next_item_rect = this.children_[i].getBoundingClientRect();
-        if (next_item_rect.y > child_rect.y) {
-          const local_distance = next_item_rect.y - child_rect.y;
-          if (local_distance < next_distance) {
-            next_distance = local_distance;
-            next_item = this.children_[i];
-          }
-        } else if (next_item_rect.y < child_rect.y && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
-          const local_distance = child_rect.y - next_item_rect.y;
-          if (local_distance < previous_distance) {
-            previous_distance = local_distance;
-            previous_item = this.children_[i];
+      this.dragControl_ = new Handlers.NodeDragControl(this, container);
+      this.dragHandleControl_ = new Handlers.DragHandleControl(
+        this, container,
+        {'ew': this.shadowRoot.querySelector(".ew_drag_handle"),
+         'ns': this.shadowRoot.querySelector(".ns_drag_handle"),
+         'nwse': this.shadowRoot.querySelector(".nwse_drag_handle")});
+
+      // TODO(vmpstr): Clean this up; issue 11.
+      container.addEventListener("click", (e) => {
+        if (e.target == container || e.target == label || e.target == child_area) {
+          this.select();
+          App.mouseTracker.handledClick(this, e);
+        }
+      });
+    }
+
+    // Getters ===================================================================
+    get parent_edge_offset() {
+      if (!this.shadowRoot)
+        return 0;
+      return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
+             this.shadowRoot.querySelector(".container").getBoundingClientRect().top;
+    }
+    get node_type() { return "scroller"; }
+
+    getContextMenu() {
+      const menu = document.createElement("mm-context-menu");
+      menu.innerHTML = contextMenu;
+      menu.handler = (item, position) => this.onContextMenuItem_(item, position);
+      const submenu = menu.querySelector("#convertmenu");
+      const choices = Nodes.similarTypes(this.node_type);
+      for (let i = 0; i < choices.length; ++i) {
+        const choice = document.createElement("mm-context-menu-item");
+        choice.setAttribute("choice", choices[i]);
+        choice.innerHTML = `<div slot=text>${Nodes.prettyName(choices[i])}</div>`;
+        submenu.appendChild(choice);
+      }
+      return menu;
+    }
+
+    onContextMenuItem_(item, position) {
+      const choice = item.getAttribute("choice");
+      const clone = this.cloneWithChildrenAsType(choice);
+      this.parent.adoptNode(clone, Nodes.childOrdinal(this, this.parent));
+      this.remove();
+    }
+
+    // Event handlers ============================================================
+    onChildToggle_(e) {
+      this.childrenHidden_ = !this.childrenHidden_;
+      if (!this.shadowRoot)
+        return;
+
+      if (this.childrenHidden_) {
+        this.shadowRoot.querySelector(".child_area").classList.add("hidden");
+        this.map_.didHideChildren(this);
+      } else {
+        this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
+      }
+      this.computeEdges_();
+
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+
+    // Misc ======================================================================
+    computeEdges_() {
+      if (!this.shadowRoot || !this.parent_)
+        return;
+      if (this.parent_.has_child_edges) {
+        this.shadowRoot.querySelector(".parent_edge").style.display = "";
+      } else {
+        this.shadowRoot.querySelector(".parent_edge").style.display = "none";
+      }
+
+      const toggle = this.shadowRoot.querySelector(".child_toggle");
+      if (this.children_.length)
+        toggle.style.display = "";
+      else
+        toggle.style.display = "none";
+
+      toggle.classList.remove("expanded");
+      toggle.classList.remove("collapsed");
+      if (this.childrenHidden_)
+        toggle.classList.add("collapsed");
+      else
+        toggle.classList.add("expanded");
+    }
+
+    // TODO(vmpstr): This needs a refactor.
+    onDraggedChild(child) {
+      const rect = this.getBoundingClientRect();
+      const child_rect = child.getBoundingClientRect();
+      const padding_slack = 15;
+      if (child_rect.left > rect.right ||
+          child_rect.right < rect.left ||
+          (child_rect.top - padding_slack) > rect.bottom ||
+          child_rect.bottom < rect.top ||
+          // If our parent isn't our map (ie we're a child of something
+          // then if the x is to our x's left, reparent up.
+          // TODO(vmpstr): this might not be true for other non-tree maps.
+          (this.parent_ != this.map_ && child_rect.x < rect.x)) {
+        this.parent_.adoptNode(child);
+      } else {
+        let child_index = -1;
+        let next_item = null;
+        let next_distance = 1e6;
+        let previous_item = null;
+        let previous_distance = 1e6;
+        for (let i = 0; i < this.children_.length; ++i) {
+          const next_item_rect = this.children_[i].getBoundingClientRect();
+          if (next_item_rect.y > child_rect.y) {
+            const local_distance = next_item_rect.y - child_rect.y;
+            if (local_distance < next_distance) {
+              next_distance = local_distance;
+              next_item = this.children_[i];
+            }
+          } else if (next_item_rect.y < child_rect.y && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
+            const local_distance = child_rect.y - next_item_rect.y;
+            if (local_distance < previous_distance) {
+              previous_distance = local_distance;
+              previous_item = this.children_[i];
+            }
           }
         }
+        child.remove();
+        if (previous_item) {
+          previous_item.unhideChildren();
+          previous_item.adoptNode(child);
+        } else {
+          // next_item may be null.
+          this.insertBefore(child, next_item);
+        }
+        child.resetPosition();
       }
-      child.remove();
-      if (previous_item) {
-        previous_item.unhideChildren();
-        previous_item.adoptNode(child);
-      } else {
-        // next_item may be null.
-        this.insertBefore(child, next_item);
+    }
+
+    repopulateChildren_() {
+      let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
+      this.children_ = [];
+      for (let i = 0; i < nodes.length; ++i) {
+        if (Nodes.isKnownTag(nodes[i].tagName))
+          this.children_.push(nodes[i]);
       }
-      child.resetPosition();
     }
-  }
 
-  repopulateChildren_() {
-    let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
-    this.children_ = [];
-    for (let i = 0; i < nodes.length; ++i) {
-      if (Nodes.isKnownTag(nodes[i].tagName))
-        this.children_.push(nodes[i]);
-    }
-  }
-
-  // TODO(vmpstr): Use this in storage.
-  getSizingInfo() {
-    const container = this.shadowRoot.querySelector(".container");
-    return {
-      width: container.style.width,
-      maxHeight: container.style.maxHeight
-    };
-  }
-  setSizingInfo(info) {
-    const container = this.shadowRoot.querySelector(".container");
-    container.style.width = info.width;
-    container.style.maxHeight = info.maxHeight;
-  }
-
-  // Storage -------------------------------------
-  // TODO(vmpstr): Move to a helper.
-  loadFromData(data) {
-    this.label = data.label || '<deprecated label>';
-    this.position = data.position || [0, 0];
-    if (this.shadowRoot) {
+    // TODO(vmpstr): Use this in storage.
+    getSizingInfo() {
       const container = this.shadowRoot.querySelector(".container");
-      container.style.width = data.container_width;
-      container.style.maxHeight = data.container_maxheight;
-    } else {
-      this.deferredData_ = this.deferredData_ || {};
-      this.deferredData_['container_width'] = data.container_width;
-      this.deferredData_['container_maxheight'] = data.container_maxheight;
+      return {
+        width: container.style.width,
+        maxHeight: container.style.maxHeight
+      };
+    }
+    setSizingInfo(info) {
+      const container = this.shadowRoot.querySelector(".container");
+      container.style.width = info.width;
+      container.style.maxHeight = info.maxHeight;
     }
 
-    // TODO(vmpstr): backcompat.
-    if (!data.nodes)
-      return;
-    for (let i = 0; i < data.nodes.length; ++i) {
-      // The order here is important since adoptNode resets the position
-      // information.
-      const node = Nodes.createNode(data.nodes[i].type, this.map_);
-      node.loadFromData(data.nodes[i]);
-      this.adoptNode(node);
+    // Storage -------------------------------------
+    // TODO(vmpstr): Move to a helper.
+    loadFromData(data) {
+      this.label = data.label || '<deprecated label>';
+      this.position = data.position || [0, 0];
+      if (this.shadowRoot) {
+        const container = this.shadowRoot.querySelector(".container");
+        container.style.width = data.container_width;
+        container.style.maxHeight = data.container_maxheight;
+      } else {
+        this.deferredData_ = this.deferredData_ || {};
+        this.deferredData_['container_width'] = data.container_width;
+        this.deferredData_['container_maxheight'] = data.container_maxheight;
+      }
+
+      // TODO(vmpstr): backcompat.
+      if (!data.nodes)
+        return;
+      for (let i = 0; i < data.nodes.length; ++i) {
+        // The order here is important since adoptNode resets the position
+        // information.
+        const node = Nodes.createNode(data.nodes[i].type, this.map_);
+        node.loadFromData(data.nodes[i]);
+        this.adoptNode(node);
+      }
+      if (data.children_hidden)
+        this.onChildToggle_();
     }
-    if (data.children_hidden)
-      this.onChildToggle_();
-  }
 
-  serializeToData() {
-    let data = {
-      label: this.label,
-      type: 'scroller',
-      position: this.position,
-      children_hidden: this.childrenHidden_,
-      nodes: []
-    };
-    const container = this.shadowRoot.querySelector(".container");
-    if (container && container.style.width)
-      data['container_width'] = container.style.width;
-    if (container && container.style.maxHeight)
-      data['container_maxheight'] = container.style.maxHeight;
+    serializeToData() {
+      let data = {
+        label: this.label,
+        type: 'scroller',
+        position: this.position,
+        children_hidden: this.childrenHidden_,
+        nodes: []
+      };
+      const container = this.shadowRoot.querySelector(".container");
+      if (container && container.style.width)
+        data['container_width'] = container.style.width;
+      if (container && container.style.maxHeight)
+        data['container_maxheight'] = container.style.maxHeight;
 
-    for (let i = 0; i < this.children_.length; ++i)
-      data.nodes.push(this.children_[i].serializeToData());
-    return data;
-  }
-});
+      for (let i = 0; i < this.children_.length; ++i)
+        data.nodes.push(this.children_[i].serializeToData());
+      return data;
+    }
+  });
+}

@@ -1,4 +1,12 @@
-import * as Nodes from "./nodes.mjs";
+let Nodes;
+let initialized = false;
+export async function initialize(version) {
+  if (initialized)
+    return;
+  initialized = true;
+  Nodes = await import(`./nodes.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+}
 
 class Transaction {
   constructor(target) {

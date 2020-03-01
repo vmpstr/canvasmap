@@ -1,4 +1,13 @@
-import * as Nodes from "./nodes.mjs";
+let Nodes;
+let initialized = false;
+export async function initialize(version) {
+  if (initialized)
+    return;
+  initialized = true;
+  Nodes = await import(`./nodes.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  define();
+}
 
 const style = `
 #container {
@@ -37,31 +46,33 @@ const body = `
   </div>
 </div>`;
 
-window.customElements.define("mm-context-menu-item", class extends HTMLElement {
-  constructor() {
-    super();
-  }
-
-  connectedCallback() {
-    if (this.shadowRoot)
-      return;
-
-    const shadow = this.attachShadow({ mode: 'open' });
-    shadow.innerHTML = `
-      <style>${style}</style>
-      <body>${body}</body>`;
-  }
-
-  getSubmenu() {
-    if (!this.shadowRoot)
-      return null;
-    const nodes = this.shadowRoot.querySelector("#submenu").assignedNodes();
-    for (let i = 0; i < nodes.length; ++i) {
-      if (Nodes.isKnownTag(nodes[i].tagName)) {
-        return nodes[i].cloneNode(true);
-      }
+const define = () => {
+  console.debug("defining mm-context-menu-item");
+  window.customElements.define("mm-context-menu-item", class extends HTMLElement {
+    constructor() {
+      super();
     }
-    return null;
-  }
-});
 
+    connectedCallback() {
+      if (this.shadowRoot)
+        return;
+
+      const shadow = this.attachShadow({ mode: 'open' });
+      shadow.innerHTML = `
+        <style>${style}</style>
+        <body>${body}</body>`;
+    }
+
+    getSubmenu() {
+      if (!this.shadowRoot)
+        return null;
+      const nodes = this.shadowRoot.querySelector("#submenu").assignedNodes();
+      for (let i = 0; i < nodes.length; ++i) {
+        if (Nodes.isKnownTag(nodes[i].tagName)) {
+          return nodes[i].cloneNode(true);
+        }
+      }
+      return null;
+    }
+  });
+};

@@ -1,7 +1,22 @@
-import * as App from "./app.mjs";
-import * as Nodes from "./nodes.mjs";
-import * as Handlers from "./handlers.mjs";
-import { NodeBase } from "./node-base.mjs?v2";
+let App;
+let Nodes;
+let Handlers;
+let NodeBaseModule;
+let initialized = false;
+export async function initialize(version) {
+  if (initialized)
+    return;
+  initialized = true;
+  App = await import(`./app.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  Nodes = await import(`./nodes.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  Handlers = await import(`./handlers.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  NodeBaseModule = await import(`./node-base.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  define();
+}
 
 const style = `
 :host {
@@ -137,257 +152,260 @@ const body = `
   </div>
 </div>`;
 
-window.customElements.define("mm-node", class extends NodeBase {
-  // Creation and initialization ===============================================
-  constructor() {
-    super();
-    this.children_ = []
-    this.position_ = [0, 0]
-    this.childrenHidden_ = false;
-  }
-
-  connectedCallback() {
-    if (this.shadowRoot) {
-      this.computeEdges_();
-      return;
+const define = () => {
+  console.debug("defining mm-node");
+  window.customElements.define("mm-node", class extends NodeBaseModule.NodeBase {
+    // Creation and initialization ===============================================
+    constructor() {
+      super();
+      this.children_ = []
+      this.position_ = [0, 0]
+      this.childrenHidden_ = false;
     }
 
-    const shadow = this.attachShadow({ mode: 'open' });
-    shadow.innerHTML = `
-      <style>${style}</style>
-      <body>${body}</body>`;
-
-    this.registerEventHandlers_();
-
-    if (this.deferredData_) {
-      const label_holder = this.shadowRoot.querySelector(".label_holder");
-      label_holder.style.width = this.deferredData_.label_width;
-      delete this.deferredData_;
-    }
-
-    if (this.childrenHidden_) {
-      this.shadowRoot.querySelector(".child_area").classList.add("hidden");
-      this.map_.didHideChildren(this);
-    } else {
-      this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
-    }
-
-    // Recompute the edges just in case we hid children.
-    this.computeEdges_();
-  }
-
-  registerEventHandlers_() {
-    super.registerEventHandlers_();
-
-    const label = this.shadowRoot.querySelector(".label");
-    const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
-    const label_holder = this.shadowRoot.querySelector(".label_holder");
-
-    this.dragControl_ = new Handlers.NodeDragControl(this, label);
-    this.dragHandleControl_ = new Handlers.DragHandleControl(
-      this, label_holder, {'ew': drag_handle});
-
-    label.addEventListener("click", (e) => {
-      if (e.target == label) {
-        this.select();
-        App.mouseTracker.handledClick(this, e);
+    connectedCallback() {
+      if (this.shadowRoot) {
+        this.computeEdges_();
+        return;
       }
-    });
-  }
 
-  // Getters ===================================================================
-  get has_child_edges() { return true; }
-  get parent_edge_offset() {
-    if (!this.shadowRoot)
-      return 0;
-    return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
-           this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().top;
-  }
-  get node_type() { return "node"; }
+      const shadow = this.attachShadow({ mode: 'open' });
+      shadow.innerHTML = `
+        <style>${style}</style>
+        <body>${body}</body>`;
 
-  getContextMenu() {
-    const menu = document.createElement("mm-context-menu");
-    menu.innerHTML = contextMenu;
-    menu.handler = (item, position) => this.onContextMenuItem_(item, position);
-    const submenu = menu.querySelector("#convertmenu");
-    const choices = Nodes.similarTypes(this.node_type);
-    for (let i = 0; i < choices.length; ++i) {
-      const choice = document.createElement("mm-context-menu-item");
-      choice.setAttribute("choice", choices[i]);
-      choice.innerHTML = `<div slot=text>${Nodes.prettyName(choices[i])}</div>`;
-      submenu.appendChild(choice);
-    }
-    return menu;
-  }
+      this.registerEventHandlers_();
 
-  onContextMenuItem_(item, position) {
-    const choice = item.getAttribute("choice");
-    const clone = this.cloneWithChildrenAsType(choice);
-    this.parent.adoptNode(clone, Nodes.childOrdinal(this, this.parent));
-    this.remove();
-  }
+      if (this.deferredData_) {
+        const label_holder = this.shadowRoot.querySelector(".label_holder");
+        label_holder.style.width = this.deferredData_.label_width;
+        delete this.deferredData_;
+      }
 
-  // Event handlers ============================================================
+      if (this.childrenHidden_) {
+        this.shadowRoot.querySelector(".child_area").classList.add("hidden");
+        this.map_.didHideChildren(this);
+      } else {
+        this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
+      }
 
-  onChildToggle_(e) {
-    this.childrenHidden_ = !this.childrenHidden_;
-    if (!this.shadowRoot)
-      return;
-
-    if (this.childrenHidden_) {
-      this.shadowRoot.querySelector(".child_area").classList.add("hidden");
-      this.map_.didHideChildren(this);
-    } else {
-      this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
-    }
-    this.computeEdges_();
-
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }
-
-  // Misc ======================================================================
-  computeEdges_() {
-    if (!this.shadowRoot || !this.parent_)
-      return;
-    if (this.parent_.has_child_edges) {
-      this.shadowRoot.querySelector(".parent_edge").style.display = "";
-    } else {
-      this.shadowRoot.querySelector(".parent_edge").style.display = "none";
+      // Recompute the edges just in case we hid children.
+      this.computeEdges_();
     }
 
-    if (this.children_.length && !this.childrenHidden_) {
-      this.shadowRoot.querySelector(".child_edge").style.display = "";
-      const last_child = this.children_[this.children_.length - 1];
-      let extent =
-          last_child.getBoundingClientRect().top +
-          last_child.parent_edge_offset -
-          this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().bottom;
-      this.shadowRoot.querySelector(".child_edge").style.height = extent + "px";
-    } else {
-      this.shadowRoot.querySelector(".child_edge").style.display = "none";
+    registerEventHandlers_() {
+      super.registerEventHandlers_();
+
+      const label = this.shadowRoot.querySelector(".label");
+      const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
+      const label_holder = this.shadowRoot.querySelector(".label_holder");
+
+      this.dragControl_ = new Handlers.NodeDragControl(this, label);
+      this.dragHandleControl_ = new Handlers.DragHandleControl(
+        this, label_holder, {'ew': drag_handle});
+
+      label.addEventListener("click", (e) => {
+        if (e.target == label) {
+          this.select();
+          App.mouseTracker.handledClick(this, e);
+        }
+      });
     }
 
-    const toggle = this.shadowRoot.querySelector(".child_toggle");
-    if (this.children_.length)
-      toggle.style.display = "";
-    else
-      toggle.style.display = "none";
+    // Getters ===================================================================
+    get has_child_edges() { return true; }
+    get parent_edge_offset() {
+      if (!this.shadowRoot)
+        return 0;
+      return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
+             this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().top;
+    }
+    get node_type() { return "node"; }
 
-    toggle.classList.remove("expanded");
-    toggle.classList.remove("collapsed");
-    if (this.childrenHidden_)
-      toggle.classList.add("collapsed");
-    else
-      toggle.classList.add("expanded");
-  }
+    getContextMenu() {
+      const menu = document.createElement("mm-context-menu");
+      menu.innerHTML = contextMenu;
+      menu.handler = (item, position) => this.onContextMenuItem_(item, position);
+      const submenu = menu.querySelector("#convertmenu");
+      const choices = Nodes.similarTypes(this.node_type);
+      for (let i = 0; i < choices.length; ++i) {
+        const choice = document.createElement("mm-context-menu-item");
+        choice.setAttribute("choice", choices[i]);
+        choice.innerHTML = `<div slot=text>${Nodes.prettyName(choices[i])}</div>`;
+        submenu.appendChild(choice);
+      }
+      return menu;
+    }
 
-  onDraggedChild(child) {
-    const rect = this.getBoundingClientRect();
-    const child_rect = child.getBoundingClientRect();
-    const padding_slack = 15;
-    if (child_rect.left > rect.right ||
-        child_rect.right < rect.left ||
-        (child_rect.top - padding_slack) > rect.bottom ||
-        child_rect.bottom < rect.top ||
-        // If our parent isn't our map (ie we're a child of something
-        // then if the x is to our x's left, reparent up.
-        // TODO(vmpstr): this might not be true for other non-tree maps.
-        (this.parent_ != this.map_ && child_rect.x < rect.x)) {
-      this.parent_.adoptNode(child);
-    } else {
-      let child_index = -1;
-      let next_item = null;
-      let next_distance = 1e6;
-      let previous_item = null;
-      let previous_distance = 1e6;
-      for (let i = 0; i < this.children_.length; ++i) {
-        const next_item_rect = this.children_[i].getBoundingClientRect();
-        if (next_item_rect.y > child_rect.y) {
-          const local_distance = next_item_rect.y - child_rect.y;
-          if (local_distance < next_distance) {
-            next_distance = local_distance;
-            next_item = this.children_[i];
-          }
-        } else if (next_item_rect.y < child_rect.y && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
-          const local_distance = child_rect.y - next_item_rect.y;
-          if (local_distance < previous_distance) {
-            previous_distance = local_distance;
-            previous_item = this.children_[i];
+    onContextMenuItem_(item, position) {
+      const choice = item.getAttribute("choice");
+      const clone = this.cloneWithChildrenAsType(choice);
+      this.parent.adoptNode(clone, Nodes.childOrdinal(this, this.parent));
+      this.remove();
+    }
+
+    // Event handlers ============================================================
+
+    onChildToggle_(e) {
+      this.childrenHidden_ = !this.childrenHidden_;
+      if (!this.shadowRoot)
+        return;
+
+      if (this.childrenHidden_) {
+        this.shadowRoot.querySelector(".child_area").classList.add("hidden");
+        this.map_.didHideChildren(this);
+      } else {
+        this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
+      }
+      this.computeEdges_();
+
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+
+    // Misc ======================================================================
+    computeEdges_() {
+      if (!this.shadowRoot || !this.parent_)
+        return;
+      if (this.parent_.has_child_edges) {
+        this.shadowRoot.querySelector(".parent_edge").style.display = "";
+      } else {
+        this.shadowRoot.querySelector(".parent_edge").style.display = "none";
+      }
+
+      if (this.children_.length && !this.childrenHidden_) {
+        this.shadowRoot.querySelector(".child_edge").style.display = "";
+        const last_child = this.children_[this.children_.length - 1];
+        let extent =
+            last_child.getBoundingClientRect().top +
+            last_child.parent_edge_offset -
+            this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().bottom;
+        this.shadowRoot.querySelector(".child_edge").style.height = extent + "px";
+      } else {
+        this.shadowRoot.querySelector(".child_edge").style.display = "none";
+      }
+
+      const toggle = this.shadowRoot.querySelector(".child_toggle");
+      if (this.children_.length)
+        toggle.style.display = "";
+      else
+        toggle.style.display = "none";
+
+      toggle.classList.remove("expanded");
+      toggle.classList.remove("collapsed");
+      if (this.childrenHidden_)
+        toggle.classList.add("collapsed");
+      else
+        toggle.classList.add("expanded");
+    }
+
+    onDraggedChild(child) {
+      const rect = this.getBoundingClientRect();
+      const child_rect = child.getBoundingClientRect();
+      const padding_slack = 15;
+      if (child_rect.left > rect.right ||
+          child_rect.right < rect.left ||
+          (child_rect.top - padding_slack) > rect.bottom ||
+          child_rect.bottom < rect.top ||
+          // If our parent isn't our map (ie we're a child of something
+          // then if the x is to our x's left, reparent up.
+          // TODO(vmpstr): this might not be true for other non-tree maps.
+          (this.parent_ != this.map_ && child_rect.x < rect.x)) {
+        this.parent_.adoptNode(child);
+      } else {
+        let child_index = -1;
+        let next_item = null;
+        let next_distance = 1e6;
+        let previous_item = null;
+        let previous_distance = 1e6;
+        for (let i = 0; i < this.children_.length; ++i) {
+          const next_item_rect = this.children_[i].getBoundingClientRect();
+          if (next_item_rect.y > child_rect.y) {
+            const local_distance = next_item_rect.y - child_rect.y;
+            if (local_distance < next_distance) {
+              next_distance = local_distance;
+              next_item = this.children_[i];
+            }
+          } else if (next_item_rect.y < child_rect.y && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
+            const local_distance = child_rect.y - next_item_rect.y;
+            if (local_distance < previous_distance) {
+              previous_distance = local_distance;
+              previous_item = this.children_[i];
+            }
           }
         }
+        child.remove();
+        if (previous_item) {
+          previous_item.unhideChildren();
+          previous_item.adoptNode(child);
+        } else {
+          // next_item may be null.
+          this.insertBefore(child, next_item);
+        }
+        child.resetPosition();
       }
-      child.remove();
-      if (previous_item) {
-        previous_item.unhideChildren();
-        previous_item.adoptNode(child);
+    }
+
+    repopulateChildren_() {
+      let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
+      this.children_ = [];
+      for (let i = 0; i < nodes.length; ++i) {
+        if (Nodes.isKnownTag(nodes[i].tagName))
+          this.children_.push(nodes[i]);
+      }
+    }
+
+    getSizingInfo() {
+      return {
+        label_width: this.shadowRoot.querySelector(".label_holder").style.width
+      };
+    }
+    setSizingInfo(info) {
+      this.shadowRoot.querySelector(".label_holder").style.width =
+        info.label_width;
+    }
+
+    // Storage -------------------------------------
+    loadFromData(data) {
+      this.label = data.label || '<deprecated label>';
+      this.position = data.position || [0, 0];
+      if (this.shadowRoot) {
+        this.shadowRoot.querySelector(".label_holder").style.width = data.label_width;
       } else {
-        // next_item may be null.
-        this.insertBefore(child, next_item);
+        if (!this.deferredData_)
+          this.deferredData_ = {};
+        this.deferredData_['label_width'] = data.label_width;
       }
-      child.resetPosition();
+      // TODO(vmpstr): backcompat.
+      if (!data.nodes)
+        return;
+      for (let i = 0; i < data.nodes.length; ++i) {
+        // The order here is important since adoptNode resets the position
+        // information.
+        const node = Nodes.createNode(data.nodes[i].type, this.map_);
+        node.loadFromData(data.nodes[i]);
+        this.adoptNode(node);
+      }
+      if (data.children_hidden)
+        this.onChildToggle_();
     }
-  }
 
-  repopulateChildren_() {
-    let nodes = this.shadowRoot.querySelector("slot").assignedNodes();
-    this.children_ = [];
-    for (let i = 0; i < nodes.length; ++i) {
-      if (Nodes.isKnownTag(nodes[i].tagName))
-        this.children_.push(nodes[i]);
+    serializeToData() {
+      let data = {
+        label: this.label,
+        type: 'node',
+        position: this.position,
+        children_hidden: this.childrenHidden_,
+        nodes: []
+      };
+      const label_holder = this.shadowRoot && this.shadowRoot.querySelector(".label_holder");
+      if (label_holder && label_holder.style.width)
+        data['label_width'] = label_holder.style.width;
+      for (let i = 0; i < this.children_.length; ++i)
+        data.nodes.push(this.children_[i].serializeToData());
+      return data;
     }
-  }
-
-  getSizingInfo() {
-    return {
-      label_width: this.shadowRoot.querySelector(".label_holder").style.width
-    };
-  }
-  setSizingInfo(info) {
-    this.shadowRoot.querySelector(".label_holder").style.width =
-      info.label_width;
-  }
-
-  // Storage -------------------------------------
-  loadFromData(data) {
-    this.label = data.label || '<deprecated label>';
-    this.position = data.position || [0, 0];
-    if (this.shadowRoot) {
-      this.shadowRoot.querySelector(".label_holder").style.width = data.label_width;
-    } else {
-      if (!this.deferredData_)
-        this.deferredData_ = {};
-      this.deferredData_['label_width'] = data.label_width;
-    }
-    // TODO(vmpstr): backcompat.
-    if (!data.nodes)
-      return;
-    for (let i = 0; i < data.nodes.length; ++i) {
-      // The order here is important since adoptNode resets the position
-      // information.
-      const node = Nodes.createNode(data.nodes[i].type, this.map_);
-      node.loadFromData(data.nodes[i]);
-      this.adoptNode(node);
-    }
-    if (data.children_hidden)
-      this.onChildToggle_();
-  }
-
-  serializeToData() {
-    let data = {
-      label: this.label,
-      type: 'node',
-      position: this.position,
-      children_hidden: this.childrenHidden_,
-      nodes: []
-    };
-    const label_holder = this.shadowRoot && this.shadowRoot.querySelector(".label_holder");
-    if (label_holder && label_holder.style.width)
-      data['label_width'] = label_holder.style.width;
-    for (let i = 0; i < this.children_.length; ++i)
-      data.nodes.push(this.children_[i].serializeToData());
-    return data;
-  }
-});
+  });
+};

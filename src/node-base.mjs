@@ -1,5 +1,15 @@
-import * as Nodes from "./nodes.mjs";
-import * as Handlers from "./handlers.mjs";
+let Nodes;
+let Handlers;
+let initialized = false;
+export async function initialize(version) {
+  if (initialized)
+    return;
+  initialized = true;
+  Nodes = await import(`./nodes.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  Handlers = await import(`./handlers.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+}
 
 export class NodeBase extends HTMLElement {
   constructor() {

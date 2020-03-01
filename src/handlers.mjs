@@ -1,6 +1,18 @@
-import * as App from "./app.mjs";
-import * as Nodes from "./nodes.mjs";
-import * as Workarounds from "./workarounds.mjs";
+let App;
+let Nodes;
+let Workarounds;
+let initialized = false;
+export async function initialize(version) {
+  if (initialized)
+    return;
+  initialized = true;
+  App = await import(`./app.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  Nodes = await import(`./nodes.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  Workarounds = await import(`./workarounds.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+}
 
 export class NodeDragControl {
   constructor(node, target) {

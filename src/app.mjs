@@ -1,5 +1,3 @@
-import { UndoStack } from "./undo-stack.mjs";
-
 class MouseTracker {
   constructor() {
     this.clickObservers_ = [];
@@ -19,19 +17,33 @@ class MouseTracker {
   }
 }
 
-export const mouseTracker = new MouseTracker;
-export const undoStack = new UndoStack;
+export let mouseTracker;
+export let undoStack;
 let contextMenuControl;
+let initialized = false;
 
-export async function initialize() {
-  const t = Date.now();
-  import(`./mm-map.mjs?${t}`);
-  import(`./mm-node.mjs?${t}`);
-  import(`./mm-context-menu.mjs?${t}`);
-  import(`./mm-context-menu-item.mjs?${t}`);
-  import(`./mm-scroller-node.mjs?${t}`);
+export async function initialize(version) {
+  if (initialized)
+    return;
+  initialized = true;
 
-  let contextModule = await import(`./context-menu-control.mjs?${t}`);
+  import(`./mm-map.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  import(`./mm-node.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  import(`./mm-context-menu.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  import(`./mm-context-menu-item.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  import(`./mm-scroller-node.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  let contextModule = await import(`./context-menu-control.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  const undoModule = await import(`./undo-stack.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+
+  mouseTracker = new MouseTracker;
+  undoStack = new undoModule.UndoStack;
   contextMenuControl = new contextModule.ContextMenuControl;
 
   const promises = [

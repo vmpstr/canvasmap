@@ -1,3 +1,5 @@
+export async function initialize(version) {}
+
 export function createNode(type, map) {
   console.assert(map);
   let node;
