@@ -116,6 +116,33 @@ const style = `
 const contextMenu = `
 <mm-context-menu-item choice=convert>
   <div slot=text>Convert</div>
+  <div slot=shortcut>&#x27a4;</div>
+  <mm-context-menu slot=submenu>
+    <mm-context-menu-item choice="subone">
+      <div slot=text>sub choice one</div>
+    </mm-context-menu-item>
+    <mm-context-menu-item choice="subtwo">
+      <div slot=text>sub choice two</div>
+      <div slot=shortcut>&#x27a4;</div>
+      <mm-context-menu slot=submenu>
+        <mm-context-menu-item choice="subsubone">
+          <div slot=text>sub sub choice one</div>
+        </mm-context-menu-item>
+      </mm-context-menu>
+    </mm-context-menu-item>
+    <mm-context-menu-item choice="subthree">
+      <div slot=text>sub choice three</div>
+    </mm-context-menu-item>
+  </mm-context_menu>
+</mm-context-menu-item>
+<mm-context-menu-item choice=test>
+  <div slot=text>Test</div>
+  <div slot=shortcut>&#x27a4;</div>
+  <mm-context-menu slot=submenu>
+    <mm-context-menu-item choice="othersubone">
+      <div slot=text>other sub choice one</div>
+    </mm-context-menu-item>
+  </mm-context-menu>
 </mm-context-menu-item>`;
 
 const body = `

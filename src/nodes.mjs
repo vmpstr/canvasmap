@@ -20,7 +20,7 @@ export function addNode(type, parent, map) {
 }
 
 export function isKnownTag(tag) {
-  return tag.startsWith("MM-");
+  return tag && tag.startsWith("MM-");
 }
 
 export function childOrdinal(child, parent) {
