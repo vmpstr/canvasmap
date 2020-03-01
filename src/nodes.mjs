@@ -42,3 +42,11 @@ export function similarTypes(type) {
     return ["node"];
   console.error("unknown type: " + type);
 }
+
+export function prettyName(type) {
+  if (type == "node")
+    return "Tree node";
+  else if (type == "scroller")
+    return "Scroller node";
+  console.error("unknown type: " + type);
+}

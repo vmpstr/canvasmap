@@ -58,6 +58,12 @@ window.customElements.define("mm-context-menu", class extends HTMLElement {
 
     this.recomputeContainerOffset_();
     this.adjustStyle_();
+    if (this.deferredSubmenuCheckPosition_) {
+      this.checkIfSubmenuNeedsUpdate_({
+        clientX: this.deferredSubmenuCheckPosition_[0],
+        clientY: this.deferredSubmenuCheckPosition_[1]});
+      delete this.deferredSubmenuCheckPosition_;
+    }
   }
 
   onSlotChange_(e) {
@@ -81,11 +87,13 @@ window.customElements.define("mm-context-menu", class extends HTMLElement {
     return null;
   }
   checkIfSubmenuNeedsUpdate_(e) {
-    const hovered = this.hoveredElement_([e.clientX, e.clientY]);
-    if (!hovered) {
-      this.removeSubmenu_();
+    if (!this.shadowRoot) {
+      this.deferredSubmenuCheckPosition_ = [e.clientX, e.clientY];
       return;
     }
+    const hovered = this.hoveredElement_([e.clientX, e.clientY]);
+    if (!hovered)
+      return;
 
     if (this.submenu_) {
       if (hovered == this.submenu_)
@@ -112,6 +120,7 @@ window.customElements.define("mm-context-menu", class extends HTMLElement {
     this.position_ = [x, y];
     this.visible_ = true;
     this.adjustStyle_();
+    this.checkIfSubmenuNeedsUpdate_({ clientX: x, clientY: y });
   }
 
   get visible() { return this.visible_; }

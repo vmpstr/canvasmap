@@ -36,6 +36,8 @@ export class ContextMenuControl {
 
     console.assert(!this.activeMenu_);
     this.activeMenu_ = menu;
+    if (!this.activeMenu_)
+      return;
 
     menu.style.zIndex = "101";
     menu.control = this;

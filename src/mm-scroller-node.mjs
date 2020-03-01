@@ -1,7 +1,7 @@
 import * as App from "./app.mjs";
 import * as Nodes from "./nodes.mjs";
 import * as Handlers from "./handlers.mjs";
-import { NodeBase } from "./node-base.mjs";
+import { NodeBase } from "./node-base.mjs?v2";
 
 const style = `
 :host {
@@ -141,6 +141,14 @@ const style = `
   min-height: 2px;
 }`;
 
+const contextMenu = `
+<mm-context-menu-item>
+  <div slot=text>Convert to</div>
+  <div slot=shortcut>&#x27a4;</div>
+  <mm-context-menu id=convertmenu slot=submenu>
+  </mm-context-menu>
+</mm-context-menu-item>`;
+
 const body = `
 <div class=parent_edge></div>
 <div class=container>
@@ -223,6 +231,28 @@ window.customElements.define("mm-scroller-node", class extends NodeBase {
            this.shadowRoot.querySelector(".container").getBoundingClientRect().top;
   }
   get node_type() { return "scroller"; }
+
+  getContextMenu() {
+    const menu = document.createElement("mm-context-menu");
+    menu.innerHTML = contextMenu;
+    menu.handler = (item, position) => this.onContextMenuItem_(item, position);
+    const submenu = menu.querySelector("#convertmenu");
+    const choices = Nodes.similarTypes(this.node_type);
+    for (let i = 0; i < choices.length; ++i) {
+      const choice = document.createElement("mm-context-menu-item");
+      choice.setAttribute("choice", choices[i]);
+      choice.innerHTML = `<div slot=text>${Nodes.prettyName(choices[i])}</div>`;
+      submenu.appendChild(choice);
+    }
+    return menu;
+  }
+
+  onContextMenuItem_(item, position) {
+    const choice = item.getAttribute("choice");
+    const clone = this.cloneWithChildrenAsType(choice);
+    this.parent.adoptNode(clone, Nodes.childOrdinal(this, this.parent));
+    this.remove();
+  }
 
   // Event handlers ============================================================
   onChildToggle_(e) {

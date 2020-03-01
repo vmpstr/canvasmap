@@ -1,7 +1,7 @@
 import * as App from "./app.mjs";
 import * as Nodes from "./nodes.mjs";
 import * as Handlers from "./handlers.mjs";
-import { NodeBase } from "./node-base.mjs";
+import { NodeBase } from "./node-base.mjs?v2";
 
 const style = `
 :host {
@@ -114,34 +114,10 @@ const style = `
 }`;
 
 const contextMenu = `
-<mm-context-menu-item choice=convert>
-  <div slot=text>Convert</div>
+<mm-context-menu-item>
+  <div slot=text>Convert to</div>
   <div slot=shortcut>&#x27a4;</div>
-  <mm-context-menu slot=submenu>
-    <mm-context-menu-item choice="subone">
-      <div slot=text>sub choice one</div>
-    </mm-context-menu-item>
-    <mm-context-menu-item choice="subtwo">
-      <div slot=text>sub choice two</div>
-      <div slot=shortcut>&#x27a4;</div>
-      <mm-context-menu slot=submenu>
-        <mm-context-menu-item choice="subsubone">
-          <div slot=text>sub sub choice one</div>
-        </mm-context-menu-item>
-      </mm-context-menu>
-    </mm-context-menu-item>
-    <mm-context-menu-item choice="subthree">
-      <div slot=text>sub choice three</div>
-    </mm-context-menu-item>
-  </mm-context_menu>
-</mm-context-menu-item>
-<mm-context-menu-item choice=test>
-  <div slot=text>Test</div>
-  <div slot=shortcut>&#x27a4;</div>
-  <mm-context-menu slot=submenu>
-    <mm-context-menu-item choice="othersubone">
-      <div slot=text>other sub choice one</div>
-    </mm-context-menu-item>
+  <mm-context-menu id=convertmenu slot=submenu>
   </mm-context-menu>
 </mm-context-menu-item>`;
 
@@ -232,8 +208,23 @@ window.customElements.define("mm-node", class extends NodeBase {
   getContextMenu() {
     const menu = document.createElement("mm-context-menu");
     menu.innerHTML = contextMenu;
-    menu.handler = (item, position) => console.log(item.getAttribute("choice"));
+    menu.handler = (item, position) => this.onContextMenuItem_(item, position);
+    const submenu = menu.querySelector("#convertmenu");
+    const choices = Nodes.similarTypes(this.node_type);
+    for (let i = 0; i < choices.length; ++i) {
+      const choice = document.createElement("mm-context-menu-item");
+      choice.setAttribute("choice", choices[i]);
+      choice.innerHTML = `<div slot=text>${Nodes.prettyName(choices[i])}</div>`;
+      submenu.appendChild(choice);
+    }
     return menu;
+  }
+
+  onContextMenuItem_(item, position) {
+    const choice = item.getAttribute("choice");
+    const clone = this.cloneWithChildrenAsType(choice);
+    this.parent.adoptNode(clone, Nodes.childOrdinal(this, this.parent));
+    this.remove();
   }
 
   // Event handlers ============================================================

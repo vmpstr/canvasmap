@@ -17,7 +17,7 @@ const style = `
   background: rgba(0, 0, 0, 0.2);
 }
 :host(.active) #container {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.1);
 }
 .spacer {
   min-width: 15px;

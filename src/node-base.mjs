@@ -116,6 +116,16 @@ export class NodeBase extends HTMLElement {
   clone() {
     const clone = Nodes.createNode(this.node_type, this.map_);
     clone.label = this.label;
+    clone.position = this.position;
+    return clone;
+  }
+
+  cloneWithChildrenAsType(type) {
+    const clone = Nodes.createNode(type, this.map_);
+    clone.label = this.label;
+    clone.position = this.position;
+    while (this.children.length)
+      clone.adoptNode(this.children[0]);
     return clone;
   }
 
