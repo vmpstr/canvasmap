@@ -202,20 +202,25 @@ export class UndoStack {
     this.currentTransaction_ = null;
     this.undoStack_ = [];
     this.redoStack_ = [];
+    this.blockTransactions_ = false;
   }
 
   handleKeyDown(e) {
     if (e.key == 'z' && e.ctrlKey) {
       if (this.undoStack_.length) {
         const transaction = this.undoStack_.pop();
+        this.blockTransactions_ = true;
         transaction.undo();
+        this.blockTransactions_ = false;
         this.redoStack_.push(transaction);
       }
       return true;
     } else if (e.key == 'y' && e.ctrlKey) {
       if (this.redoStack_.length) {
         const transaction = this.redoStack_.pop();
+        this.blockTransactions_ = true;
         transaction.apply();
+        this.blockTransactions_ = false;
         this.undoStack_.push(transaction);
       }
       return true;
@@ -271,6 +276,8 @@ export class UndoStack {
 
 
   recordTransaction_() {
+    if (this.blockTransactions_)
+      return;
     console.assert(this.currentTransaction_);
     if (this.currentTransaction_.done()) {
       this.undoStack_.push(this.currentTransaction_);
