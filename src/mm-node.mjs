@@ -238,10 +238,7 @@ const define = () => {
     }
 
     onContextMenuItem_(item, position) {
-      const choice = item.getAttribute("choice");
-      const clone = this.cloneWithChildrenAsType(choice);
-      this.parent.adoptNode(clone, Nodes.childOrdinal(this, this.parent));
-      this.remove();
+      this.convertToType(item.getAttribute("choice"));
     }
 
     // Event handlers ============================================================

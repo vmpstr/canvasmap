@@ -176,6 +176,27 @@ class SizeHandleDragTransaction extends Transaction {
   }
 };
 
+class ConvertTransaction extends Transaction {
+  constructor(target, clone) {
+    super(target);
+    this.clone_ = clone;
+  }
+
+  apply() {
+    super.target.convertToType(this.clone_.node_type, this.clone_);
+    this.clone_.select();
+  }
+
+  undo() {
+    this.clone_.convertToType(this.target.node_type, this.target);
+    super.target.select();
+  }
+
+  done() {
+    return true;
+  }
+};
+
 export class UndoStack {
   constructor() {
     this.currentTransaction_ = null;
@@ -239,6 +260,12 @@ export class UndoStack {
     this.currentTransaction_ = new SizeHandleDragTransaction(target);
   }
   endSizeHandleDrag() {
+    this.recordTransaction_();
+  }
+
+  didConvertTo(target, clone) {
+    console.assert(!this.currentTransaction_);
+    this.currentTransaction_ = new ConvertTransaction(target, clone);
     this.recordTransaction_();
   }
 

@@ -1,3 +1,4 @@
+let App;
 let Nodes;
 let Handlers;
 let initialized = false;
@@ -5,6 +6,8 @@ export async function initialize(version) {
   if (initialized)
     return;
   initialized = true;
+  App = await import(`./app.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
   Nodes = await import(`./nodes.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   Handlers = await import(`./handlers.mjs?v=${version()}`).then(
@@ -86,6 +89,13 @@ export class NodeBase extends HTMLElement {
   }
 
   // Misc ======================================================================
+  convertToType(new_type, recycled_node) {
+    const clone = this.cloneWithChildrenAsType(new_type, recycled_node);
+    this.parent.adoptNode(clone, Nodes.childOrdinal(this, this.parent));
+    this.remove();
+    App.undoStack.didConvertTo(this, clone);
+  }
+
   startLabelEdit() {
     console.assert(this.labelEditor_);
     this.labelEditor_.startLabelEdit();
@@ -130,8 +140,9 @@ export class NodeBase extends HTMLElement {
     return clone;
   }
 
-  cloneWithChildrenAsType(type) {
-    const clone = Nodes.createNode(type, this.map_);
+  cloneWithChildrenAsType(type, recycled_node) {
+    console.assert(!recycled_node || recycled_node.node_type == type);
+    const clone = recycled_node || Nodes.createNode(type, this.map_);
     clone.label = this.label;
     clone.position = this.position;
     while (this.children.length)
