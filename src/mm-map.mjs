@@ -231,7 +231,7 @@ const define = () => {
       if (this.selectedNode_)
         this.selectedNode_.deselect();
       this.selectedNode_ = node;
-      node.scrollIntoView();
+      node.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
     nodeDeselected(node) {
