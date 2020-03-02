@@ -147,14 +147,14 @@ export class LabelEditor {
     this.node_ = node;
     this.labelElement_ = label;
     this.labelElement_.addEventListener("dblclick", (e) => this.startLabelEdit(e));
-    this.labelElement_.innerHTML = this.node_.label;
+    this.labelElement_.innerText = this.node_.label;
     this.labelElement_.title = this.node_.label;
 
     this.endLabelEdit_ = this.endLabelEdit_.bind(this);
   }
 
   set label(v) {
-    this.labelElement_.innerHTML = v;
+    this.labelElement_.innerText = v;
     this.labelElement_.title = v;
   }
 
@@ -168,7 +168,7 @@ export class LabelEditor {
     // doesn't blink... So instead, just clear it so we see the
     // cursor blinking.
     if (el.innerText == '\u200b')
-      el.innerHTML = "";
+      el.innerText = "";
 
     // First make this contentEditable,
     // so that the selection selects proper contents.
