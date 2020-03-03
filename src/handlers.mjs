@@ -125,13 +125,13 @@ export class DragHandleControl {
       //this.target_.style.width = `min(100%, ${new_width}px)`;
       this.target_.style.width = `${new_width}px`;
       // Reset if we're trying to expand past the max-width.
-      if (this.target_.getBoundingClientRect().width + 10 < new_width)
+      if (this.target_.getBoundingClientRect().width < new_width)
         this.target_.style.width = "";
     }
     if (this.dragHandleMode_ == "ns" || this.dragHandleMode_ == "nwse") {
       this.target_.style.maxHeight = new_height + "px";
       // Reset if we're trying to expand past the max-height.
-      if (this.target_.getBoundingClientRect().height + 10 < new_height)
+      if (this.target_.getBoundingClientRect().height < new_height)
         this.target_.style.maxHeight = "";
     }
     e.stopPropagation();

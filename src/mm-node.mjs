@@ -20,12 +20,16 @@ export async function initialize(version) {
 
 const style = `
 :host {
+  --user-background: transparent;
+
   display: flex;
   flex-shrink: 1;
+  border-radius: 10px;
 }
 .container {
   width: 100%;
   position: relative;
+  border-radius: inherit;
 }
 .label {
   box-sizing: border-box;
@@ -35,11 +39,9 @@ const style = `
   white-space: nowrap;
   text-overflow: ellipsis;
 
-  border: 1px solid black;
-  border-radius: 10px;
   padding: 10px;
 }
-.label:hover {
+.label_flexer:hover {
   box-shadow: 0 0 2px 0;
 }
 .child_area {
@@ -64,12 +66,16 @@ const style = `
 .label_flexer {
   display: flex;
   flex-shrink: 1;
+  max-width: max-content;
+  min-width: 20px;
   width: 100%;
+  border: 1px solid black;
+  border-radius: inherit;
+  background: var(--user-background, transparent);
 }
 .label_holder {
   width: 100%;
   max-width: max-content;
-  min-width: 20px;
 
   position: relative;
 }
@@ -120,7 +126,7 @@ const style = `
   opacity: 0.01;
   cursor: ew-resize;
 }
-:host(.selected) .label {
+:host(.selected) .label_flexer {
   border-color: blue;
   box-shadow: 0 0 3px 0 blue;
 }

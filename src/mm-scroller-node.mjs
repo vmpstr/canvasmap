@@ -20,9 +20,25 @@ export async function initialize(version) {
 
 const style = `
 :host {
+  --user-background: transparent;
+
   display: flex;
   flex-shrink: 1;
+  border-radius: 10px;
+  border: 1px solid black;
+  background: var(--user-background, transparent);
 }
+:host(:hover) {
+  box-shadow: 0 0 2px 0;
+}
+:host(.dragged) {
+  opacity: 40%;
+}
+:host(.selected) {
+  border-color: blue;
+  box-shadow: 0 0 3px 0 blue;
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -30,8 +46,6 @@ const style = `
   box-sizing: border-box;
   width: 100%;
 
-  border: 1px solid black;
-  border-radius: 10px;
   padding: 5px 0 5px 0;
 
   position: relative;
@@ -39,9 +53,9 @@ const style = `
   max-width: max-content;
   min-width: 30px;
   min-height: 45px;
+  border-radius: inherit;
 }
 .container:hover {
-  box-shadow: 0 0 2px 0;
 }
 
 .label {
@@ -138,13 +152,8 @@ const style = `
   opacity: 0.01;
 }
 
-:host(.selected) .container {
-  border-color: blue;
-  box-shadow: 0 0 3px 0 blue;
-}
-:host(.dragged) {
-  opacity: 40%;
-}
+
+
 .divider {
   width: 100%;
   border-top: 1px solid grey;
