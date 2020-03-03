@@ -221,6 +221,7 @@ const define = () => {
              this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().top;
     }
     get node_type() { return "node"; }
+    get hero() { return this.shadowRoot.querySelector(".label_holder"); }
 
     getContextMenu() {
       const menu = document.createElement("mm-context-menu");

@@ -55,6 +55,7 @@ export class NodeBase extends HTMLElement {
   // TODO(vmpstr): it will become hard to reason about this, so we need better
   // spaces or explicit separation between fixed position and free nodes.
   get position() { return this.position_; }
+  get hero() { return this; }
 
   // Setters ===================================================================
   set label(v) {
