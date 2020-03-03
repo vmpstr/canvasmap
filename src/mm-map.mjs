@@ -1,5 +1,6 @@
 let App;
 let Nodes;
+let Shortcuts;
 let Workarounds;
 let initialized = false;
 export async function initialize(version) {
@@ -9,6 +10,8 @@ export async function initialize(version) {
   App = await import(`./app.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   Nodes = await import(`./nodes.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  Shortcuts = await import(`./shortcuts.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   Workarounds = await import(`./workarounds.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
@@ -142,7 +145,8 @@ const define = () => {
       const node = this.selectedNode_;
       if (!node)
         return;
-      if (e.key == "Delete" || e.key == "Backspace") {
+      const action = Shortcuts.eventToAction(e);
+      if (action == Shortcuts.action.kDelete) {
         App.undoStack.willDelete(node);
         if (node.parent && node.parent.select)
           node.parent.select();
@@ -151,7 +155,7 @@ const define = () => {
         return;
       }
 
-      if (e.key == "e") {
+      if (action == Shortcuts.action.kLabelEdit) {
         e.preventDefault();
         e.stopPropagation();
         node.startLabelEdit();

@@ -1,10 +1,13 @@
 let Nodes;
+let Shortcuts;
 let initialized = false;
 export async function initialize(version) {
   if (initialized)
     return;
   initialized = true;
   Nodes = await import(`./nodes.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  Shortcuts = await import(`./shortcuts.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
 }
 
@@ -206,7 +209,8 @@ export class UndoStack {
   }
 
   handleKeyDown(e) {
-    if (e.key == 'z' && e.ctrlKey) {
+    const action = Shortcuts.eventToAction(e);
+    if (action == Shortcuts.action.kUndo) {
       if (this.undoStack_.length) {
         const transaction = this.undoStack_.pop();
         this.blockTransactions_ = true;
@@ -215,7 +219,7 @@ export class UndoStack {
         this.redoStack_.push(transaction);
       }
       return true;
-    } else if (e.key == 'y' && e.ctrlKey) {
+    } else if (action == Shortcuts.action.kRedo) {
       if (this.redoStack_.length) {
         const transaction = this.redoStack_.pop();
         this.blockTransactions_ = true;
