@@ -149,6 +149,7 @@ export class LabelEditor {
     this.labelElement_.addEventListener("dblclick", (e) => this.startLabelEdit(e));
     this.labelElement_.innerText = this.node_.label;
     this.labelElement_.title = this.node_.label;
+    this.editing_ = false;
 
     this.endLabelEdit_ = this.endLabelEdit_.bind(this);
   }
@@ -159,6 +160,14 @@ export class LabelEditor {
   }
 
   startLabelEdit(e) {
+    // If we're already editing, we must've double clicked to select a word.
+    // Capture the event and do nothing.
+    if (this.editing_) {
+      console.assert(e);
+      e.stopPropagation();
+      return;
+    }
+
     App.undoStack.startLabelEdit(this.node_);
 
     const el = this.labelElement_;
@@ -176,6 +185,7 @@ export class LabelEditor {
     // Prevent ellipsis editing.
     el.style.overflow = "visible";
     el.style.width = "min-content";
+    this.editing_ = true;
 
     // Create a new range for all of the contents.
     const range = document.createRange();
@@ -209,6 +219,7 @@ export class LabelEditor {
     // Restore ellipsis if necessary.
     e.target.style.overflow = "";
     e.target.style.width = "";
+    this.editing_ = false;
 
     e.target.innerText = e.target.innerText.trim();
 
