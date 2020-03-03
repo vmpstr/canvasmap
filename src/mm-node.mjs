@@ -228,7 +228,7 @@ const define = () => {
       if (!this.shadowRoot)
         return 0;
       return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
-             this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().top;
+             this.shadowRoot.querySelector(".label_flexer").getBoundingClientRect().top;
     }
     get node_type() { return "node"; }
     get hero() { return this.shadowRoot.querySelector(".label_holder"); }
