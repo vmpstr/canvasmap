@@ -129,6 +129,10 @@ const style = `
 }`;
 
 const contextMenu = `
+<mm-context-menu-item choice=edit>
+  <div slot=text>Edit label</div>
+  <div slot=shortcut>e</div>
+</mm-context-menu-item>
 <mm-context-menu-item>
   <div slot=text>Convert to</div>
   <div slot=shortcut>&#x27a4;</div>
@@ -224,6 +228,7 @@ const define = () => {
     get hero() { return this.shadowRoot.querySelector(".label_holder"); }
 
     getContextMenu() {
+      // TODO(vmpstr): Refactor.
       const menu = document.createElement("mm-context-menu");
       menu.innerHTML = contextMenu;
       menu.handler = (item, position) => this.onContextMenuItem_(item, position);
@@ -239,7 +244,12 @@ const define = () => {
     }
 
     onContextMenuItem_(item, position) {
-      this.convertToType(item.getAttribute("choice"));
+      // TODO(vmpstr): Refactor.
+      const choice = item.getAttribute("choice");
+      if (choice == "edit")
+        this.startLabelEdit();
+      else
+        this.convertToType(choice);
     }
 
     // Event handlers ============================================================

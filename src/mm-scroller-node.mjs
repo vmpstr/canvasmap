@@ -157,6 +157,10 @@ const style = `
 }`;
 
 const contextMenu = `
+<mm-context-menu-item choice=edit>
+  <div slot=text>Edit label</div>
+  <div slot=shortcut>e</div>
+</mm-context-menu-item>
 <mm-context-menu-item>
   <div slot=text>Convert to</div>
   <div slot=shortcut>&#x27a4;</div>
@@ -282,7 +286,11 @@ const define = () => {
     }
 
     onContextMenuItem_(item, position) {
-      this.convertToType(item.getAttribute("choice"));
+      const choice = item.getAttribute("choice");
+      if (choice == "edit")
+        this.startLabelEdit();
+      else
+        this.convertToType(choice);
     }
 
     // Event handlers ============================================================

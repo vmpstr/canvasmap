@@ -151,6 +151,13 @@ const define = () => {
         return;
       }
 
+      if (e.key == "e") {
+        e.preventDefault();
+        e.stopPropagation();
+        node.startLabelEdit();
+        return;
+      }
+
       let child;
       if (e.key == "Tab" || e.key == "Enter") {
         child = Nodes.createNode("node", this);
