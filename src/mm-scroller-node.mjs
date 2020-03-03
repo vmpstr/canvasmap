@@ -231,6 +231,23 @@ const define = () => {
          'ns': this.shadowRoot.querySelector(".ns_drag_handle"),
          'nwse': this.shadowRoot.querySelector(".nwse_drag_handle")});
 
+      // TODO(vmpstr): Refactor this.
+      child_area.addEventListener("dblclick", (e) => {
+        e.stopPropagation();
+        if (this.children_ && this.children_.length > 0)
+          return;
+        const node = Nodes.addNode("node", this, this.map_);
+        node.label = "new task";
+        this.adoptNode(node);
+        App.undoStack.didCreate(node);
+        node.select();
+        node.startLabelEdit();
+      });
+      this.addEventListener("dblclick", (e) => {
+        this.startLabelEdit();
+        e.stopPropagation();
+      });
+
       // TODO(vmpstr): Clean this up; issue 11.
       container.addEventListener("click", (e) => {
         if (e.target == container || e.target == label || e.target == child_area) {
