@@ -2,6 +2,7 @@ let App;
 let Nodes;
 let Handlers;
 let NodeBaseModule;
+let Style;
 let initialized = false;
 export async function initialize(version) {
   if (initialized)
@@ -15,186 +16,193 @@ export async function initialize(version) {
     async m => { await m.initialize(version); return m });
   NodeBaseModule = await import(`./node-base.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
+  Style = await import(`./style.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
   define();
 }
 
-const style = `
-:host {
-  --user-background: transparent;
-
-  display: flex;
-  flex-shrink: 1;
-  border-radius: 10px;
-  border: 1px solid black;
-  background: var(--user-background, transparent);
-}
-:host(:hover) {
-  box-shadow: 0 0 2px 0;
-}
-:host(.dragged) {
-  opacity: 40%;
-}
-:host(.selected) {
-  border-color: blue;
-  box-shadow: 0 0 3px 0 blue;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-
-  box-sizing: border-box;
-  width: 100%;
-
-  padding: 5px 0 5px 0;
-
-  position: relative;
-  overflow: hidden;
-  max-width: max-content;
-  min-width: 30px;
-  min-height: 45px;
-  border-radius: inherit;
-}
-.container:hover {
-}
-
-.label {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  /* workaround for ff? */
-  width: calc(100% + 5px);
-}
-.child_area {
-  margin-top: 5px;
-  position: relative;
-  contain: layout;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-bottom: 5px;
-
-  min-height: 10px;
-
-  background: rgba(0, 0, 0, 0.05);
-}
-.child_area.hidden > * {
-  display: none;
-}
-::slotted(*) {
-  position: relative;
-  margin-top: 5px;
-  width: 100%;
-  max-width: max-content;
-}
-.label_holder {
-  max-width: min-content;
-
-  position: relative;
-  padding: 0 10px 0 10px;
-}
-.parent_edge {
-  position: absolute;
-  bottom: 50%;
-  right: 100%;
-  width: 15px;
-  height: 30%;
-  border-bottom: 1px solid black;
-  border-left: 1px solid black;
-  border-radius: 0px 0px 0px 10px;
-}
-.child_toggle {
-  position: absolute;
-  left: calc(50% - 5px);
-  top: -5px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: powderblue;
-  border: 1px solid black;
-  z-index: 1;
-}
-.child_toggle:hover {
-  cursor: pointer;
-}
-.child_toggle.collapsed:hover {
-  background: springgreen;
-}
-.child_toggle.expanded:hover {
-  background: indianred;
-}
-.nwse_drag_handle {
-  position: absolute;
-  bottom: -3px;
-  right: -3px;
-  width: 20px;
-  height: 20px;
-  cursor: nwse-resize;
-  opacity: 0.01;
-}
-.ew_drag_handle {
-  position: absolute;
-  top: 10px;
-  right: -3px;
-  width: 7px;
-  height: calc(100% - 20px);
-  cursor: ew-resize;
-  opacity: 0.01;
-}
-.ns_drag_handle {
-  position: absolute;
-  left: 10px;
-  bottom: -3px;
-  height: 7px;
-  width: calc(100% - 20px);
-  cursor: ns-resize;
-  opacity: 0.01;
-}
-
-
-
-.divider {
-  width: 100%;
-  border-top: 1px solid grey;
-  margin-top: 5px;
-  position: relative;
-
-  /* fix flex making the height 0.99 -> 0 */
-  box-sizing: border-box;
-  min-height: 2px;
-}`;
-
-const contextMenu = `
-<mm-context-menu-item choice=edit>
-  <div slot=text>Edit label</div>
-  <div slot=shortcut>e</div>
-</mm-context-menu-item>
-<mm-context-menu-item>
-  <div slot=text>Convert to</div>
-  <div slot=shortcut>&#x27a4;</div>
-  <mm-context-menu id=convertmenu slot=submenu>
-  </mm-context-menu>
-</mm-context-menu-item>`;
-
-const body = `
-<div class=parent_edge></div>
-<div class=container>
-  <div class=label_holder>
-    <div class=label></div>
-  </div>
-  <div class=divider>
-    <div class="child_toggle expanded"></div>
-  </div>
-  <div class=child_area>
-    <slot></slot>
-  </div>
-</div>
-<div class=ew_drag_handle></div>
-<div class=ns_drag_handle></div>
-<div class=nwse_drag_handle></div>`;
-
 const define = () => {
+  const style = `
+  ${Style.customVariablesInitialization("scroller")}
+  :host {
+    display: flex;
+    flex-shrink: 1;
+    border-radius: var(--user-border-radius);
+
+    background: var(--user-background);
+    box-sizing: border-box;
+  }
+  :host(:hover) {
+  }
+  :host(.dragged) {
+    opacity: 40%;
+  }
+  :host(.selected) {
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+
+    box-sizing: inherit;
+    width: 100%;
+
+    padding: 5px 0 5px 0;
+
+    position: relative;
+    overflow: hidden;
+    max-width: max-content;
+    min-width: 30px;
+    min-height: 45px;
+    border-radius: inherit;
+    border: var(--user-border);
+  }
+  .container:hover {
+    box-shadow: 0 0 2px 0;
+  }
+  :host(.selected) .container {
+    border-color: blue;
+    box-shadow: 0 0 3px 0 blue;
+  }
+
+  .label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    /* workaround for ff? */
+    width: calc(100% + 5px);
+  }
+  .child_area {
+    margin-top: 5px;
+    position: relative;
+    contain: layout;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 5px;
+
+    min-height: 10px;
+
+    background: rgba(0, 0, 0, 0.05);
+  }
+  .child_area.hidden > * {
+    display: none;
+  }
+  ::slotted(*) {
+    position: relative;
+    margin-top: 5px;
+    width: 100%;
+    max-width: max-content;
+  }
+  .label_holder {
+    max-width: min-content;
+
+    position: relative;
+    padding: 0 10px 0 10px;
+  }
+  .parent_edge {
+    position: absolute;
+    bottom: 50%;
+    right: 100%;
+    width: 15px;
+    height: 30%;
+    border-bottom: 1px solid black;
+    border-left: 1px solid black;
+    border-radius: 0px 0px 0px 10px;
+  }
+  .child_toggle {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--user-background);
+    border: 1px solid black;
+    z-index: 1;
+  }
+  .child_toggle:hover {
+    cursor: pointer;
+  }
+  .child_toggle.collapsed:hover {
+    background: springgreen;
+  }
+  .child_toggle.expanded:hover {
+    background: indianred;
+  }
+  .nwse_drag_handle {
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 20px;
+    height: 20px;
+    cursor: nwse-resize;
+    opacity: 0.01;
+  }
+  .ew_drag_handle {
+    position: absolute;
+    top: 10px;
+    right: -3px;
+    width: 7px;
+    height: calc(100% - 20px);
+    cursor: ew-resize;
+    opacity: 0.01;
+  }
+  .ns_drag_handle {
+    position: absolute;
+    left: 10px;
+    bottom: -3px;
+    height: 7px;
+    width: calc(100% - 20px);
+    cursor: ns-resize;
+    opacity: 0.01;
+  }
+
+  .divider {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+    margin-top: 5px;
+  }
+  .divider_line {
+    border-top: 1px solid grey;
+    flex-grow: 1;
+
+    /* fix flex making the height 0.99 -> 0 */
+    box-sizing: border-box;
+    min-height: 2px;
+  }`;
+
+  const contextMenu = `
+  <mm-context-menu-item choice=edit>
+    <div slot=text>Edit label</div>
+    <div slot=shortcut>e</div>
+  </mm-context-menu-item>
+  <mm-context-menu-item>
+    <div slot=text>Convert to</div>
+    <div slot=shortcut>&#x27a4;</div>
+    <mm-context-menu id=convertmenu slot=submenu>
+    </mm-context-menu>
+  </mm-context-menu-item>`;
+
+  const body = `
+  <div class=parent_edge></div>
+  <div class=container>
+    <div class=label_holder>
+      <div class=label></div>
+    </div>
+    <div class=divider>
+      <div class=divider_line></div>
+      <div class="child_toggle expanded"></div>
+      <div class=divider_line></div>
+    </div>
+    <div class=child_area>
+      <slot></slot>
+    </div>
+  </div>
+  <div class=ew_drag_handle></div>
+  <div class=ns_drag_handle></div>
+  <div class=nwse_drag_handle></div>`;
+
   console.debug("defining mm-scroller-node");
   window.customElements.define("mm-scroller-node", class extends NodeBaseModule.NodeBase {
     // Creation and initialization ===============================================

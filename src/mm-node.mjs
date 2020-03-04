@@ -2,6 +2,7 @@ let App;
 let Nodes;
 let Handlers;
 let NodeBaseModule;
+let Style;
 let initialized = false;
 export async function initialize(version) {
   if (initialized)
@@ -15,154 +16,159 @@ export async function initialize(version) {
     async m => { await m.initialize(version); return m });
   NodeBaseModule = await import(`./node-base.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
+  Style = await import(`./style.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
   define();
 }
 
-const style = `
-:host {
-  --user-background: transparent;
+const define = () => {
+  const style = `
+  ${Style.customVariablesInitialization("node")}
+  :host {
+    display: flex;
+    flex-shrink: 1;
+    border-radius: var(--user-border-radius);
+  }
+  .container {
+    width: 100%;
+    position: relative;
+    border-radius: inherit;
+  }
+  .label {
+    box-sizing: border-box;
+    width: 100%;
 
-  display: flex;
-  flex-shrink: 1;
-  border-radius: 10px;
-}
-.container {
-  width: 100%;
-  position: relative;
-  border-radius: inherit;
-}
-.label {
-  box-sizing: border-box;
-  width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+    padding: 10px;
+  }
+  .label_flexer:hover {
+  }
+  .child_area {
+    position: relative;
+    contain: layout;
+    margin-left: 30px;
+    width: calc(100% - 30px);
+    max-width: max-content;
+  }
+  .child_area.hidden {
+    min-height: 10px;
+  }
+  .child_area.hidden > * {
+    display: none;
+  }
+  ::slotted(*) {
+    position: relative;
+    margin-top: 5px;
+    width: 100%;
+    max-width: max-content;
+  }
+  .label_flexer {
+    display: flex;
+    position: relative;
+    flex-shrink: 1;
+    max-width: max-content;
+    min-width: 20px;
+    width: 100%;
+    border-radius: inherit;
+    background: var(--user-background);
+  }
+  .label_holder {
+    width: 100%;
+    max-width: max-content;
+    border: var(--user-border);
+    border-radius: inherit;
+    box-sizing: border-box;
+    position: relative;
+  }
+  .label_holder:hover {
+    box-shadow: 0 0 2px 0;
+  }
+  .parent_edge {
+    position: absolute;
+    bottom: 50%;
+    right: 100%;
+    width: 15px;
+    height: 30%;
+    border-bottom: 1px solid black;
+    border-left: 1px solid black;
+    border-radius: 0px 0px 0px 10px;
+  }
+  .child_edge {
+    position: absolute;
+    top: 100%;
+    border-left: 1px solid black;
+    width: 1px;
+    left: 14px;
+    height: 50px;
+  }
+  .child_toggle {
+    position: absolute;
+    top: 100%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    left: 9px;
+    background: var(--user-background);
+    border: 1px solid black;
+    z-index: 1;
+  }
+  .child_toggle:hover {
+    cursor: pointer;
+  }
+  .child_toggle.collapsed:hover {
+    background: springgreen;
+  }
+  .child_toggle.expanded:hover {
+    background: indianred;
+  }
+  .ew_drag_handle {
+    position: absolute;
+    top: 15%;
+    right: -2px;
+    width: 5px;
+    height: 70%;
+    opacity: 0.01;
+    cursor: ew-resize;
+  }
+  :host(.selected) .label_holder {
+    border-color: blue;
+    box-shadow: 0 0 3px 0 blue;
+  }
+  :host(.dragged) {
+    opacity: 40%;
+  }`;
 
-  padding: 10px;
-}
-.label_flexer:hover {
-  box-shadow: 0 0 2px 0;
-}
-.child_area {
-  position: relative;
-  contain: layout;
-  margin-left: 30px;
-  width: calc(100% - 30px);
-  max-width: max-content;
-}
-.child_area.hidden {
-  min-height: 10px;
-}
-.child_area.hidden > * {
-  display: none;
-}
-::slotted(*) {
-  position: relative;
-  margin-top: 5px;
-  width: 100%;
-  max-width: max-content;
-}
-.label_flexer {
-  display: flex;
-  flex-shrink: 1;
-  max-width: max-content;
-  min-width: 20px;
-  width: 100%;
-  border: 1px solid black;
-  border-radius: inherit;
-  background: var(--user-background, transparent);
-}
-.label_holder {
-  width: 100%;
-  max-width: max-content;
+  const contextMenu = `
+  <mm-context-menu-item choice=edit>
+    <div slot=text>Edit label</div>
+    <div slot=shortcut>e</div>
+  </mm-context-menu-item>
+  <mm-context-menu-item>
+    <div slot=text>Convert to</div>
+    <div slot=shortcut>&#x27a4;</div>
+    <mm-context-menu id=convertmenu slot=submenu>
+    </mm-context-menu>
+  </mm-context-menu-item>`;
 
-  position: relative;
-}
-.parent_edge {
-  position: absolute;
-  bottom: 50%;
-  right: 100%;
-  width: 15px;
-  height: 30%;
-  border-bottom: 1px solid black;
-  border-left: 1px solid black;
-  border-radius: 0px 0px 0px 10px;
-}
-.child_edge {
-  position: absolute;
-  top: 100%;
-  border-left: 1px solid black;
-  width: 1px;
-  left: 14px;
-  height: 50px;
-}
-.child_toggle {
-  position: absolute;
-  top: 100%;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  left: 9px;
-  background: powderblue;
-  border: 1px solid black;
-  z-index: 1;
-}
-.child_toggle:hover {
-  cursor: pointer;
-}
-.child_toggle.collapsed:hover {
-  background: springgreen;
-}
-.child_toggle.expanded:hover {
-  background: indianred;
-}
-.ew_drag_handle {
-  position: absolute;
-  top: 15%;
-  right: -2px;
-  width: 5px;
-  height: 70%;
-  opacity: 0.01;
-  cursor: ew-resize;
-}
-:host(.selected) .label_flexer {
-  border-color: blue;
-  box-shadow: 0 0 3px 0 blue;
-}
-:host(.dragged) {
-  opacity: 40%;
-}`;
-
-const contextMenu = `
-<mm-context-menu-item choice=edit>
-  <div slot=text>Edit label</div>
-  <div slot=shortcut>e</div>
-</mm-context-menu-item>
-<mm-context-menu-item>
-  <div slot=text>Convert to</div>
-  <div slot=shortcut>&#x27a4;</div>
-  <mm-context-menu id=convertmenu slot=submenu>
-  </mm-context-menu>
-</mm-context-menu-item>`;
-
-const body = `
-<div class=container>
-  <div class=label_flexer>
-    <div class=label_holder>
+  const body = `
+  <div class=container>
+    <div class=label_flexer>
+      <div class=label_holder>
+        <div class=label></div>
+      </div>
+      <div class=ew_drag_handle></div>
+      <div class="child_toggle expanded"></div>
       <div class=parent_edge></div>
       <div class=child_edge></div>
-      <div class="child_toggle expanded"></div>
-      <div class=label></div>
-      <div class=ew_drag_handle></div>
     </div>
-  </div>
-  <div class=child_area>
-    <slot></slot>
-  </div>
-</div>`;
+    <div class=child_area>
+      <slot></slot>
+    </div>
+  </div>`;
 
-const define = () => {
   console.debug("defining mm-node");
   window.customElements.define("mm-node", class extends NodeBaseModule.NodeBase {
     // Creation and initialization ===============================================
@@ -289,18 +295,6 @@ const define = () => {
         this.shadowRoot.querySelector(".parent_edge").style.display = "none";
       }
 
-      if (this.children_.length && !this.childrenHidden_) {
-        this.shadowRoot.querySelector(".child_edge").style.display = "";
-        const last_child = this.children_[this.children_.length - 1];
-        let extent =
-            last_child.getBoundingClientRect().top +
-            last_child.parent_edge_offset -
-            this.shadowRoot.querySelector(".label_holder").getBoundingClientRect().bottom;
-        this.shadowRoot.querySelector(".child_edge").style.height = extent + "px";
-      } else {
-        this.shadowRoot.querySelector(".child_edge").style.display = "none";
-      }
-
       const toggle = this.shadowRoot.querySelector(".child_toggle");
       if (this.children_.length)
         toggle.style.display = "";
@@ -313,6 +307,21 @@ const define = () => {
         toggle.classList.add("collapsed");
       else
         toggle.classList.add("expanded");
+
+      if (this.children_.length && !this.childrenHidden_) {
+        this.shadowRoot.querySelector(".child_edge").style.display = "";
+        const last_child = this.children_[this.children_.length - 1];
+        const child_toggle_rect = this.shadowRoot.querySelector(".child_toggle").getBoundingClientRect();
+        const child_edge = this.shadowRoot.querySelector(".child_edge");
+        let extent =
+            Math.max(last_child.getBoundingClientRect().top +
+                     last_child.parent_edge_offset -
+                     child_toggle_rect.bottom, 0);
+        child_edge.style.top = `calc(${child_toggle_rect.height}px + 100%)`;
+        child_edge.style.height = extent + "px";
+      } else {
+        this.shadowRoot.querySelector(".child_edge").style.display = "none";
+      }
     }
 
     onDraggedChild(child) {
