@@ -23,6 +23,11 @@ export class ContextMenuControl {
       this.dismissMenu();
       App.mouseTracker.handledClick(this, e);
     });
+    this.cover_.addEventListener("contextmenu", (e) => {
+      this.dismissMenu();
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      target.dispatchEvent(new e.constructor(e.type, e));
+    });
   }
 
   onContextMenu_(e) {

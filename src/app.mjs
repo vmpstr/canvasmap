@@ -19,6 +19,7 @@ class MouseTracker {
 
 export let mouseTracker;
 export let undoStack;
+export let dialogControl;
 let contextMenuControl;
 let initialized = false;
 
@@ -41,10 +42,13 @@ export async function initialize(version) {
     async m => { await m.initialize(version); return m });
   const undoModule = await import(`./undo-stack.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
+  const dialogModule = await import(`./dialog-control.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
 
   mouseTracker = new MouseTracker;
   undoStack = new undoModule.UndoStack;
   contextMenuControl = new contextModule.ContextMenuControl;
+  dialogControl = new dialogModule.DialogControl;
 
   const promises = [
     customElements.whenDefined('mm-map'),

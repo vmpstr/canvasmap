@@ -182,6 +182,9 @@ const define = () => {
     <div slot=shortcut>&#x27a4;</div>
     <mm-context-menu id=convertmenu slot=submenu>
     </mm-context-menu>
+  </mm-context-menu-item>
+  <mm-context-menu-item choice=self_style>
+    <div slot=text>Self style</div>
   </mm-context-menu-item>`;
 
   const body = `
@@ -304,10 +307,13 @@ const define = () => {
 
     onContextMenuItem_(item, position) {
       const choice = item.getAttribute("choice");
-      if (choice == "edit")
+      if (choice == "edit") {
         this.startLabelEdit();
-      else
+      } else if (choice == "self_style") {
+        App.dialogControl.showStyleDialog(this, position);
+      } else {
         this.convertToType(choice);
+      }
     }
 
     // Event handlers ============================================================
