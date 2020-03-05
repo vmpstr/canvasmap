@@ -143,8 +143,18 @@ const define = () => {
 
     handleKeyDown(e) {
       const node = this.selectedNode_;
-      if (!node)
+      if (!node) {
+        if (e.key == "ArrowLeft" ||
+            e.key == "ArrowRight" ||
+            e.key == "ArrowDown" ||
+            e.key == "ArrowUp") {
+          if (this.lastSelected_ && this.lastSelected_.isConnected)
+            this.lastSelected_.select();
+          else if (this.nodes_.length)
+            this.nodes_[0].select();
+        }
         return;
+      }
       const action = Shortcuts.eventToAction(e);
       if (action == Shortcuts.action.kDelete) {
         App.undoStack.willDelete(node);
@@ -242,6 +252,7 @@ const define = () => {
       if (this.selectedNode_)
         this.selectedNode_.deselect();
       this.selectedNode_ = node;
+      this.lastSelected_ = node;
       node.hero.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
