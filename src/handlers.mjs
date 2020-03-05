@@ -62,10 +62,6 @@ export class NodeDragControl {
     console.assert(this.dragTarget_);
 
     this.dragTarget_.classList.add('dragged');
-    this.dragTarget_.style.left = 0;
-    this.dragTarget_.style.top = 0;
-    rect = this.dragTarget_.getBoundingClientRect();
-
     this.dragTarget_.position =
       [this.dragOffset_[0] + clientPoint[0],
        this.dragOffset_[1] + clientPoint[1]];
@@ -115,6 +111,7 @@ export class DragHandleControl {
     } else {
       clientPoint = [e.clientX, e.clientY];
     }
+    Workarounds.mouseTracker.dragPoint = [clientPoint[0], clientPoint[1]];
 
     let new_width =
       Math.floor(this.initialWidth_ + (clientPoint[0] + this.dragOffset_[0]));

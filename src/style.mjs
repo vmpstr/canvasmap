@@ -17,34 +17,49 @@ const host = `
 // .label
 // .child_area
 //
-const customVariables = [
-  {
-    name: "--user-background",
+const customVariables = {
+  "--user-background": {
     default: {
       node: "transparent",
       scroller: "transparent"
-    }
+    },
+    selection_name: "background",
+    description: "The background of the node."
   },
-  {
-    name: "--user-border-radius",
+  "--user-border-radius": {
     default: {
       node: "10px",
       scroller: "10px"
-    }
+    },
+    selection_name: "border-radius",
+    description: "The border radius of the node. This determines how much rounding to apply to the corners."
   },
-  {
-    name: "--user-border",
+  "--user-border": {
     default: {
       node: "1px solid black",
       scroller: "1px solid black"
-    }
+    },
+    selection_name: "border",
+    description: "Shouldn't use shorthands. This will be removed."
   }
-];
+};
 
 export function customVariablesInitialization(type) {
   let result = ":host {\n";
-  for(let i = 0; i < customVariables.length; ++i)
-    result += `${customVariables[i].name}: ${customVariables[i].default[type]};\n`;
+  for(let name in customVariables)
+    result += `${name}: ${customVariables[name].default[type]};\n`;
   result += "}\n";
+  return result;
+}
+
+export function getSelectionStylesForType(type) {
+  let result = [];
+  for(let name in customVariables) {
+    result.push({
+      name: name,
+      selection_name: customVariables[name].selection_name,
+      description: customVariables[name].description
+    });
+  }
   return result;
 }
