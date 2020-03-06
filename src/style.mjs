@@ -40,7 +40,7 @@ const customVariables = {
       scroller: "1px solid black"
     },
     selection_name: "border",
-    description: "Shouldn't use shorthands. This will be removed."
+    description: "The border thickness style and color. Note that this refers to the unselected element's border"
   }
 };
 

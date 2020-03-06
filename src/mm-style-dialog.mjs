@@ -95,11 +95,17 @@ const define = () => {
 
   /* description */
   .property_description {
+    font-size: small;
   }
 
   /* property editing */
   .property_editor_container {
-    background: lightgreen;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .current_value {
+    font-weight: bold;
   }`;
 
   const body = `
@@ -174,8 +180,8 @@ const define = () => {
         let control = document.createElement("div");
         control.classList.add("property_editor_container");
         container.appendChild(control);
-        // TODO(vmpstr): construct the editor for the given property.
 
+        this.buildPropertyEditor_(control, this.styles_[i]);
       }
 
       let maxHeight = 0;
@@ -189,6 +195,64 @@ const define = () => {
 
       this.selectedOption_ = 0;
       this.selectionChanged_();
+    }
+
+    buildPropertyEditor_(container, style) {
+      if (style.name == "--user-border-radius") {
+        const current = document.createElement("div");
+        current.classList.add("current_value");
+
+        const slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = 0;
+        slider.max = 25;
+        slider.value = parseInt(this.node_.getCustomStyle(style.name));
+        slider.addEventListener("input", () => {
+          current.innerText = `${slider.value}px`;
+          this.node_.setCustomStyle(style.name, `${slider.value}px`);
+        });
+
+        current.innerText = `${slider.value}px`;
+
+        container.appendChild(current);
+        container.appendChild(slider);
+      } else if (style.name == "--user-border") {
+        const current = document.createElement("div");
+        current.classList.add("current_value");
+
+        const values = this.node_.getCustomStyle(style.name).trim().split(" ");
+
+        const slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = 0;
+        slider.max = 10;
+        slider.value = parseInt(values[0]);
+
+        const select = document.createElement("select");
+        const options = [
+          "none", "solid", "dotted", "dashed", "double",
+          "groove", "ridge", "inset", "outset"];
+        for (let i = 0; i < options.length; ++i) {
+          let option = document.createElement("option");
+          option.value = options[i];
+          option.innerText = options[i];
+          if (values[1] == options[i])
+            option.selected = "selected";
+          select.appendChild(option);
+        }
+
+        const callback = () => {
+          current.innerText = `${slider.value}px ${select.value} black`;
+          this.node_.setCustomStyle(style.name, current.innerText);
+        };
+        select.addEventListener("change", callback);
+        slider.addEventListener("input", callback);
+
+        callback();
+        container.appendChild(current);
+        container.appendChild(slider);
+        container.appendChild(select);
+      }
     }
 
     selectionChanged_() {
@@ -217,6 +281,8 @@ const define = () => {
       header.addEventListener("dragstart", (e) => this.onDragStart_(e));
       header.addEventListener("drag", (e) => this.onDrag_(e));
       header.addEventListener("dragend", (e) => this.onDragEnd_(e));
+
+      this.shadowRoot.addEventListener("keydown", (e) => { e.stopPropagation() });
     }
 
     set position(v) {

@@ -57,6 +57,13 @@ export class NodeBase extends HTMLElement {
   get position() { return this.position_; }
   get hero() { return this; }
 
+  getCustomStyle(property) {
+    return getComputedStyle(this).getPropertyValue(property);
+  }
+  setCustomStyle(property, value) {
+    this.style.setProperty(property, value);
+  }
+
   // Setters ===================================================================
   set label(v) {
     this.label_ = v;
