@@ -38,6 +38,8 @@ export async function initialize(version) {
     async m => { await m.initialize(version); return m });
   import(`./mm-scroller-node.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
+  import(`./mm-color-picker.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
   let contextModule = await import(`./context-menu-control.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   const undoModule = await import(`./undo-stack.mjs?v=${version()}`).then(
