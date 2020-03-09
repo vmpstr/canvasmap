@@ -15,6 +15,15 @@ class MouseTracker {
   registerClickObserver(observer) {
     this.clickObservers_.push(observer);
   }
+
+  removeClickObserver(observer) {
+    for (let i = 0; i < this.clickObservers_.length; ++i) {
+      if (this.clickObservers_[i] == observer) {
+        this.clickObservers_ = this.clickObservers_.splice(i, 1);
+        break;
+      }
+    }
+  }
 }
 
 export let mouseTracker;
@@ -28,6 +37,19 @@ export async function initialize(version) {
     return;
   initialized = true;
 
+  // No deps.
+  mouseTracker = new MouseTracker;
+
+  // No mm- deps.
+  const undoModule = await import(`./undo-stack.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  undoStack = new undoModule.UndoStack;
+
+  let contextModule = await import(`./context-menu-control.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  contextMenuControl = new contextModule.ContextMenuControl;
+
+  // Mms async.
   import(`./mm-map.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   import(`./mm-node.mjs?v=${version()}`).then(
@@ -40,16 +62,10 @@ export async function initialize(version) {
     async m => { await m.initialize(version); return m });
   import(`./mm-color-picker.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
-  let contextModule = await import(`./context-menu-control.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
-  const undoModule = await import(`./undo-stack.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
+
+  // Has mm- deps.
   const dialogModule = await import(`./dialog-control.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
-
-  mouseTracker = new MouseTracker;
-  undoStack = new undoModule.UndoStack;
-  contextMenuControl = new contextModule.ContextMenuControl;
   dialogControl = new dialogModule.DialogControl;
 
   const promises = [

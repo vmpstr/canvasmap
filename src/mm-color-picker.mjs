@@ -1,9 +1,12 @@
 let initialized = false;
+let App;
 let Workarounds;
 export async function initialize(version) {
   if (initialized)
     return;
   initialized = true;
+  App = await import(`./app.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
   Workarounds = await import(`./workarounds.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   define();
@@ -221,6 +224,7 @@ const define = () => {
       super();
       this.saturation_ = 0;
       this.lightness_ = 1;
+      this.clickHandledObserver_ = this.clickHandledObserver_.bind(this);
     }
 
     connectedCallback() {
@@ -259,13 +263,27 @@ const define = () => {
           track_margin: 2 },
         (percents) => this.adjustSaturationLightness_(percents));
 
+      // Don't dismiss on self clicks.
+      this.shadowRoot.addEventListener("click", (e) => {
+        App.mouseTracker.handledClick(this, e);
+      });
+
+      // Except the sample.
       // TODO(vmpstr): Open recent colors / swatches instead.
       const sample = this.shadowRoot.querySelector(".sample");
       sample.addEventListener("click", (e) => {
-        this.remove();
-        e.stopPropagation();
-        e.preventDefault();
+        App.mouseTracker.handledClick(sample, e);
       });
+
+      App.mouseTracker.registerClickObserver(this.clickHandledObserver_);
+    }
+
+    clickHandledObserver_(object, e) {
+      // Don't dismiss on self clicks.
+      if (object == this)
+        return;
+      App.mouseTracker.removeClickObserver(this.clickHandledObserver_);
+      this.remove();
     }
 
     createPicker_(picker, cursor, opts, callback) {
