@@ -60,7 +60,7 @@ export async function initialize(version) {
     async m => { await m.initialize(version); return m });
   import(`./mm-scroller-node.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
-  import(`./mm-color-picker.mjs?v=${version()}`).then(
+  import(`./mm-color-sample.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
 
   // Has mm- deps.

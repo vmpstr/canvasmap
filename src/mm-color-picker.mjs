@@ -1,5 +1,6 @@
 let initialized = false;
 let App;
+let Style;
 let Workarounds;
 export async function initialize(version) {
   if (initialized)
@@ -7,32 +8,13 @@ export async function initialize(version) {
   initialized = true;
   App = await import(`./app.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
+  Style = await import(`./style.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
   Workarounds = await import(`./workarounds.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   define();
 }
 const define = () => {
-  const checker =
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAGX' +
-    'RFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA0ppVFh0WE1MOmNvbS5hZG9iZS' +
-    '54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3' +
-    'prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9Ik' +
-    'Fkb2JlIFhNUCBDb3JlIDUuNi1jMDY3IDc5LjE1Nzc0NywgMjAxNS8wMy8zMC0yMzo0MDo0Mi' +
-    'AgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5Lz' +
-    'AyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG' +
-    '1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0Um' +
-    'VmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bW' +
-    'xuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOkRvY3VtZW50SU' +
-    'Q9InhtcC5kaWQ6RTc5MkU2MDQ2MDM2MTFFQUJCRDhCQThBQ0QyRjNDNjkiIHhtcE1NOkluc3' +
-    'RhbmNlSUQ9InhtcC5paWQ6RTc5MkU2MDM2MDM2MTFFQUJCRDhCQThBQ0QyRjNDNjkiIHhtcD' +
-    'pDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKFdpbmRvd3MpIj4gPHhtcE' +
-    '1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcD' +
-    'pjNDEyN2I1MS02MDM1LTExZWEtYWE2OS1hMjJjNDc3ZTZjZTUiIHN0UmVmOmRvY3VtZW50SU' +
-    'Q9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcDpjNDEyN2I1MS02MDM1LTExZWEtYWE2OS1hMjJjND' +
-    'c3ZTZjZTUiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+ID' +
-    'w/eHBhY2tldCBlbmQ9InIiPz4Jp6ghAAAABlBMVEX////MzMw46qqDAAAAF0lEQVR42mJghA' +
-    'IGGBgggQG2HiYAEGAARRAAgR90vRgAAAAASUVORK5CYII=';
-
   const style = `
     :host {
       background: white;
@@ -81,7 +63,7 @@ const define = () => {
       width: 25px;
       height: 25px;
       border: 1px solid black;
-      background: url(${checker}) repeat;
+      background: url(${Style.checkerUrl}) repeat;
     }
     .value > .sample_holder > .sample {
       position: absolute;
@@ -138,7 +120,7 @@ const define = () => {
       grid-area: a-picker;
       width: 25px;
       height: 100%;
-      background: url(${checker}) repeat;
+      background: url(${Style.checkerUrl}) repeat;
     }
     .a_picker > .gradient {
       width: 100%;
@@ -218,6 +200,12 @@ const define = () => {
     kNS: 2
   };
 
+  const margins = {
+    hue: 5,
+    alpha: 5,
+    ls: 2
+  };
+
   // Need to reverse engineer from rgba specified.
   window.customElements.define("mm-color-picker", class extends HTMLElement {
     constructor() {
@@ -225,6 +213,8 @@ const define = () => {
       this.saturation_ = 0;
       this.lightness_ = 1;
       this.clickHandledObserver_ = this.clickHandledObserver_.bind(this);
+      this.callbacks_ = [];
+      this.computed_rgba_ = [255, 255, 255, 1];
     }
 
     connectedCallback() {
@@ -236,9 +226,12 @@ const define = () => {
         <style>${style}</style>
         <body>${body}</body>`;
 
+      this.no_notify_scope_ = true;
       this.registerEventHandlers_();
       this.computeRgb_();
-      this.adjustAlpha_(0);
+      this.computeAlpha_();
+      this.updateSlidersFromComputed_(); 
+      delete this.no_notify_scope_;
     }
 
     registerEventHandlers_() {
@@ -246,21 +239,21 @@ const define = () => {
         this.shadowRoot.querySelector(".h_picker"),
         this.shadowRoot.querySelector(".h_cursor"),
         { direction: direction.kEW,
-          track_margin: 5 },
+          track_margin: margins.hue },
         (percent) => this.adjustHue_(percent));
 
       this.createPicker_(
         this.shadowRoot.querySelector(".a_picker"),
         this.shadowRoot.querySelector(".a_cursor"),
         { direction: direction.kNS,
-          track_margin: 5 },
+          track_margin: margins.alpha },
         (percent) => this.adjustAlpha_(percent));
 
       this.createPicker_(
         this.shadowRoot.querySelector(".ls_picker"),
         this.shadowRoot.querySelector(".ls_cursor"),
         { direction: direction.kNS | direction.kEW,
-          track_margin: 2 },
+          track_margin: margins.ls },
         (percents) => this.adjustSaturationLightness_(percents));
 
       // Don't dismiss on self clicks.
@@ -380,7 +373,14 @@ const define = () => {
     adjustAlpha_(percent) {
       let a = 1 - Math.min(Math.max(percent / 100, 0), 1);
       this.style.setProperty("--root-alpha", `${a}`);
+      this.computeAlpha_();
+    }
+
+    computeAlpha_() {
+      let a = this.style.getPropertyValue("--root-alpha").trim();
       this.shadowRoot.querySelector("#input_a").value = a;
+      this.computed_rgba_[3] = a;
+      this.notifyChanged();
     }
 
     adjustSaturationLightness_(percents) {
@@ -408,7 +408,122 @@ const define = () => {
       this.shadowRoot.querySelector("#input_r").value = rgb[0];
       this.shadowRoot.querySelector("#input_g").value = rgb[1];
       this.shadowRoot.querySelector("#input_b").value = rgb[2];
+      this.computed_rgba_ = [rgb[0], rgb[1], rgb[2], this.computed_rgba_[3]]
+      this.notifyChanged();
+    }
+
+    notifyChanged() {
+      if (this.no_notify_scope_)
+        return;
+      for (let i = 0; i < this.callbacks_.length; ++i)
+        this.callbacks_[i](this.computed_rgba_);
+    }
+
+    onChange(callback) {
+      this.callbacks_.push(callback);
+    }
+
+    setRgbaNoNotify(v) {
+      this.computed_rgba_ = v;
+      this.updateSlidersFromComputed_();
+    }
+
+    updateSlidersFromComputed_() {
+      if (this.shadowRoot) {
+        this.shadowRoot.querySelector("#input_r").value = this.computed_rgba_[0];
+        this.shadowRoot.querySelector("#input_g").value = this.computed_rgba_[1];
+        this.shadowRoot.querySelector("#input_b").value = this.computed_rgba_[2];
+        this.shadowRoot.querySelector("#input_a").value = this.computed_rgba_[3];
+      }
+      
+      this.style.setProperty(
+        "--computed-rgb",
+        `${this.computed_rgba_[0]}, ${this.computed_rgba_[1]}, ${this.computed_rgba_[2]}`);
+
+      let r = this.computed_rgba_[0];
+      let g = this.computed_rgba_[1];
+      let b = this.computed_rgba_[2];
+      let a = this.computed_rgba_[3];
+
+      let max = Math.max(r, g, b);
+      let hue;
+      if (max == 0) {
+        this.saturation_ = 0;
+        this.lightness_ = 0;
+        r = 255;
+        g = 0;
+        b = 0;
+        hue = this.huePercentFromRgb(r, g, b);
+      } else {
+        this.lightness_ = max / 255;
+        r = Math.round(r / this.lightness_);
+        g = Math.round(g / this.lightness_);
+        b = Math.round(b / this.lightness_);
+
+        console.assert(Math.max(r, g, b) == 255);
+        let min = Math.min(r, g, b);
+        if (min == 255) {
+          this.saturation_ = 0;
+          r = 255;
+          g = 0;
+          b = 0;
+          hue = this.huePercentFromRgb(r, g, b);
+        } else {
+          this.saturation_ = 1 - min / 255;
+          r = Math.round((r - (1 - this.saturation_) * 255) / this.saturation_);
+          g = Math.round((g - (1 - this.saturation_) * 255) / this.saturation_);
+          b = Math.round((b - (1 - this.saturation_) * 255) / this.saturation_);
+
+          console.assert(Math.min(r, g, b) == 0);
+          console.assert(Math.max(r, g, b) == 255);
+          hue = this.huePercentFromRgb(r, g, b);
+        }
+      }
+
+      this.style.setProperty("--root-alpha", `${a}`);
+      this.style.setProperty("--root-rgb", `${r}, ${g}, ${b}`);
+
+      this.setSlidersFromPercents(hue, 100 * a, 100 * this.lightness_, 100 * this.saturation_);
+    }
+
+    setSlidersFromPercents(hue, alpha, lightness, saturation) {
+      if (!this.shadowRoot)
+        return;
+
+      const htrack = this.shadowRoot.querySelector(".h_picker").getBoundingClientRect().width - margins.hue;
+      const atrack = this.shadowRoot.querySelector(".a_picker").getBoundingClientRect().height - margins.alpha;
+      const strack = this.shadowRoot.querySelector(".ls_picker").getBoundingClientRect().width - margins.ls;
+      const ltrack = this.shadowRoot.querySelector(".ls_picker").getBoundingClientRect().height - margins.ls;
+
+      const hcursor = this.shadowRoot.querySelector(".h_cursor");
+      const acursor = this.shadowRoot.querySelector(".a_cursor");
+      const lscursor = this.shadowRoot.querySelector(".ls_cursor");
+
+      hcursor.style.left = `${htrack * hue / 100}px`;
+      acursor.style.top = `${atrack * (1 - alpha / 100)}px`;
+      lscursor.style.left = `${strack * saturation / 100}px`;
+      lscursor.style.top = `${ltrack * (1 - lightness / 100)}px`;
+    }
+
+    huePercentFromRgb(r, g, b) {
+      console.assert(Math.min(r, g, b) == 0);
+      console.assert(Math.max(r, g, b) == 255);
+
+      if (r == 255 && b == 0) {
+        return 16.66 * g / 255;
+      } else if (g == 255 && b == 0) {
+        return 16.66 + 16.66 * (1 - r / 255);
+      } else if (g == 255 && r == 0) {
+        return 33.33 + 16.66 * b / 255;
+      } else if (b == 255 && r == 0) {
+        return 50 + 16.66 * (1 - g / 255);
+      } else if (b == 255 && g == 0) {
+        return 66.66 + 16.66 * r / 255;
+      } else {
+        console.assert(r == 255 && g == 0);
+        return 83.33 + 16.66 * (1 - b / 255);
+      }
     }
   });
-};
+}
 
