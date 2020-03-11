@@ -19,7 +19,7 @@ class MouseTracker {
   removeClickObserver(observer) {
     for (let i = 0; i < this.clickObservers_.length; ++i) {
       if (this.clickObservers_[i] == observer) {
-        this.clickObservers_ = this.clickObservers_.splice(i, 1);
+        this.clickObservers_.splice(i, 1);
         break;
       }
     }

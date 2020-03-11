@@ -27,6 +27,7 @@ const define = () => {
       width: 100%;
       height: 100%;
       background: rgba(var(--rgba));
+      border-radius: inherit;
     }
     #picker {
       position: absolute;
@@ -87,7 +88,8 @@ const define = () => {
 
     set rgba(v) {
       this.style.setProperty("--rgba", `${v[0]}, ${v[1]}, ${v[2]}, ${v[3]}`);
-      this.picker_.setRgbaNoNotify(v);
+      if (this.picker_)
+        this.picker_.setRgbaNoNotify(v);
       this.rgba_ = v;
     }
     get rgba() {

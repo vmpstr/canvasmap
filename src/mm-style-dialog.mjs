@@ -27,6 +27,7 @@ const define = () => {
     box-shadow: 0 0 10px 0;
     border-radius: 5px;
     border: 1px solid black;
+    will-change: transform;
   }
   .container {
     position: relative;
@@ -106,6 +107,13 @@ const define = () => {
   }
   .current_value {
     font-weight: bold;
+  }
+  .property_editor_container > mm-color-sample {
+    width: 50px;
+    height: 25px;
+    border-radius: 5px;
+    border: 1px solid black;
+    margin-top: 3px;
   }`;
 
   const body = `
@@ -241,17 +249,76 @@ const define = () => {
           select.appendChild(option);
         }
 
+        // TODO(vmpstr): util
+        const div = document.createElement("div");
+        div.style.color = values.slice(2).join(" ");
+        div.style.visibility = "hidden";
+        div.style.width = "0px";
+        div.style.height = "0px";
+        document.body.appendChild(div);
+        const value = getComputedStyle(div).getPropertyValue("color");
+        const a = value.match(/rgba?\((.*)\)/)[1].split(", ").map(Number);
+        let rgba;
+        if (a.length == 3) {
+          rgba = [a[0], a[1], a[2], 1];
+        } else {
+          console.assert(a.length == 4);
+          rgba = a;
+        }
+        div.remove();
+
+        const sample = document.createElement("mm-color-sample");
+        sample.rgba = rgba;
+
         const callback = () => {
-          current.innerText = `${slider.value}px ${select.value} black`;
+          current.innerText = `${slider.value}px ${select.value} rgba(${sample.rgba.join(",")})`;
           this.node_.setCustomStyle(style.name, current.innerText);
         };
         select.addEventListener("change", callback);
         slider.addEventListener("input", callback);
+        sample.onChange(callback);
 
         callback();
         container.appendChild(current);
         container.appendChild(slider);
         container.appendChild(select);
+        container.appendChild(sample);
+      } else if (style.name == "--user-background") {
+        const current = document.createElement("div");
+        current.classList.add("current_value");
+
+        const initial = this.node_.getCustomStyle(style.name).trim();
+
+        // TODO(vmpstr): util
+        const div = document.createElement("div");
+        div.style.color = initial;
+        div.style.visibility = "hidden";
+        div.style.width = "0px";
+        div.style.height = "0px";
+        document.body.appendChild(div);
+        const value = getComputedStyle(div).getPropertyValue("color");
+        const a = value.match(/rgba?\((.*)\)/)[1].split(", ").map(Number);
+        let rgba;
+        if (a.length == 3) {
+          rgba = [a[0], a[1], a[2], 1];
+        } else {
+          console.assert(a.length == 4);
+          rgba = a;
+        }
+        div.remove();
+
+        const sample = document.createElement("mm-color-sample");
+        sample.rgba = rgba;
+
+        const callback = () => {
+          current.innerText = `rgba(${sample.rgba.join(",")})`;
+          this.node_.setCustomStyle(style.name, current.innerText);
+        };
+        sample.onChange(callback);
+
+        callback();
+        container.appendChild(current);
+        container.appendChild(sample);
       }
     }
 

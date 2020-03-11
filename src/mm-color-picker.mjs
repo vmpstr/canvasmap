@@ -22,6 +22,7 @@ const define = () => {
       border: 1px solid black;
       box-shadow: 0 0 2px black;
       padding: 5px;
+      will-change: transform;
 
       --root-rgb: 255, 0, 0;
       --computed-rgb: 255, 0, 0;
@@ -218,8 +219,10 @@ const define = () => {
     }
 
     connectedCallback() {
-      if (this.shadowRoot)
+      if (this.shadowRoot) {
+        App.mouseTracker.registerClickObserver(this.clickHandledObserver_);
         return;
+      }
 
       this.attachShadow({ mode: "open" });
       this.shadowRoot.innerHTML = `
@@ -388,7 +391,7 @@ const define = () => {
       this.no_notify_scope_ = true;
       let a = this.style.getPropertyValue("--root-alpha").trim();
       this.shadowRoot.querySelector("#input_a").value = a;
-      this.computed_rgba_[3] = a;
+      this.computed_rgba_[3] = Math.round(a * 100) / 100;
       delete this.no_notify_scope_;
       this.notifyChanged();
     }
