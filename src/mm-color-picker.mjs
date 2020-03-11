@@ -182,7 +182,7 @@ const define = () => {
         <div class=rgba_text>b=</div>
         <input id=input_b type=number min=0 max=255 class=rgba_input></input>
         <div class=rgba_text>a=</div>
-        <input id=input_a type=number min=0 max=1 class=rgba_input></input>
+        <input id=input_a type=number min=0 max=1 step=0.01 class=rgba_input></input>
       </div>
       <div class=ls_picker>
         <div class="root_color abstopleft"></div>
@@ -226,12 +226,8 @@ const define = () => {
         <style>${style}</style>
         <body>${body}</body>`;
 
-      this.no_notify_scope_ = true;
+      this.setRgbaNoNotify(this.computed_rgba_);
       this.registerEventHandlers_();
-      this.computeRgb_();
-      this.computeAlpha_();
-      this.updateSlidersFromComputed_(); 
-      delete this.no_notify_scope_;
     }
 
     registerEventHandlers_() {
@@ -268,6 +264,11 @@ const define = () => {
         App.mouseTracker.handledClick(sample, e);
       });
 
+      this.shadowRoot.querySelector("#input_r").addEventListener("input", () => this.updateFromInput_());
+      this.shadowRoot.querySelector("#input_g").addEventListener("input", () => this.updateFromInput_());
+      this.shadowRoot.querySelector("#input_b").addEventListener("input", () => this.updateFromInput_());
+      this.shadowRoot.querySelector("#input_a").addEventListener("input", () => this.updateFromInput_());
+
       App.mouseTracker.registerClickObserver(this.clickHandledObserver_);
     }
 
@@ -279,6 +280,7 @@ const define = () => {
       this.remove();
     }
 
+    // picker ====================================================
     createPicker_(picker, cursor, opts, callback) {
       this.registerPicker_(
         picker,
@@ -339,6 +341,7 @@ const define = () => {
       callback(percents.length == 1 ? percents[0] : percents);
     }
 
+    // picker setters ============================================
     adjustHue_(percent) {
       let r = 0;
       let g = 0;
@@ -367,29 +370,29 @@ const define = () => {
       g = Math.min(Math.max(g, 0), 255);
       b = Math.min(Math.max(b, 0), 255);
       this.style.setProperty("--root-rgb", `${r}, ${g}, ${b}`);
-      this.computeRgb_();
+      this.updateComputedRgb__();
     }
-
     adjustAlpha_(percent) {
       let a = 1 - Math.min(Math.max(percent / 100, 0), 1);
       this.style.setProperty("--root-alpha", `${a}`);
-      this.computeAlpha_();
+      this.updateComputedAlpha_();
     }
-
-    computeAlpha_() {
-      let a = this.style.getPropertyValue("--root-alpha").trim();
-      this.shadowRoot.querySelector("#input_a").value = a;
-      this.computed_rgba_[3] = a;
-      this.notifyChanged();
-    }
-
     adjustSaturationLightness_(percents) {
       this.saturation_ = percents[0] / 100;
       this.lightness_ = 1 - (percents[1] / 100);
-      this.computeRgb_();
+      this.updateComputedRgb__();
     }
 
-    computeRgb_() {
+    // compute and inputs updaters =====================================
+    updateComputedAlpha_() {
+      this.no_notify_scope_ = true;
+      let a = this.style.getPropertyValue("--root-alpha").trim();
+      this.shadowRoot.querySelector("#input_a").value = a;
+      this.computed_rgba_[3] = a;
+      delete this.no_notify_scope_;
+      this.notifyChanged();
+    }
+    updateComputedRgb__() {
       let rgb = getComputedStyle(this).getPropertyValue("--root-rgb").trim().split(", ");
       console.assert(rgb.length == 3);
 
@@ -404,42 +407,59 @@ const define = () => {
       for (let i = 0; i < 3; ++i)
         rgb[i] = Math.round(rgb[i]);
 
+      this.no_notify_scope_ = true;
       this.style.setProperty("--computed-rgb", `${rgb[0]}, ${rgb[1]}, ${rgb[2]}`);
       this.shadowRoot.querySelector("#input_r").value = rgb[0];
       this.shadowRoot.querySelector("#input_g").value = rgb[1];
       this.shadowRoot.querySelector("#input_b").value = rgb[2];
       this.computed_rgba_ = [rgb[0], rgb[1], rgb[2], this.computed_rgba_[3]]
+      delete this.no_notify_scope_;
       this.notifyChanged();
     }
 
+    // caller notifications ====================================
     notifyChanged() {
       if (this.no_notify_scope_)
         return;
       for (let i = 0; i < this.callbacks_.length; ++i)
         this.callbacks_[i](this.computed_rgba_);
     }
-
     onChange(callback) {
       this.callbacks_.push(callback);
     }
 
     setRgbaNoNotify(v) {
+      this.no_notify_scope_ = true;
       this.computed_rgba_ = v;
-      this.updateSlidersFromComputed_();
-    }
+      this.style.setProperty(
+        "--computed-rgb",
+        `${this.computed_rgba_[0]}, ${this.computed_rgba_[1]}, ${this.computed_rgba_[2]}`);
 
-    updateSlidersFromComputed_() {
       if (this.shadowRoot) {
         this.shadowRoot.querySelector("#input_r").value = this.computed_rgba_[0];
         this.shadowRoot.querySelector("#input_g").value = this.computed_rgba_[1];
         this.shadowRoot.querySelector("#input_b").value = this.computed_rgba_[2];
         this.shadowRoot.querySelector("#input_a").value = this.computed_rgba_[3];
       }
-      
-      this.style.setProperty(
-        "--computed-rgb",
-        `${this.computed_rgba_[0]}, ${this.computed_rgba_[1]}, ${this.computed_rgba_[2]}`);
+      this.updateSlidersFromComputed_();
+      delete this.no_notify_scope_;
+    }
+    setRgbaAndNotify(v) {
+      this.setRgbaNoNotify(v);
+      this.notifyChanged();
+    }
 
+    updateFromInput_() {
+      if (this.no_notify_scope_)
+        return;
+      this.setRgbaAndNotify([
+        this.shadowRoot.querySelector("#input_r").value,
+        this.shadowRoot.querySelector("#input_g").value,
+        this.shadowRoot.querySelector("#input_b").value,
+        this.shadowRoot.querySelector("#input_a").value]);
+    }
+
+    updateSlidersFromComputed_() {
       let r = this.computed_rgba_[0];
       let g = this.computed_rgba_[1];
       let b = this.computed_rgba_[2];
@@ -482,10 +502,8 @@ const define = () => {
 
       this.style.setProperty("--root-alpha", `${a}`);
       this.style.setProperty("--root-rgb", `${r}, ${g}, ${b}`);
-
       this.setSlidersFromPercents(hue, 100 * a, 100 * this.lightness_, 100 * this.saturation_);
     }
-
     setSlidersFromPercents(hue, alpha, lightness, saturation) {
       if (!this.shadowRoot)
         return;
