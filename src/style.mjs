@@ -21,66 +21,75 @@ export const checkerUrl =
   'w/eHBhY2tldCBlbmQ9InIiPz4Jp6ghAAAABlBMVEX////MzMw46qqDAAAAF0lEQVR42mJghA' +
   'IGGBgggQG2HiYAEGAARRAAgR90vRgAAAAASUVORK5CYII=';
 
-// --layout-direction: row | column
-// --cross-direction: column | row
-// --scroller-border: border shorthand
-// --node-border: border shorthand
-// 
-const host = `
-  display: flex;
-  flex-direction: var(--layout-direction, "column");
-  flex-shrink: 1;
-`;
+const descriptions = {
+  "background":
+    "The border radius of the node. This determines how much rounding to " +
+    "apply to the corners.",
+  "border-radius":
+    "The border radius of the node. This determines how much rounding to " +
+    "apply to the corners.",
+  "border":
+    "The border thickness style and color. Note that this refers to the " +
+    "unselected element's border"
+}
 
-// constant classes:
-// :host
-// .container
-// .label
-// .child_area
-//
-const customVariables = {
-  "--user-background": {
+const theme = {
+  "background" : {
     default: {
       node: "transparent",
       scroller: "transparent"
-    },
-    selection_name: "background",
-    description: "The background of the node."
+    }
   },
-  "--user-border-radius": {
+  "border-radius" : {
     default: {
       node: "10px",
       scroller: "10px"
-    },
-    selection_name: "border-radius",
-    description: "The border radius of the node. This determines how much rounding to apply to the corners."
+    }
   },
-  "--user-border": {
+  "border" : {
     default: {
-      node: "1px solid black",
-      scroller: "1px solid black"
-    },
-    selection_name: "border",
-    description: "The border thickness style and color. Note that this refers to the unselected element's border"
+      node: "1px solid rgba(0, 0, 0, 1)",
+      scroller: "1px solid rgba(0, 0, 0, 1)"
+    }
   }
 };
 
+export function themeVariables() {
+  let result = ":host {\n";
+  for (let name in theme) {
+    for (let type in theme[name].default) {
+      result += `--theme-${type}-${name}: ${theme[name].default[type]};\n`;
+    }
+  }
+  result += "}\n";
+  return result;
+}
+
 export function customVariablesInitialization(type) {
   let result = ":host {\n";
-  for(let name in customVariables)
-    result += `${name}: ${customVariables[name].default[type]};\n`;
+  for(let name in theme) {
+    if (theme[name].default[type])
+      result += `--self-${name}: initial;\n`;
+  }
+  for (let name in theme) {
+    if (theme[name].default[type]) {
+      result += `--effective-${name}: var(--self-${name}, var(--child-${name}, var(--theme-${type}-${name})));\n`;
+    }
+  }
   result += "}\n";
   return result;
 }
 
 export function getSelectionStylesForType(type) {
   let result = [];
-  for(let name in customVariables) {
-    result.push({
-      name: name,
-      selection_name: customVariables[name].selection_name,
-      description: customVariables[name].description
-    });
+  for(let name in theme) {
+    if (theme[name].default[type]) {
+      result.push({
+        name: `--self-${name}`,
+        selection_name: name,
+        description: descriptions[name]
+      });
+    }
   }
   return result;
 }

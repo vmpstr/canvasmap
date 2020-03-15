@@ -206,7 +206,7 @@ const define = () => {
     }
 
     buildPropertyEditor_(container, style) {
-      if (style.name == "--user-border-radius") {
+      if (style.selection_name == "border-radius") {
         const current = document.createElement("div");
         current.classList.add("current_value");
 
@@ -214,7 +214,7 @@ const define = () => {
         slider.type = "range";
         slider.min = 0;
         slider.max = 25;
-        slider.value = parseInt(this.node_.getCustomStyle(style.name));
+        slider.value = parseInt(this.node_.getCustomStyle(style.selection_name));
         slider.addEventListener("input", () => {
           current.innerText = `${slider.value}px`;
           this.node_.setCustomStyle(style.name, `${slider.value}px`);
@@ -224,11 +224,11 @@ const define = () => {
 
         container.appendChild(current);
         container.appendChild(slider);
-      } else if (style.name == "--user-border") {
+      } else if (style.selection_name == "border") {
         const current = document.createElement("div");
         current.classList.add("current_value");
 
-        const values = this.node_.getCustomStyle(style.name).trim().split(" ");
+        const values = this.node_.getCustomStyle(style.selection_name).trim().split(" ");
 
         const slider = document.createElement("input");
         slider.type = "range";
@@ -283,11 +283,11 @@ const define = () => {
         container.appendChild(slider);
         container.appendChild(select);
         container.appendChild(sample);
-      } else if (style.name == "--user-background") {
+      } else if (style.selection_name == "background") {
         const current = document.createElement("div");
         current.classList.add("current_value");
 
-        const initial = this.node_.getCustomStyle(style.name).trim();
+        const initial = this.node_.getCustomStyle(style.selection_name).trim();
 
         // TODO(vmpstr): util
         const div = document.createElement("div");

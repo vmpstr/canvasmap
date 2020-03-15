@@ -27,9 +27,9 @@ const define = () => {
   :host {
     display: flex;
     flex-shrink: 1;
-    border-radius: var(--user-border-radius);
+    border-radius: var(--effective-border-radius);
 
-    background: var(--user-background);
+    background: var(--effective-background);
     box-sizing: border-box;
   }
   :host(:hover) {
@@ -55,7 +55,7 @@ const define = () => {
     min-width: 30px;
     min-height: 45px;
     border-radius: inherit;
-    border: var(--user-border);
+    border: var(--effective-border);
   }
   .container:hover {
     box-shadow: 0 0 2px 0;
@@ -115,7 +115,7 @@ const define = () => {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: var(--user-background);
+    background: var(--effective-background);
     border: 1px solid black;
     z-index: 1;
   }

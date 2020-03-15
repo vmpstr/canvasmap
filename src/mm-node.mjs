@@ -27,7 +27,7 @@ const define = () => {
   :host {
     display: flex;
     flex-shrink: 1;
-    border-radius: var(--user-border-radius);
+    border-radius: var(--effective-border-radius);
   }
   .container {
     width: 100%;
@@ -73,12 +73,12 @@ const define = () => {
     min-width: 20px;
     width: 100%;
     border-radius: inherit;
-    background: var(--user-background);
+    background: var(--effective-background);
   }
   .label_holder {
     width: 100%;
     max-width: max-content;
-    border: var(--user-border);
+    border: var(--effective-border);
     border-radius: inherit;
     box-sizing: border-box;
     position: relative;
@@ -111,7 +111,7 @@ const define = () => {
     height: 10px;
     border-radius: 50%;
     left: 9px;
-    background: var(--user-background);
+    background: var(--effective-background);
     border: 1px solid black;
     z-index: 1;
   }

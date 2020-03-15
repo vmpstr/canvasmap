@@ -1,6 +1,7 @@
 let App;
 let Nodes;
 let Shortcuts;
+let Style;
 let Workarounds;
 let initialized = false;
 export async function initialize(version) {
@@ -13,6 +14,8 @@ export async function initialize(version) {
     async m => { await m.initialize(version); return m });
   Shortcuts = await import(`./shortcuts.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
+  Style = await import(`./style.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
   Workarounds = await import(`./workarounds.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   define();
@@ -20,40 +23,41 @@ export async function initialize(version) {
 
 const default_label = "new task";
 
-const style = `
-:host {
-  display: block;
-
-  width: 100%;
-  height: 100%;
-  background: lightblue;
-}
-::slotted(*) {
-  position: absolute;
-  will-change: transform;
-}
-#self {
-  height: 100%;
-  overflow: auto;
-  position: relative;
-}`;
-
-const contextMenu = `
-<mm-context-menu-item action=add type=node>
-  <div slot=text>Add tree node</div>
-  <div slot=shortcut>dblclick</div>
-</mm-context-menu-item>
-<mm-context-menu-item action=add type=scroller>
-  <div slot=text>Add scroller node</div>
-  <div slot=shortcut>Shift+dblclick</div>
-</mm-context-menu-item>`;
-
-const body = `
-<div id=self>
-  <slot></slot>
-</div>`;
-
 const define = () => {
+  const style = `
+  ${Style.themeVariables()}
+  :host {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+    background: lightblue;
+  }
+  ::slotted(*) {
+    position: absolute;
+    will-change: transform;
+  }
+  #self {
+    height: 100%;
+    overflow: auto;
+    position: relative;
+  }`;
+
+  const contextMenu = `
+  <mm-context-menu-item action=add type=node>
+    <div slot=text>Add tree node</div>
+    <div slot=shortcut>dblclick</div>
+  </mm-context-menu-item>
+  <mm-context-menu-item action=add type=scroller>
+    <div slot=text>Add scroller node</div>
+    <div slot=shortcut>Shift+dblclick</div>
+  </mm-context-menu-item>`;
+
+  const body = `
+  <div id=self>
+    <slot></slot>
+  </div>`;
+
   console.debug("defining mm-map"); 
   window.customElements.define("mm-map", class extends HTMLElement {
     constructor() {
