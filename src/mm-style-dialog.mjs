@@ -215,12 +215,12 @@ const define = () => {
         slider.min = 0;
         slider.max = 25;
         slider.value = parseInt(this.node_.getCustomStyle(style.selection_name));
-        slider.addEventListener("input", () => {
+        const callback = () => {
           current.innerText = `${slider.value}px`;
           this.node_.setCustomStyle(style.name, `${slider.value}px`);
-        });
-
-        current.innerText = `${slider.value}px`;
+        };
+        slider.addEventListener("input", callback);
+        callback();
 
         container.appendChild(current);
         container.appendChild(slider);
