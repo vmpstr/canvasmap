@@ -446,9 +446,11 @@ const define = () => {
         this.deferredData_['container_maxheight'] = data.container_maxheight;
       }
 
-      // TODO(vmpstr): backcompat.
-      if (!data.nodes)
-        return;
+      if (data.styles) {
+        for (let i = 0; i < data.styles.length; ++i)
+          this.setCustomStyle(`--self-${data.styles[i].name}`, data.styles[i].value);
+      }
+
       for (let i = 0; i < data.nodes.length; ++i) {
         // The order here is important since adoptNode resets the position
         // information.
@@ -466,13 +468,26 @@ const define = () => {
         type: 'scroller',
         position: this.position,
         children_hidden: this.childrenHidden_,
-        nodes: []
+        nodes: [],
+        styles: []
       };
       const container = this.shadowRoot.querySelector(".container");
       if (container && container.style.width)
         data['container_width'] = container.style.width;
       if (container && container.style.maxHeight)
         data['container_maxheight'] = container.style.maxHeight;
+
+      const all_styles = Style.getAllBaseCustomStyles();
+      for (let i = 0; i < all_styles.length; ++i) {
+        const name = all_styles[i].name;
+        const self_value = this.getSelfCustomStyle(name);
+        if (self_value) {
+          data.styles.push({
+            name: name,
+            value: self_value
+          });
+        }
+      }
 
       for (let i = 0; i < this.children_.length; ++i)
         data.nodes.push(this.children_[i].serializeToData());

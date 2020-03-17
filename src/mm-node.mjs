@@ -151,6 +151,9 @@ const define = () => {
     <div slot=shortcut>&#x27a4;</div>
     <mm-context-menu id=convertmenu slot=submenu>
     </mm-context-menu>
+  </mm-context-menu-item>
+  <mm-context-menu-item choice=self_style>
+    <div slot=text>Self style</div>
   </mm-context-menu-item>`;
 
   const body = `
@@ -258,10 +261,13 @@ const define = () => {
     onContextMenuItem_(item, position) {
       // TODO(vmpstr): Refactor.
       const choice = item.getAttribute("choice");
-      if (choice == "edit")
+      if (choice == "edit") {
         this.startLabelEdit();
-      else
+      } else if (choice == "self_style") {
+        App.dialogControl.showStyleDialog(this, position);
+      } else {
         this.convertToType(choice);
+      }
     }
 
     // Event handlers ============================================================
@@ -403,8 +409,9 @@ const define = () => {
       }
 
       // TODO(vmpstr): backcompat
-      for (let i = 0; i < data.styles && data.styles.length; ++i) {
-        this.setCustomStyle(`--self-${data.styles[i].name}`, data.styles[i].value);
+      if (data.styles) {
+        for (let i = 0; i < data.styles.length; ++i)
+          this.setCustomStyle(`--self-${data.styles[i].name}`, data.styles[i].value);
       }
 
       for (let i = 0; i < data.nodes.length; ++i) {
@@ -433,9 +440,9 @@ const define = () => {
         data['label_width'] = label_holder.style.width;
 
       const all_styles = Style.getAllBaseCustomStyles();
-      for (let i = 0; i < all_styles; ++i) {
+      for (let i = 0; i < all_styles.length; ++i) {
         const name = all_styles[i].name;
-        const self_value = this.getSelfCustomStylesForType(name);
+        const self_value = this.getSelfCustomStyle(name);
         if (self_value) {
           data.styles.push({
             name: name,
