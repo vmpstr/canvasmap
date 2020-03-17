@@ -163,7 +163,7 @@ const define = () => {
 
       const propertiesContainer = this.shadowRoot.querySelector(".properties_container");
 
-      this.styles_ = Style.getSelectionStylesForType(this.node_.node_type);
+      this.styles_ = Style.getSelfCustomStylesForType(this.node_.node_type);
       console.assert(this.styles_.length);
       for (let i = 0; i < this.styles_.length; ++i) {
         let option = document.createElement("option");
@@ -214,7 +214,7 @@ const define = () => {
         slider.type = "range";
         slider.min = 0;
         slider.max = 25;
-        slider.value = parseInt(this.node_.getCustomStyle(style.selection_name));
+        slider.value = parseInt(this.node_.getEffectiveCustomStyle(style.selection_name));
         const callback = () => {
           current.innerText = `${slider.value}px`;
           this.node_.setCustomStyle(style.name, `${slider.value}px`);
@@ -228,7 +228,7 @@ const define = () => {
         const current = document.createElement("div");
         current.classList.add("current_value");
 
-        const values = this.node_.getCustomStyle(style.selection_name).trim().split(" ");
+        const values = this.node_.getEffectiveCustomStyle(style.selection_name).trim().split(" ");
 
         const slider = document.createElement("input");
         slider.type = "range";
@@ -287,7 +287,7 @@ const define = () => {
         const current = document.createElement("div");
         current.classList.add("current_value");
 
-        const initial = this.node_.getCustomStyle(style.selection_name).trim();
+        const initial = this.node_.getEffectiveCustomStyle(style.selection_name).trim();
 
         // TODO(vmpstr): util
         const div = document.createElement("div");

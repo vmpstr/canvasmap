@@ -401,9 +401,12 @@ const define = () => {
           this.deferredData_ = {};
         this.deferredData_['label_width'] = data.label_width;
       }
-      // TODO(vmpstr): backcompat.
-      if (!data.nodes)
-        return;
+
+      // TODO(vmpstr): backcompat
+      for (let i = 0; i < data.styles && data.styles.length; ++i) {
+        this.setCustomStyle(`--self-${data.styles[i].name}`, data.styles[i].value);
+      }
+
       for (let i = 0; i < data.nodes.length; ++i) {
         // The order here is important since adoptNode resets the position
         // information.
@@ -421,11 +424,27 @@ const define = () => {
         type: 'node',
         position: this.position,
         children_hidden: this.childrenHidden_,
-        nodes: []
+        nodes: [],
+        styles: []
       };
+      // Serialize width of the element.
       const label_holder = this.shadowRoot && this.shadowRoot.querySelector(".label_holder");
       if (label_holder && label_holder.style.width)
         data['label_width'] = label_holder.style.width;
+
+      const all_styles = Style.getAllBaseCustomStyles();
+      for (let i = 0; i < all_styles; ++i) {
+        const name = all_styles[i].name;
+        const self_value = this.getSelfCustomStylesForType(name);
+        if (self_value) {
+          data.styles.push({
+            name: name,
+            value: self_value
+          });
+        }
+      }
+
+      // Serialize children.
       for (let i = 0; i < this.children_.length; ++i)
         data.nodes.push(this.children_[i].serializeToData());
       return data;

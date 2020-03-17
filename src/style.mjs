@@ -80,7 +80,7 @@ export function customVariablesInitialization(type) {
   return result;
 }
 
-export function getSelectionStylesForType(type) {
+export function getSelfCustomStylesForType(type) {
   let result = [];
   for(let name in theme) {
     if (theme[name].default[type]) {
@@ -90,6 +90,14 @@ export function getSelectionStylesForType(type) {
         description: descriptions[name]
       });
     }
+  }
+  return result;
+}
+
+export function getAllBaseCustomStyles() {
+  let result = [];
+  for(let name in theme) {
+    result.push({ name: name });
   }
   return result;
 }
