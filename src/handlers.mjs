@@ -82,6 +82,7 @@ export class DragHandleControl {
     this.node_ = node;
     this.target_ = target;
     this.dragHandleMode_ = '';
+    this.resetCheckId_ = -1;
     for (let direction in handles) {
       console.assert(["ew", "ns", "nwse"].includes(direction));
       const handle = handles[direction];
@@ -118,18 +119,28 @@ export class DragHandleControl {
     let new_height =
       Math.floor(this.initialHeight_ + (clientPoint[1] + this.dragOffset_[1]));
 
-    if (this.dragHandleMode_ == "ew" || this.dragHandleMode_ == "nwse") {
+    if (this.dragHandleMode_ == "ew" || this.dragHandleMode_ == "nwse")
       this.target_.style.width = `${new_width}px`;
-      // Reset if we're trying to expand past the max-width.
-      if (Math.ceil(this.target_.getBoundingClientRect().width) < new_width)
-        this.target_.style.width = "";
-    }
-    if (this.dragHandleMode_ == "ns" || this.dragHandleMode_ == "nwse") {
-      this.target_.style.maxHeight = new_height + "px";
-      // Reset if we're trying to expand past the max-height.
-      if (Math.ceil(this.target_.getBoundingClientRect().height) < new_height)
-        this.target_.style.maxHeight = "";
-    }
+    if (this.dragHandleMode_ == "ns" || this.dragHandleMode_ == "nwse")
+      this.target_.style.maxHeight = `${new_height}px`;
+
+    // Schedule a rAF to check if we need to reset the values. Since we can
+    // receive a lot of drags per frame, we defer the forced layouts to rAF.
+    if (this.resetCheckId_ >= 0)
+      cancelAnimationFrame(this.resetCheckId_);
+    this.resetCheckId_ = requestAnimationFrame(() => {
+      const rect = this.target_.getBoundingClientRect();
+      if (this.dragHandleMode_ == "ew" || this.dragHandleMode_ == "nwse") {
+        // Reset if we're trying to expand past the max-width.
+        if (Math.ceil(rect.width) < new_width)
+          this.target_.style.width = "";
+      }
+      if (this.dragHandleMode_ == "ns" || this.dragHandleMode_ == "nwse") {
+        // Reset if we're trying to expand past the max-height.
+        if (Math.ceil(rect.height) < new_height)
+          this.target_.style.maxHeight = "";
+      }
+    });
     e.stopPropagation();
   }
   onDragEnd_(e) {
