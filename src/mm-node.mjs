@@ -44,8 +44,6 @@ const define = () => {
 
     padding: 10px;
   }
-  .label_flexer:hover {
-  }
   .child_area {
     position: relative;
     contain: layout;
@@ -73,15 +71,15 @@ const define = () => {
     min-width: 20px;
     width: 100%;
     border-radius: inherit;
-    background: var(--effective-background);
   }
   .label_holder {
     width: 100%;
     max-width: max-content;
-    border: var(--effective-border);
-    border-radius: inherit;
-    box-sizing: border-box;
     position: relative;
+    border-radius: inherit;
+    background: var(--effective-background);
+    border: var(--effective-border);
+    box-sizing: border-box;
   }
   .label_holder:hover {
     box-shadow: 0 0 2px 0;
