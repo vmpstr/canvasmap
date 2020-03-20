@@ -217,15 +217,13 @@ const define = () => {
       const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
       const label_holder = this.shadowRoot.querySelector(".label_holder");
 
-      this.dragControl_ = new Handlers.NodeDragControl(this, label);
+      this.dragControl_ = new Handlers.NodeDragControl(this, label_holder);
       this.dragHandleControl_ = new Handlers.DragHandleControl(
         this, label_holder, {'ew': drag_handle});
 
-      label.addEventListener("click", (e) => {
-        if (e.target == label) {
-          this.select();
-          App.mouseTracker.handledClick(this, e);
-        }
+      label_holder.addEventListener("click", (e) => {
+        this.select();
+        App.mouseTracker.handledClick(this, e);
       });
     }
 
