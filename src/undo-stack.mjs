@@ -246,6 +246,12 @@ export class UndoStack {
     this.undoStack_ = [];
     this.redoStack_ = [];
     this.blockTransactions_ = false;
+    this.changeCallbacks_ = [];
+    this.changeRequestId_ = null;
+  }
+
+  onChange(callback) {
+    this.changeCallbacks_.push(callback);
   }
 
   handleKeyDown(e) {
@@ -258,6 +264,7 @@ export class UndoStack {
         transaction.undo();
         this.blockTransactions_ = false;
         this.redoStack_.push(transaction);
+        this.notifyChanged();
       }
       return true;
     } else if (action == Shortcuts.action.kRedo) {
@@ -268,6 +275,7 @@ export class UndoStack {
         transaction.apply();
         this.blockTransactions_ = false;
         this.undoStack_.push(transaction);
+        this.notifyChanged();
       }
       return true;
     }
@@ -346,7 +354,17 @@ export class UndoStack {
       if (!merged)
         this.undoStack_.push(this.currentTransaction_);
       this.redoStack_ = [];
+      this.notifyChanged();
     }
     this.currentTransaction_ = null;
+  }
+
+  notifyChanged() {
+    if (this.changeRequestId_)
+      cancelAnimationFrame(this.changeRequestId_);
+    this.changeRequestId_ = requestAnimationFrame(() => {
+      for (let i = 0; i < this.changeCallbacks_.length; ++i)
+        this.changeCallbacks_[i]();
+    });
   }
 };

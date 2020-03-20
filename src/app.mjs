@@ -85,5 +85,6 @@ export async function initialize(version) {
     });
     map.setStorage(window.localStorage);
     map.loadFromStorage();
+    undoStack.onChange(() => map.saveToStorage());
   });
 }

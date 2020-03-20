@@ -84,9 +84,6 @@ const define = () => {
       });
 
       shadow.querySelector("slot").addEventListener("slotchange", (e) => this.onSlotChange_(e));
-
-      setInterval(() => this.saveToStorage_(), 1000);
-
     }
 
     get map() {
@@ -296,7 +293,7 @@ const define = () => {
       }
     }
 
-    saveToStorage_() {
+    saveToStorage() {
       if (!this.storage_)
         return;
 
