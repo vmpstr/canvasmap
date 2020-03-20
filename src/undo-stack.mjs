@@ -23,6 +23,13 @@ class Transaction {
     return this.target_;
   }
 
+  canMerge() {
+    return false;
+  }
+  merge(transaction) {
+    console.error("unimplemented merge(transaction)");
+  }
+
   apply() {
     console.error("unimplemented apply()");
   }
@@ -200,6 +207,39 @@ class ConvertTransaction extends Transaction {
   }
 };
 
+class StyleChange extends Transaction {
+  constructor(target, property) {
+    super(target);
+    this.property_ = property;
+    this.old_value_ = super.target.style.getPropertyValue(this.property_);
+  }
+
+  canMerge(transaction) {
+    if (transaction instanceof StyleChange)
+      return transaction.property_ == this.property_;
+    return false;
+  }
+
+  merge(transaction) {
+    console.assert(this.canMerge(transaction));
+    console.assert(this.new_value_ == transaction.old_value_);
+    this.new_value_ = transaction.new_value_;
+  }
+
+  apply() {
+    this.target.style.setProperty(this.property_, this.new_value_);
+  }
+
+  undo() {
+    this.target.style.setProperty(this.property_, this.old_value_);
+  }
+
+  done() {
+    this.new_value_ = super.target.style.getPropertyValue(this.property_);
+    return this.old_value_ !== this.new_value_;
+  }
+};
+
 export class UndoStack {
   constructor() {
     this.currentTransaction_ = null;
@@ -213,6 +253,7 @@ export class UndoStack {
     if (action == Shortcuts.action.kUndo) {
       if (this.undoStack_.length) {
         const transaction = this.undoStack_.pop();
+        console.debug(transaction);
         this.blockTransactions_ = true;
         transaction.undo();
         this.blockTransactions_ = false;
@@ -222,6 +263,7 @@ export class UndoStack {
     } else if (action == Shortcuts.action.kRedo) {
       if (this.redoStack_.length) {
         const transaction = this.redoStack_.pop();
+        console.debug(transaction);
         this.blockTransactions_ = true;
         transaction.apply();
         this.blockTransactions_ = false;
@@ -237,7 +279,7 @@ export class UndoStack {
     this.currentTransaction_ = new LabelChangeTransaction(target);
   }
   endLabelEdit() {
-    this.recordTransaction_();
+    this.recordTransactionIfNeeded_();
   }
 
   startNodeDrag(target) {
@@ -249,19 +291,19 @@ export class UndoStack {
     this.currentTransaction_ = new CreateTransaction(newTarget);
   }
   endNodeDrag() {
-    this.recordTransaction_();
+    this.recordTransactionIfNeeded_();
   }
 
   didCreate(target) {
     console.assert(!this.currentTransaction_);
     this.currentTransaction_ = new CreateTransaction(target);
-    this.recordTransaction_();
+    this.recordTransactionIfNeeded_();
   }
 
   willDelete(target) {
     console.assert(!this.currentTransaction_);
     this.currentTransaction_ = new DeleteTransaction(target);
-    this.recordTransaction_();
+    this.recordTransactionIfNeeded_();
   }
 
   startSizeHandleDrag(target) {
@@ -269,22 +311,40 @@ export class UndoStack {
     this.currentTransaction_ = new SizeHandleDragTransaction(target);
   }
   endSizeHandleDrag() {
-    this.recordTransaction_();
+    this.recordTransactionIfNeeded_();
   }
 
   didConvertTo(target, clone) {
     console.assert(!this.currentTransaction_);
     this.currentTransaction_ = new ConvertTransaction(target, clone);
-    this.recordTransaction_();
+    this.recordTransactionIfNeeded_();
   }
 
+  willChangeStyle(target, property) {
+    console.assert(!this.currentTransaction_);
+    this.currentTransaction_ = new StyleChange(target, property);
+  }
+  didChangeStyle() {
+    this.recordTransactionIfNeeded_();
+  }
 
-  recordTransaction_() {
+  recordTransactionIfNeeded_() {
     if (this.blockTransactions_)
       return;
-    console.assert(this.currentTransaction_);
+    if (!this.currentTransaction_)
+      return;
+
     if (this.currentTransaction_.done()) {
-      this.undoStack_.push(this.currentTransaction_);
+      let merged = false;
+      if (this.undoStack_.length) {
+        const i = this.undoStack_.length - 1;
+        if (this.undoStack_[i].canMerge(this.currentTransaction_)) {
+          this.undoStack_[i].merge(this.currentTransaction_);
+          merged = true;
+        }
+      }
+      if (!merged)
+        this.undoStack_.push(this.currentTransaction_);
       this.redoStack_ = [];
     }
     this.currentTransaction_ = null;

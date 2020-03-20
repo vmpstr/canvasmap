@@ -215,12 +215,17 @@ const define = () => {
         slider.min = 0;
         slider.max = 25;
         slider.value = parseInt(this.node_.getEffectiveCustomStyle(style.selection_name));
-        const callback = () => {
+        const update_inputs = () => {
           current.innerText = `${slider.value}px`;
+        };
+        const callback = () => {
+          update_inputs();
+          App.undoStack.willChangeStyle(this.node_, style.name);
           this.node_.setCustomStyle(style.name, `${slider.value}px`);
+          App.undoStack.didChangeStyle();
         };
         slider.addEventListener("input", callback);
-        callback();
+        update_inputs();
 
         container.appendChild(current);
         container.appendChild(slider);
@@ -270,15 +275,20 @@ const define = () => {
         const sample = document.createElement("mm-color-sample");
         sample.rgba = rgba;
 
-        const callback = () => {
+        const update_inputs = () => {
           current.innerText = `${slider.value}px ${select.value} rgba(${sample.rgba.join(",")})`;
+        };
+        const callback = () => {
+          update_inputs();
+          App.undoStack.willChangeStyle(this.node_, style.name);
           this.node_.setCustomStyle(style.name, current.innerText);
+          App.undoStack.didChangeStyle();
         };
         select.addEventListener("change", callback);
         slider.addEventListener("input", callback);
         sample.onChange(callback);
 
-        callback();
+        update_inputs();
         container.appendChild(current);
         container.appendChild(slider);
         container.appendChild(select);
@@ -310,13 +320,18 @@ const define = () => {
         const sample = document.createElement("mm-color-sample");
         sample.rgba = rgba;
 
-        const callback = () => {
+        const update_inputs = () => {
           current.innerText = `rgba(${sample.rgba.join(",")})`;
+        };
+        const callback = () => {
+          update_inputs();
+          App.undoStack.willChangeStyle(this.node_, style.name);
           this.node_.setCustomStyle(style.name, current.innerText);
+          App.undoStack.didChangeStyle();
         };
         sample.onChange(callback);
 
-        callback();
+        update_inputs();
         container.appendChild(current);
         container.appendChild(sample);
       }
