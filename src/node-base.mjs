@@ -1,6 +1,7 @@
 let App;
 let Nodes;
 let Handlers;
+let Style;
 let initialized = false;
 export async function initialize(version) {
   if (initialized)
@@ -11,6 +12,8 @@ export async function initialize(version) {
   Nodes = await import(`./nodes.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   Handlers = await import(`./handlers.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  Style = await import(`./style.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
 }
 
@@ -162,6 +165,12 @@ export class NodeBase extends HTMLElement {
     clone.position = this.position;
     while (this.children.length)
       clone.adoptNode(this.children[0]);
+    const properties = Style.getSelfCustomStylesForType(clone.node_type);
+    for (let i = 0; i < properties.length; ++i) {
+      clone.style.setProperty(
+        properties[i].name,
+        this.style.getPropertyValue(properties[i].name));
+    }
     return clone;
   }
 
