@@ -240,6 +240,36 @@ class StyleChange extends Transaction {
   }
 };
 
+class StyleHunkChange extends Transaction {
+  constructor(target, properties) {
+    super(target);
+    this.old_values_ = {};
+    for (let i = 0; i < properties.length; ++i) {
+      const property = properties[i];
+      this.old_values_[property] = super.target.style.getPropertyValue(property);
+    }
+  }
+
+  apply() {
+    for (let property in this.new_values_)
+      this.target.style.setProperty(property, this.new_values_[property]);
+  }
+
+  undo() {
+    for (let property in this.old_values_)
+      this.target.style.setProperty(property, this.old_values_[property]);
+  }
+
+  done() {
+    let changed = false;
+    this.new_values_ = {};
+    for (let property in this.old_values_) {
+      this.new_values_[property] = super.target.style.getPropertyValue(property);
+      changed = changed || this.old_values_[property] != this.new_values_[property];
+    }
+    return changed;
+  }
+};
 export class UndoStack {
   constructor() {
     this.currentTransaction_ = null;
@@ -331,6 +361,10 @@ export class UndoStack {
   willChangeStyle(target, property) {
     console.assert(!this.currentTransaction_);
     this.currentTransaction_ = new StyleChange(target, property);
+  }
+  willChangeStyleHunk(target, properties) {
+    console.assert(!this.currentTransaction_);
+    this.currentTransaction_ = new StyleHunkChange(target, properties);
   }
   didChangeStyle() {
     this.recordTransactionIfNeeded_();

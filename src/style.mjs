@@ -1,4 +1,12 @@
-export function initialize() {}
+let App
+let initialized = false;
+export async function initialize(version) {
+  if (initialized)
+    return;
+  initialized = true;
+  App = await import(`./app.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+}
 
 export const checkerUrl =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAGX' +
@@ -100,4 +108,28 @@ export function getAllBaseCustomStyles() {
     result.push({ name: name });
   }
   return result;
+}
+
+
+class Hunk {
+  constructor(properties) {
+    this.properties_ = properties;
+  }
+
+  applyTo(node) {
+    App.undoStack.willChangeStyleHunk(node, Object.keys(this.properties_));
+    for (let property in this.properties_)
+      node.style.setProperty(property, this.properties_[property]);
+    App.undoStack.didChangeStyle();
+  }
+}
+
+export function selfStyleFrom(node) {
+  const properties = getSelfCustomStylesForType(node.node_type);
+  const dictionary = {};
+  for (let i = 0; i < properties.length; ++i) {
+    const base = properties[i].selection_name;
+    dictionary[`--self-${base}`] = node.getSelfCustomStyle(base);
+  }
+  return new Hunk(dictionary);
 }

@@ -150,8 +150,20 @@ const define = () => {
     <mm-context-menu id=convertmenu slot=submenu>
     </mm-context-menu>
   </mm-context-menu-item>
-  <mm-context-menu-item choice=self_style>
+  <mm-context-menu-item>
     <div slot=text>Self style</div>
+    <div slot=shortcut>&#x27a4;</div>
+    <mm-context-menu id=convertmenu slot=submenu>
+      <mm-context-menu-item choice=self_style_edit>
+        <div slot=text>Edit</div>
+      </mm-context-menu-item>
+      <mm-context-menu-item choice=self_style_copy>
+        <div slot=text>Copy</div>
+      </mm-context-menu-item>
+      <mm-context-menu-item choice=self_style_paste>
+        <div slot=text>Paste</div>
+      </mm-context-menu-item>
+    </mm-context-menu>
   </mm-context-menu-item>`;
 
   const body = `
@@ -259,8 +271,13 @@ const define = () => {
       const choice = item.getAttribute("choice");
       if (choice == "edit") {
         this.startLabelEdit();
-      } else if (choice == "self_style") {
+      } else if (choice == "self_style_edit") {
         App.dialogControl.showStyleDialog(this, position);
+      } else if (choice == "self_style_copy") {
+        App.pasteBuffer.store(App.pbk.kStyle, Style.selfStyleFrom(this));
+      } else if (choice == "self_style_paste") {
+        if (App.pasteBuffer.has(App.pbk.kStyle))
+          App.pasteBuffer.retrieve(App.pbk.kStyle).applyTo(this);
       } else {
         this.convertToType(choice);
       }

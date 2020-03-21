@@ -29,6 +29,13 @@ class MouseTracker {
 export let mouseTracker;
 export let undoStack;
 export let dialogControl;
+export let pasteBuffer;
+
+export const pbk =  {
+  kStyle: "style",
+  kNode: "node"
+}
+
 let contextMenuControl;
 let initialized = false;
 
@@ -44,6 +51,10 @@ export async function initialize(version) {
   const undoModule = await import(`./undo-stack.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   undoStack = new undoModule.UndoStack;
+
+  const pasteModule = await import(`./paste-buffer.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  pasteBuffer = new pasteModule.PasteBuffer;
 
   let contextModule = await import(`./context-menu-control.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
