@@ -372,7 +372,8 @@ export class UndoStack {
 
   recordTransactionIfNeeded_() {
     if (this.blockTransactions_)
-      return;
+      this.currentTransaction_ = null;
+
     if (!this.currentTransaction_)
       return;
 
