@@ -56,11 +56,11 @@ const define = () => {
     border-radius: var(--effective-border-radius);
   }
   .container:hover {
-    box-shadow: 0 0 2px 0;
+    box-shadow: 2px 2px 2px 1px rgba(15, 15, 15, 0.7), -2px -2px 2px 1px rgba(240, 240, 240, 0.7);
   }
   :host(.selected) .container {
     border-color: blue;
-    box-shadow: 0 0 3px 0 blue;
+    box-shadow: 0 0 3px 0 blue, 2px 2px 2px 1px rgba(0, 0, 70, 0.8), -2px -2px 2px 1px rgba(230, 230, 255, 0.8);
   }
 
   .label {
