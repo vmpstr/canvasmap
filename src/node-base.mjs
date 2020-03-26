@@ -106,6 +106,27 @@ export class NodeBase extends HTMLElement {
     this.computeEdges_();
   }
 
+  onChildToggle_(e) {
+    this.childrenHidden_ = !this.childrenHidden_;
+    if (!this.shadowRoot)
+      return;
+
+    const child_area = this.shadowRoot.querySelector(Style.selectors.kChildArea);
+    if (this.childrenHidden_) {
+      child_area.classList.add(Style.classes.kHidden);
+      this.map_.didHideChildren(this);
+    } else {
+      child_area.classList.remove(Style.classes.kHidden);
+    }
+    this.computeEdges_();
+
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+
   // Misc ======================================================================
   convertToType(new_type, recycled_node) {
     const clone = this.cloneWithChildrenAsType(new_type, recycled_node);

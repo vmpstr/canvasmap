@@ -44,17 +44,17 @@ const define = () => {
 
     padding: 10px;
   }
-  .child_area {
+  ${Style.selectors.kChildArea} {
     position: relative;
     contain: layout;
     margin-left: 30px;
     width: calc(100% - 30px);
     max-width: max-content;
   }
-  .child_area.hidden {
+  ${Style.selectors.kChildArea}${Style.selectors.kHidden} {
     min-height: 10px;
   }
-  .child_area.hidden > * {
+  ${Style.selectors.kChildArea}${Style.selectors.kHidden} > * {
     display: none;
   }
   ::slotted(*) {
@@ -177,7 +177,7 @@ const define = () => {
       <div class=parent_edge></div>
       <div class=child_edge></div>
     </div>
-    <div class=child_area>
+    <div class=${Style.classes.kChildArea}>
       <slot></slot>
     </div>
   </div>`;
@@ -211,11 +211,12 @@ const define = () => {
         delete this.deferredData_;
       }
 
+      const child_area = this.shadowRoot.querySelector(Style.selectors.kChildArea);
       if (this.childrenHidden_) {
-        this.shadowRoot.querySelector(".child_area").classList.add("hidden");
+        child_area.classList.add(Style.classes.kHidden);
         this.map_.didHideChildren(this);
       } else {
-        this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
+        child_area.classList.remove(Style.classes.kHidden);
       }
 
       // Recompute the edges just in case we hid children.
@@ -280,27 +281,6 @@ const define = () => {
           App.pasteBuffer.retrieve(App.pbk.kStyle).applyTo(this);
       } else {
         this.convertToType(choice);
-      }
-    }
-
-    // Event handlers ============================================================
-
-    onChildToggle_(e) {
-      this.childrenHidden_ = !this.childrenHidden_;
-      if (!this.shadowRoot)
-        return;
-
-      if (this.childrenHidden_) {
-        this.shadowRoot.querySelector(".child_area").classList.add("hidden");
-        this.map_.didHideChildren(this);
-      } else {
-        this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
-      }
-      this.computeEdges_();
-
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
       }
     }
 

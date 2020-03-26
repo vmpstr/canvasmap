@@ -70,7 +70,7 @@ const define = () => {
     /* workaround for ff? */
     width: calc(100% + 5px);
   }
-  .child_area {
+  ${Style.selectors.kChildArea} {
     margin-top: 5px;
     position: relative;
     contain: layout;
@@ -84,7 +84,7 @@ const define = () => {
 
     background: rgba(0, 0, 0, 0.05);
   }
-  .child_area.hidden > * {
+  ${Style.selectors.kChildArea}${Style.selectors.kHidden} > * {
     display: none;
   }
   ::slotted(*) {
@@ -208,7 +208,7 @@ const define = () => {
       <div class="child_toggle expanded"></div>
       <div class=divider_line></div>
     </div>
-    <div class=child_area>
+    <div class=${Style.classes.kChildArea}>
       <slot></slot>
     </div>
   </div>
@@ -240,11 +240,12 @@ const define = () => {
         delete this.deferredData_;
       }
 
+      const child_area = this.shadowRoot.querySelector(Style.selectors.kChildArea);
       if (this.childrenHidden_) {
-        this.shadowRoot.querySelector(".child_area").classList.add("hidden");
+        child_area.classList.add(Style.classes.kHidden);
         this.map_.didHideChildren(this);
       } else {
-        this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
+        child_area.classList.remove(Style.classes.kHidden);
       }
 
       // Recompute the edges just in case we hid children.
@@ -256,7 +257,7 @@ const define = () => {
 
       const container = this.shadowRoot.querySelector(".container");
       const label = this.shadowRoot.querySelector(".label");
-      const child_area = this.shadowRoot.querySelector(".child_area");
+      const child_area = this.shadowRoot.querySelector(Style.selectors.kChildArea);
 
       this.dragControl_ = new Handlers.NodeDragControl(this, container);
       this.dragHandleControl_ = new Handlers.DragHandleControl(
@@ -328,26 +329,6 @@ const define = () => {
           App.pasteBuffer.retrieve(App.pbk.kStyle).applyTo(this);
       } else {
         this.convertToType(choice);
-      }
-    }
-
-    // Event handlers ============================================================
-    onChildToggle_(e) {
-      this.childrenHidden_ = !this.childrenHidden_;
-      if (!this.shadowRoot)
-        return;
-
-      if (this.childrenHidden_) {
-        this.shadowRoot.querySelector(".child_area").classList.add("hidden");
-        this.map_.didHideChildren(this);
-      } else {
-        this.shadowRoot.querySelector(".child_area").classList.remove("hidden");
-      }
-      this.computeEdges_();
-
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
       }
     }
 

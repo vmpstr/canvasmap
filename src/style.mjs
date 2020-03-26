@@ -29,6 +29,16 @@ export const checkerUrl =
   'w/eHBhY2tldCBlbmQ9InIiPz4Jp6ghAAAABlBMVEX////MzMw46qqDAAAAF0lEQVR42mJghA' +
   'IGGBgggQG2HiYAEGAARRAAgR90vRgAAAAASUVORK5CYII=';
 
+export const classes = {
+  kChildArea: "child_area",
+  kHidden: "hidden"
+};
+
+export const selectors = {
+  kChildArea: `.${classes.kChildArea}`,
+  kHidden: `.${classes.kHidden}`
+};
+
 const descriptions = {
   "background":
     "The border radius of the node. This determines how much rounding to " +
