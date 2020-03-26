@@ -208,4 +208,17 @@ export class NodeBase extends HTMLElement {
     this.insertBefore(child, this.children[ordinal]);
     child.resetPosition();
   }
+
+  selfStyleAction(action, position) {
+    if (action == "edit") {
+      App.dialogControl.showStyleDialog(this, position);
+    } else if (action == "copy") {
+      App.pasteBuffer.store(App.pbk.kStyle, Style.selfStyleFrom(this));
+    } else if (action == "paste") {
+      if (App.pasteBuffer.has(App.pbk.kStyle))
+        App.pasteBuffer.retrieve(App.pbk.kStyle).applyTo(this);
+    } else {
+      console.error(`unknown self style action: ${action}`);
+    }
+  }
 }

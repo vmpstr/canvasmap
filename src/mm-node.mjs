@@ -3,6 +3,7 @@ let Nodes;
 let Handlers;
 let NodeBaseModule;
 let Style;
+let ContextMenuHelpers;
 let initialized = false;
 export async function initialize(version) {
   if (initialized)
@@ -17,6 +18,8 @@ export async function initialize(version) {
   NodeBaseModule = await import(`./node-base.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   Style = await import(`./style.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version); return m });
+  ContextMenuHelpers = await import(`./context-menu-helpers.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
   define();
 }
@@ -139,33 +142,6 @@ const define = () => {
     opacity: 40%;
   }`;
 
-  const contextMenu = `
-  <mm-context-menu-item choice=edit>
-    <div slot=text>Edit label</div>
-    <div slot=shortcut>e</div>
-  </mm-context-menu-item>
-  <mm-context-menu-item>
-    <div slot=text>Convert to</div>
-    <div slot=shortcut>&#x27a4;</div>
-    <mm-context-menu id=convertmenu slot=submenu>
-    </mm-context-menu>
-  </mm-context-menu-item>
-  <mm-context-menu-item>
-    <div slot=text>Self style</div>
-    <div slot=shortcut>&#x27a4;</div>
-    <mm-context-menu id=convertmenu slot=submenu>
-      <mm-context-menu-item choice=self_style_edit>
-        <div slot=text>Edit</div>
-      </mm-context-menu-item>
-      <mm-context-menu-item choice=self_style_copy>
-        <div slot=text>Copy</div>
-      </mm-context-menu-item>
-      <mm-context-menu-item choice=self_style_paste>
-        <div slot=text>Paste</div>
-      </mm-context-menu-item>
-    </mm-context-menu>
-  </mm-context-menu-item>`;
-
   const body = `
   <div class=container>
     <div class=label_flexer>
@@ -252,36 +228,11 @@ const define = () => {
     get hero() { return this.shadowRoot.querySelector(".label_holder"); }
 
     getContextMenu() {
-      // TODO(vmpstr): Refactor.
-      const menu = document.createElement("mm-context-menu");
-      menu.innerHTML = contextMenu;
-      menu.handler = (item, position) => this.onContextMenuItem_(item, position);
-      const submenu = menu.querySelector("#convertmenu");
-      const choices = Nodes.similarTypes(this.node_type);
-      for (let i = 0; i < choices.length; ++i) {
-        const choice = document.createElement("mm-context-menu-item");
-        choice.setAttribute("choice", choices[i]);
-        choice.innerHTML = `<div slot=text>${Nodes.prettyName(choices[i])}</div>`;
-        submenu.appendChild(choice);
-      }
-      return menu;
-    }
-
-    onContextMenuItem_(item, position) {
-      // TODO(vmpstr): Refactor.
-      const choice = item.getAttribute("choice");
-      if (choice == "edit") {
-        this.startLabelEdit();
-      } else if (choice == "self_style_edit") {
-        App.dialogControl.showStyleDialog(this, position);
-      } else if (choice == "self_style_copy") {
-        App.pasteBuffer.store(App.pbk.kStyle, Style.selfStyleFrom(this));
-      } else if (choice == "self_style_paste") {
-        if (App.pasteBuffer.has(App.pbk.kStyle))
-          App.pasteBuffer.retrieve(App.pbk.kStyle).applyTo(this);
-      } else {
-        this.convertToType(choice);
-      }
+      return ContextMenuHelpers.createMenu([
+        ContextMenuHelpers.menus.editLabel(() => this.startLabelEdit()),
+        ContextMenuHelpers.menus.convertTo(this.node_type, (type) => this.convertToType(type)),
+        ContextMenuHelpers.menus.selfStyle((action, position) => this.selfStyleAction(action, position))
+      ]);
     }
 
     // Misc ======================================================================
