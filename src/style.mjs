@@ -41,8 +41,7 @@ export const selectors = {
 
 const descriptions = {
   "background":
-    "The border radius of the node. This determines how much rounding to " +
-    "apply to the corners.",
+    "The background color of the node.",
   "border-radius":
     "The border radius of the node. This determines how much rounding to " +
     "apply to the corners.",
