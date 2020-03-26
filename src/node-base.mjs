@@ -123,6 +123,8 @@ export class NodeBase extends HTMLElement {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
+      // Only record toggles from events.
+      App.undoStack.didToggleChildren(this);
     }
   }
 

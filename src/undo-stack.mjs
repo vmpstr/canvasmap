@@ -207,7 +207,7 @@ class ConvertTransaction extends Transaction {
   }
 };
 
-class StyleChange extends Transaction {
+class StyleChangeTransaction extends Transaction {
   constructor(target, property) {
     super(target);
     this.property_ = property;
@@ -215,7 +215,9 @@ class StyleChange extends Transaction {
   }
 
   canMerge(transaction) {
-    if (transaction instanceof StyleChange)
+    if (transaction.target != this.target)
+      return false;
+    if (transaction instanceof StyleChangeTransaction)
       return transaction.property_ == this.property_;
     return false;
   }
@@ -240,7 +242,7 @@ class StyleChange extends Transaction {
   }
 };
 
-class StyleHunkChange extends Transaction {
+class StyleHunkChangeTransaction extends Transaction {
   constructor(target, properties) {
     super(target);
     this.old_values_ = {};
@@ -270,6 +272,39 @@ class StyleHunkChange extends Transaction {
     return changed;
   }
 };
+
+class ChildToggleTransaction extends Transaction {
+  constructor(target) {
+    super(target);
+    this.count_ = 1;
+  }
+
+  canMerge(transaction) {
+    if (transaction.target != this.target)
+      return false;
+    return transaction instanceof ChildToggleTransaction;
+  }
+
+  merge(transaction) {
+    console.assert(this.canMerge(transaction));
+    this.count_ += transaction.count_;
+  }
+
+  apply() {
+    if (this.count_ % 2 == 1)
+      this.target.onChildToggle_();
+  }
+
+  undo() {
+    if (this.count_ % 2 == 1)
+      this.target.onChildToggle_();
+  }
+
+  done() {
+    return true;
+  }
+}
+
 export class UndoStack {
   constructor() {
     this.currentTransaction_ = null;
@@ -360,13 +395,19 @@ export class UndoStack {
 
   willChangeStyle(target, property) {
     console.assert(!this.currentTransaction_);
-    this.currentTransaction_ = new StyleChange(target, property);
+    this.currentTransaction_ = new StyleChangeTransaction(target, property);
   }
   willChangeStyleHunk(target, properties) {
     console.assert(!this.currentTransaction_);
-    this.currentTransaction_ = new StyleHunkChange(target, properties);
+    this.currentTransaction_ = new StyleHunkChangeTransaction(target, properties);
   }
   didChangeStyle() {
+    this.recordTransactionIfNeeded_();
+  }
+
+  didToggleChildren(target) {
+    console.assert(!this.currentTransaction_);
+    this.currentTransaction_ = new ChildToggleTransaction(target);
     this.recordTransactionIfNeeded_();
   }
 
