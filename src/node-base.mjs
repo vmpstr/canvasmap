@@ -61,10 +61,10 @@ export class NodeBase extends HTMLElement {
   get hero() { return this; }
 
   getEffectiveCustomStyle(property) {
-    return getComputedStyle(this).getPropertyValue(`--effective-${property}`);
+    return getComputedStyle(this).getPropertyValue(Style.toEffective(property));
   }
   getSelfCustomStyle(property) {
-    return this.style.getPropertyValue(`--self-${property}`);
+    return this.style.getPropertyValue(Style.toSelf(property));
   }
   getChildCustomStyle(property) {
     console.error("base child custom style");

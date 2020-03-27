@@ -30,7 +30,7 @@ const define = () => {
   :host {
     display: flex;
     flex-shrink: 1;
-    border-radius: var(--effective-border-radius);
+    border-radius: var(${Style.toEffective("border-radius")});
   }
   .container {
     width: 100%;
@@ -80,8 +80,8 @@ const define = () => {
     max-width: max-content;
     position: relative;
     border-radius: inherit;
-    background: var(--effective-background);
-    border: var(--effective-border);
+    background: var(${Style.toEffective("background")});
+    border: var(${Style.toEffective("border")});
     box-sizing: border-box;
   }
   .label_holder:hover {
@@ -112,7 +112,7 @@ const define = () => {
     height: 10px;
     border-radius: 50%;
     left: 9px;
-    background: var(--effective-background);
+    background: var(${Style.toEffective("background")});
     border: 1px solid black;
     z-index: 1;
   }
@@ -355,7 +355,7 @@ const define = () => {
       // TODO(vmpstr): backcompat
       if (data.styles) {
         for (let i = 0; i < data.styles.length; ++i)
-          this.setCustomStyle(`--self-${data.styles[i].name}`, data.styles[i].value);
+          this.setCustomStyle(Style.toSelf(data.styles[i].name), data.styles[i].value);
       }
 
       for (let i = 0; i < data.nodes.length; ++i) {
@@ -383,9 +383,9 @@ const define = () => {
       if (label_holder && label_holder.style.width)
         data['label_width'] = label_holder.style.width;
 
-      const all_styles = Style.getAllBaseCustomStyles();
+      const all_styles = Style.getAllCustomStyles();
       for (let i = 0; i < all_styles.length; ++i) {
-        const name = all_styles[i].name;
+        const name = all_styles[i];
         const self_value = this.getSelfCustomStyle(name);
         if (self_value) {
           data.styles.push({

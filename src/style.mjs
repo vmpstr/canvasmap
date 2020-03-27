@@ -97,6 +97,13 @@ export function getCustomStylesForType(type) {
   return result;
 }
 
+export function getAllCustomStyles() {
+  let result = [];
+  for(let name in theme)
+    result.push(name);
+  return result;
+}
+
 export function customVariablesInitialization(type) {
   let result = ":host {\n";
   const styles = getCustomStylesForType(type);
@@ -109,15 +116,6 @@ export function customVariablesInitialization(type) {
   result += "}\n";
   return result;
 }
-
-export function getAllBaseCustomStyles() {
-  let result = [];
-  for(let name in theme) {
-    result.push({ name: name });
-  }
-  return result;
-}
-
 
 class Hunk {
   constructor(properties) {
@@ -137,7 +135,7 @@ export function selfStyleFrom(node) {
   const dictionary = {};
   for (let i = 0; i < properties.length; ++i) {
     const base = properties[i].selection_name;
-    dictionary[`--self-${base}`] = node.getSelfCustomStyle(base);
+    dictionary[toSelf(base)] = node.getSelfCustomStyle(base);
   }
   return new Hunk(dictionary);
 }

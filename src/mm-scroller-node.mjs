@@ -54,9 +54,9 @@ const define = () => {
     max-width: max-content;
     min-width: 30px;
     min-height: 45px;
-    border: var(--effective-border);
-    background: var(--effective-background);
-    border-radius: var(--effective-border-radius);
+    border: var(${Style.toEffective("border")});
+    background: var(${Style.toEffective("background")});
+    border-radius: var(${Style.toEffective("border-radius")});
   }
   .container:hover {
     box-shadow: 2px 2px 2px 1px rgba(15, 15, 15, 0.7), -2px -2px 2px 1px rgba(240, 240, 240, 0.7);
@@ -116,7 +116,7 @@ const define = () => {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: var(--effective-background);
+    background: var(${Style.toEffective("background")});
     border: 1px solid black;
     z-index: 1;
   }
@@ -397,7 +397,7 @@ const define = () => {
 
       if (data.styles) {
         for (let i = 0; i < data.styles.length; ++i)
-          this.setCustomStyle(`--self-${data.styles[i].name}`, data.styles[i].value);
+          this.setCustomStyle(Style.toSelf(data.styles[i].name), data.styles[i].value);
       }
 
       for (let i = 0; i < data.nodes.length; ++i) {
@@ -426,9 +426,9 @@ const define = () => {
       if (container && container.style.maxHeight)
         data['container_maxheight'] = container.style.maxHeight;
 
-      const all_styles = Style.getAllBaseCustomStyles();
+      const all_styles = Style.getAllCustomStyles();
       for (let i = 0; i < all_styles.length; ++i) {
-        const name = all_styles[i].name;
+        const name = all_styles[i];
         const self_value = this.getSelfCustomStyle(name);
         if (self_value) {
           data.styles.push({
