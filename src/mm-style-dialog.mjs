@@ -163,14 +163,14 @@ const define = () => {
 
       const propertiesContainer = this.shadowRoot.querySelector(".properties_container");
 
-      this.styles_ = Style.getSelfCustomStylesForType(this.node_.node_type);
+      this.styles_ = Style.getCustomStylesForType(this.node_.node_type);
       console.assert(this.styles_.length);
       for (let i = 0; i < this.styles_.length; ++i) {
         let option = document.createElement("option");
         if (i == 0)
           option.selected = "selected";
         option.value = i;
-        option.innerText = this.styles_[i].selection_name;
+        option.innerText = this.styles_[i];
         select.appendChild(option);
 
         let container = document.createElement("div");
@@ -182,7 +182,7 @@ const define = () => {
 
         let description = document.createElement("div");
         description.classList.add("property_description");
-        description.innerText = this.styles_[i].description;
+        description.innerText = Style.toDescription(this.styles_[i]);
         container.appendChild(description);
 
         let control = document.createElement("div");
@@ -206,7 +206,7 @@ const define = () => {
     }
 
     buildPropertyEditor_(container, style) {
-      if (style.selection_name == "border-radius") {
+      if (style == "border-radius") {
         const current = document.createElement("div");
         current.classList.add("current_value");
 
@@ -214,14 +214,14 @@ const define = () => {
         slider.type = "range";
         slider.min = 0;
         slider.max = 25;
-        slider.value = parseInt(this.node_.getEffectiveCustomStyle(style.selection_name));
+        slider.value = parseInt(this.node_.getEffectiveCustomStyle(style));
         const update_inputs = () => {
           current.innerText = `${slider.value}px`;
         };
         const callback = () => {
           update_inputs();
-          App.undoStack.willChangeStyle(this.node_, style.name);
-          this.node_.setCustomStyle(style.name, `${slider.value}px`);
+          App.undoStack.willChangeStyle(this.node_, Style.toSelf(style));
+          this.node_.setCustomStyle(Style.toSelf(style), `${slider.value}px`);
           App.undoStack.didChangeStyle();
         };
         slider.addEventListener("input", callback);
@@ -229,11 +229,11 @@ const define = () => {
 
         container.appendChild(current);
         container.appendChild(slider);
-      } else if (style.selection_name == "border") {
+      } else if (style == "border") {
         const current = document.createElement("div");
         current.classList.add("current_value");
 
-        const values = this.node_.getEffectiveCustomStyle(style.selection_name).trim().split(" ");
+        const values = this.node_.getEffectiveCustomStyle(style).trim().split(" ");
 
         const slider = document.createElement("input");
         slider.type = "range";
@@ -280,8 +280,8 @@ const define = () => {
         };
         const callback = () => {
           update_inputs();
-          App.undoStack.willChangeStyle(this.node_, style.name);
-          this.node_.setCustomStyle(style.name, current.innerText);
+          App.undoStack.willChangeStyle(this.node_, Style.toSelf(style));
+          this.node_.setCustomStyle(Style.toSelf(style), current.innerText);
           App.undoStack.didChangeStyle();
         };
         select.addEventListener("change", callback);
@@ -293,11 +293,11 @@ const define = () => {
         container.appendChild(slider);
         container.appendChild(select);
         container.appendChild(sample);
-      } else if (style.selection_name == "background") {
+      } else if (style == "background") {
         const current = document.createElement("div");
         current.classList.add("current_value");
 
-        const initial = this.node_.getEffectiveCustomStyle(style.selection_name).trim();
+        const initial = this.node_.getEffectiveCustomStyle(style).trim();
 
         // TODO(vmpstr): util
         const div = document.createElement("div");
@@ -325,8 +325,8 @@ const define = () => {
         };
         const callback = () => {
           update_inputs();
-          App.undoStack.willChangeStyle(this.node_, style.name);
-          this.node_.setCustomStyle(style.name, current.innerText);
+          App.undoStack.willChangeStyle(this.node_, Style.toSelf(style));
+          this.node_.setCustomStyle(Style.toSelf(style), current.innerText);
           App.undoStack.didChangeStyle();
         };
         sample.onChange(callback);

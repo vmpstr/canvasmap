@@ -188,11 +188,11 @@ export class NodeBase extends HTMLElement {
     clone.position = this.position;
     while (this.children.length)
       clone.adoptNode(this.children[0]);
-    const properties = Style.getSelfCustomStylesForType(clone.node_type);
+    const properties = Style.getCustomStylesForType(clone.node_type);
     for (let i = 0; i < properties.length; ++i) {
       clone.style.setProperty(
-        properties[i].name,
-        this.style.getPropertyValue(properties[i].name));
+        Style.toSelf(properties[i]),
+        this.style.getPropertyValue(Style.toSelf(properties[i])));
     }
     return clone;
   }

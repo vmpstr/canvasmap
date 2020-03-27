@@ -71,43 +71,42 @@ const theme = {
   }
 };
 
+export function toTheme(type, base) { return `--theme-${type}-${base}`; }
+export function toSelf(base) { return `--self-${base}`; }
+export function toChild(base) { return `--child-${base}`; }
+export function toEffective(base) { return `--effective-${base}`; }
+export function toDescription(base) { return descriptions[base]; }
+
 export function themeVariables() {
   let result = ":host {\n";
   for (let name in theme) {
     for (let type in theme[name].default) {
-      result += `--theme-${type}-${name}: ${theme[name].default[type]};\n`;
+      result += `${toTheme(type, name)}: ${theme[name].default[type]};\n`;
     }
   }
   result += "}\n";
+  return result;
+}
+
+export function getCustomStylesForType(type) {
+  let result = [];
+  for(let name in theme) {
+    if (type in theme[name].default)
+      result.push(name);
+  }
   return result;
 }
 
 export function customVariablesInitialization(type) {
   let result = ":host {\n";
-  for(let name in theme) {
-    if (theme[name].default[type])
-      result += `--self-${name}: initial;\n`;
-  }
-  for (let name in theme) {
-    if (theme[name].default[type]) {
-      result += `--effective-${name}: var(--self-${name}, var(--child-${name}, var(--theme-${type}-${name})));\n`;
-    }
-  }
+  const styles = getCustomStylesForType(type);
+  // Self inits.
+  for (let i = 0; i < styles.length; ++i)
+    result += `${toSelf(name)}: initial;\n`;
+  // Effective inits.
+  for (let i = 0; i < styles.length; ++i)
+    result += `${toEffective(name)}: var(${toSelf(name)}, var(${toChild(name)}, var(${toTheme(type, name)})));\n`;
   result += "}\n";
-  return result;
-}
-
-export function getSelfCustomStylesForType(type) {
-  let result = [];
-  for(let name in theme) {
-    if (theme[name].default[type]) {
-      result.push({
-        name: `--self-${name}`,
-        selection_name: name,
-        description: descriptions[name]
-      });
-    }
-  }
   return result;
 }
 
