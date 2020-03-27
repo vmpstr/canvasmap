@@ -102,10 +102,10 @@ export function customVariablesInitialization(type) {
   const styles = getCustomStylesForType(type);
   // Self inits.
   for (let i = 0; i < styles.length; ++i)
-    result += `${toSelf(name)}: initial;\n`;
+    result += `${toSelf(styles[i])}: initial;\n`;
   // Effective inits.
   for (let i = 0; i < styles.length; ++i)
-    result += `${toEffective(name)}: var(${toSelf(name)}, var(${toChild(name)}, var(${toTheme(type, name)})));\n`;
+    result += `${toEffective(styles[i])}: var(${toSelf(styles[i])}, var(${toChild(styles[i])}, var(${toTheme(type, styles[i])})));\n`;
   result += "}\n";
   return result;
 }
