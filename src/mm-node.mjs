@@ -45,7 +45,10 @@ const define = () => {
     white-space: nowrap;
     text-overflow: ellipsis;
 
-    padding: 10px;
+    padding-left: var(${Style.toEffective("horizontal-padding")});
+    padding-right: var(${Style.toEffective("horizontal-padding")});
+    padding-top: var(${Style.toEffective("vertical-padding")});
+    padding-bottom: var(${Style.toEffective("vertical-padding")});
   }
   ${Style.selectors.kChildArea} {
     position: relative;

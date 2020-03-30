@@ -47,7 +47,11 @@ const descriptions = {
     "apply to the corners.",
   "border":
     "The border thickness style and color. Note that this refers to the " +
-    "unselected element's border"
+    "unselected element's border",
+  "horizontal-padding":
+    "The padding around the label of the node",
+  "vertical-padding":
+    "The padding around the label of the node"
 }
 
 const theme = {
@@ -67,6 +71,18 @@ const theme = {
     default: {
       node: "1px solid rgba(0, 0, 0, 1)",
       scroller: "1px solid rgba(0, 0, 0, 1)"
+    }
+  },
+  "horizontal-padding" : {
+    default: {
+      node: "10px",
+      scroller: "10px"
+    }
+  },
+  "vertical-padding" : {
+    default: {
+      node: "10px",
+      scroller: "5px"
     }
   }
 };

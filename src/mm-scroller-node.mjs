@@ -47,7 +47,10 @@ const define = () => {
     box-sizing: inherit;
     width: 100%;
 
-    padding: 5px 0 5px 0;
+    xxpadding-top: var(${Style.toEffective("vertical-padding")});
+    padding-left: 0;
+    padding-bottom: 5px;
+    padding-right: 0;
 
     position: relative;
     overflow: hidden;
@@ -100,7 +103,11 @@ const define = () => {
     max-width: min-content;
 
     position: relative;
-    padding: 0 10px 0 10px;
+    padding-left: var(${Style.toEffective("horizontal-padding")});
+    padding-right: var(${Style.toEffective("horizontal-padding")});
+    padding-top: var(${Style.toEffective("vertical-padding")});
+    /* no padding bottom for scrollers */
+    padding-bottom: 0;
   }
   .parent_edge {
     position: absolute;
