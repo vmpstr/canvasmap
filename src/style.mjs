@@ -147,10 +147,10 @@ class Hunk {
 }
 
 export function selfStyleFrom(node) {
-  const properties = getSelfCustomStylesForType(node.node_type);
+  const properties = getCustomStylesForType(node.node_type);
   const dictionary = {};
   for (let i = 0; i < properties.length; ++i) {
-    const base = properties[i].selection_name;
+    const base = properties[i];
     dictionary[toSelf(base)] = node.getSelfCustomStyle(base);
   }
   return new Hunk(dictionary);
