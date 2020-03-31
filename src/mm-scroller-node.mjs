@@ -32,14 +32,9 @@ const define = () => {
     flex-shrink: 1;
     box-sizing: border-box;
   }
-  :host(:hover) {
-  }
   :host(.dragged) {
     opacity: 40%;
   }
-  :host(.selected) {
-  }
-
   .container {
     display: flex;
     flex-direction: column;
@@ -66,6 +61,7 @@ const define = () => {
   }
   .container:hover {
     box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.02);
+    z-index: 1;
   }
   :host(.has_parent_edge) .container {
     transform-origin: left;

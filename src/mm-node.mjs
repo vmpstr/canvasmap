@@ -87,10 +87,11 @@ const define = () => {
     border: var(${Style.toEffective("border")});
     box-sizing: border-box;
     box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.5);
-    transition: box-shadow 200ms, transform 200ms;
+    transition: box-shadow 200ms, transform 200ms, z-index 200ms;
   }
   .label_holder:hover {
     box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.02);
+    z-index: 1;
   }
   :host(.has_parent_edge) .label_holder {
     transform-origin: left;
