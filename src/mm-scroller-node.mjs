@@ -67,6 +67,9 @@ const define = () => {
   .container:hover {
     box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.02);
   }
+  :host(.has_parent_edge) .container {
+    transform-origin: left;
+  }
   :host(.selected) .container {
     border-color: blue;
   }
@@ -300,8 +303,10 @@ const define = () => {
         return;
       if (this.parent_.has_child_edges) {
         this.shadowRoot.querySelector(".parent_edge").style.display = "";
+        this.classList.add("has_parent_edge");
       } else {
         this.shadowRoot.querySelector(".parent_edge").style.display = "none";
+        this.classList.remove("has_parent_edge");
       }
 
       const toggle = this.shadowRoot.querySelector(".child_toggle");
