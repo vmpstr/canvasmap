@@ -57,11 +57,11 @@ const define = () => {
     border-radius: var(${Style.toEffective("border-radius")});
 
     box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.5);
-    transition: box-shadow 200ms, transform 200ms;
+    transition: box-shadow 200ms, transform 200ms, z-index 200ms;
   }
   .container:hover {
     box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.02);
-    z-index: 1;
+    z-index: 10;
   }
   :host(.has_parent_edge) .container {
     transform-origin: left;
