@@ -57,8 +57,8 @@ const descriptions = {
 const theme = {
   "background" : {
     default: {
-      node: "transparent",
-      scroller: "transparent"
+      node: "rgb(195, 231, 240)",
+      scroller: "rgb(195, 231, 240)"
     }
   },
   "border-radius" : {
@@ -69,8 +69,8 @@ const theme = {
   },
   "border" : {
     default: {
-      node: "1px solid rgba(0, 0, 0, 1)",
-      scroller: "1px solid rgba(0, 0, 0, 1)"
+      node: "0px solid black",
+      scroller: "0px solid black"
     }
   },
   "horizontal-padding" : {
