@@ -68,7 +68,7 @@ const define = () => {
     background: pink;
   }
   .selection_container:hover {
-    box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.02);
+    box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.01);
     z-index: 10;
   }
   :host(.has_parent_edge) .selection_container {
@@ -163,20 +163,30 @@ const define = () => {
   .ew_drag_handle {
     position: absolute;
     top: 10px;
-    right: -3px;
-    width: 7px;
+    right: -4px;
+    width: 9px;
     height: calc(100% - 20px);
-    cursor: ew-resize;
     opacity: 0.01;
+  }
+  .ew_drag_handle_cursor {
+    cursor: ew-resize;
+    margin: 1px;
+    width: 100%;
+    height: 100%;
   }
   .ns_drag_handle {
     position: absolute;
     left: 10px;
-    bottom: -3px;
-    height: 7px;
+    bottom: -4px;
+    height: 9px;
     width: calc(100% - 20px);
-    cursor: ns-resize;
     opacity: 0.01;
+  }
+  .ns_drag_handle_cursor {
+    cursor: ns-resize;
+    margin: 1px;
+    width: 100%;
+    height: 100%;
   }
 
   .divider {
@@ -211,8 +221,8 @@ const define = () => {
         <slot></slot>
       </div>
     </div>
-    <div class=ew_drag_handle></div>
-    <div class=ns_drag_handle></div>
+    <div class=ew_drag_handle><div class=ew_drag_handle_cursor></div></div>
+    <div class=ns_drag_handle><div class=ns_drag_handle_cursor></div></div>
     <div class=nwse_drag_handle></div>
   </div>`;
 

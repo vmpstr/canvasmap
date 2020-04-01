@@ -97,7 +97,7 @@ const define = () => {
   }
   .label_selection:hover {
     box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3);
-    transform: scale(1.02);
+    transform: scale(1.01);
     z-index: 10;
   }
   :host(.has_parent_edge) .label_selection {
@@ -144,12 +144,18 @@ const define = () => {
   }
   .ew_drag_handle {
     position: absolute;
+    box-sizing: content-box;
     top: 15%;
-    right: -2px;
-    width: 7px;
+    right: -4px;
+    width: 9px;
     height: 70%;
     opacity: 0.01;
+  }
+  .ew_drag_handle_cursor {
     cursor: ew-resize;
+    margin: 1px;
+    width: 100%;
+    height: 100%;
   }
 
   :host(.selected) .label_selection {
@@ -175,7 +181,7 @@ const define = () => {
         <div class=label_holder>
           <div class=label></div>
         </div>
-        <div class=ew_drag_handle></div>
+        <div class=ew_drag_handle><div class=ew_drag_handle_cursor></div></div>
         <div class="child_toggle expanded"></div>
         <div class=parent_edge></div>
         <div class=child_edge></div>
