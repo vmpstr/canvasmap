@@ -38,7 +38,6 @@ const define = () => {
   .selection_container {
     width: 100%;
     max-width: max-content;
-    background: orange;
     position: relative;
     border-radius: var(${Style.toEffective("border-radius")});
 
@@ -64,8 +63,6 @@ const define = () => {
     border: var(${Style.toEffective("border")});
     background: var(${Style.toEffective("background")});
     border-radius: inherit;
-
-    background: pink;
   }
   .selection_container:hover {
     box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.01);
