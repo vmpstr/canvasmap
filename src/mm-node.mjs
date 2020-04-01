@@ -86,14 +86,19 @@ const define = () => {
     background: var(${Style.toEffective("background")});
     border: var(${Style.toEffective("border")});
     box-sizing: border-box;
+  }
+
+  .label_selection {
+    border-radius: inherit;
     box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.5);
     transition: box-shadow 200ms, transform 200ms, z-index 200ms;
   }
-  .label_holder:hover {
-    box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.02);
+  .label_selection:hover {
+    box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3);
+    transform: scale(1.02);
     z-index: 10;
   }
-  :host(.has_parent_edge) .label_holder {
+  :host(.has_parent_edge) .label_selection {
     transform-origin: left;
   }
 
@@ -144,10 +149,19 @@ const define = () => {
     opacity: 0.01;
     cursor: ew-resize;
   }
-  :host(.selected) .label_holder {
-    border-color: blue;
-    xxbox-shadow: 0 0 3px 0 blue, 2px 2px 2px 1px rgba(0, 0, 70, 0.8), -2px -2px 2px 1px rgba(230, 230, 255, 0.8);
+
+  :host(.selected) .label_selection {
+    margin: -1px;
+    border: 1px solid blue;
+
   }
+  :host(.selected) .label_selection:hover {
+    box-shadow: 0px 10px 10px 0px rgba(0,0,255,0.5);
+  }
+  :host(.selected) .label_selection {
+    box-shadow: 0px 2px 3px 0px rgba(0,0,255,0.7);
+  }
+
   :host(.dragged) {
     opacity: 40%;
   }`;
@@ -155,8 +169,10 @@ const define = () => {
   const body = `
   <div class=container>
     <div class=label_flexer>
-      <div class=label_holder>
-        <div class=label></div>
+      <div class=label_selection>
+        <div class=label_holder>
+          <div class=label></div>
+        </div>
       </div>
       <div class=ew_drag_handle></div>
       <div class="child_toggle expanded"></div>

@@ -35,6 +35,13 @@ const define = () => {
   :host(.dragged) {
     opacity: 40%;
   }
+  .selection_container {
+    width: max-content;
+    border-radius: var(${Style.toEffective("border-radius")});
+
+    box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.5);
+    transition: box-shadow 200ms, transform 200ms, z-index 200ms;
+  }
   .container {
     display: flex;
     flex-direction: column;
@@ -54,20 +61,23 @@ const define = () => {
     min-height: 45px;
     border: var(${Style.toEffective("border")});
     background: var(${Style.toEffective("background")});
-    border-radius: var(${Style.toEffective("border-radius")});
-
-    box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.5);
-    transition: box-shadow 200ms, transform 200ms, z-index 200ms;
+    border-radius: inherit;
   }
-  .container:hover {
+  .selection_container:hover {
     box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.02);
     z-index: 10;
   }
-  :host(.has_parent_edge) .container {
+  :host(.has_parent_edge) .selection_container {
     transform-origin: left;
   }
-  :host(.selected) .container {
-    border-color: blue;
+  :host(.selected) .selection_container {
+    margin: -1px;
+    border: 1px solid blue;
+    box-shadow: 0px 2px 3px 0px rgba(0,0,255,0.7);
+  }
+
+  :host(.selected) .selection_container:hover {
+    box-shadow: 0px 10px 10px 0px rgba(0,0,255,0.5);
   }
 
   .label {
@@ -183,17 +193,19 @@ const define = () => {
 
   const body = `
   <div class=parent_edge></div>
-  <div class=container>
-    <div class=label_holder>
-      <div class=label></div>
-    </div>
-    <div class=divider>
-      <div class=divider_line></div>
-      <div class="child_toggle expanded"></div>
-      <div class=divider_line></div>
-    </div>
-    <div class=${Style.classes.kChildArea}>
-      <slot></slot>
+  <div class=selection_container>
+    <div class=container>
+      <div class=label_holder>
+        <div class=label></div>
+      </div>
+      <div class=divider>
+        <div class=divider_line></div>
+        <div class="child_toggle expanded"></div>
+        <div class=divider_line></div>
+      </div>
+      <div class=${Style.classes.kChildArea}>
+        <slot></slot>
+      </div>
     </div>
   </div>
   <div class=ew_drag_handle></div>
