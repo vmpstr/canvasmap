@@ -36,7 +36,10 @@ const define = () => {
     opacity: 40%;
   }
   .selection_container {
-    width: max-content;
+    width: 100%;
+    max-width: max-content;
+    background: orange;
+    position: relative;
     border-radius: var(${Style.toEffective("border-radius")});
 
     box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.5);
@@ -49,7 +52,6 @@ const define = () => {
     box-sizing: inherit;
     width: 100%;
 
-    xxpadding-top: var(${Style.toEffective("vertical-padding")});
     padding-left: 0;
     padding-bottom: 5px;
     padding-right: 0;
@@ -62,6 +64,8 @@ const define = () => {
     border: var(${Style.toEffective("border")});
     background: var(${Style.toEffective("background")});
     border-radius: inherit;
+
+    background: pink;
   }
   .selection_container:hover {
     box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.02);
@@ -207,10 +211,10 @@ const define = () => {
         <slot></slot>
       </div>
     </div>
-  </div>
-  <div class=ew_drag_handle></div>
-  <div class=ns_drag_handle></div>
-  <div class=nwse_drag_handle></div>`;
+    <div class=ew_drag_handle></div>
+    <div class=ns_drag_handle></div>
+    <div class=nwse_drag_handle></div>
+  </div>`;
 
   console.debug("defining mm-scroller-node");
   window.customElements.define("mm-scroller-node", class extends NodeBaseModule.NodeBase {

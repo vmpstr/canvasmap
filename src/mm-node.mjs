@@ -74,12 +74,12 @@ const define = () => {
     position: relative;
     flex-shrink: 1;
     max-width: max-content;
-    min-width: 20px;
     width: 100%;
     border-radius: inherit;
   }
   .label_holder {
     width: 100%;
+    min-width: 20px;
     max-width: max-content;
     position: relative;
     border-radius: inherit;
@@ -89,6 +89,8 @@ const define = () => {
   }
 
   .label_selection {
+    width: 100%;
+    max-width: max-content;
     border-radius: inherit;
     box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.5);
     transition: box-shadow 200ms, transform 200ms, z-index 200ms;
@@ -144,7 +146,7 @@ const define = () => {
     position: absolute;
     top: 15%;
     right: -2px;
-    width: 5px;
+    width: 7px;
     height: 70%;
     opacity: 0.01;
     cursor: ew-resize;
@@ -173,11 +175,11 @@ const define = () => {
         <div class=label_holder>
           <div class=label></div>
         </div>
+        <div class=ew_drag_handle></div>
+        <div class="child_toggle expanded"></div>
+        <div class=parent_edge></div>
+        <div class=child_edge></div>
       </div>
-      <div class=ew_drag_handle></div>
-      <div class="child_toggle expanded"></div>
-      <div class=parent_edge></div>
-      <div class=child_edge></div>
     </div>
     <div class=${Style.classes.kChildArea}>
       <slot></slot>
