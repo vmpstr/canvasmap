@@ -65,8 +65,13 @@ const define = () => {
     border-radius: inherit;
   }
   .selection_container:hover {
-    box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3); transform: scale(1.01);
+    box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3);
     z-index: 10;
+  }
+  @media (min-resolution: 192dpi) {
+    .selection_container:hover {
+      transform: scale(1.01);
+    }
   }
   :host(.has_parent_edge) .selection_container {
     transform-origin: left;

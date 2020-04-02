@@ -97,8 +97,13 @@ const define = () => {
   }
   .label_selection:hover {
     box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3);
-    transform: scale(1.01);
     z-index: 10;
+  }
+
+  @media (min-resolution: 192dpi) {
+    .label_selection:hover {
+      transform: scale(1.01);
+    }
   }
   :host(.has_parent_edge) .label_selection {
     transform-origin: left;
