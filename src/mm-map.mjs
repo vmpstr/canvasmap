@@ -235,8 +235,10 @@ const define = () => {
         const node_rect = this.nodes_[i].getBoundingClientRect();
         if (rect.left > node_rect.left && rect.left < node_rect.right &&
             rect.top > node_rect.top && rect.top < node_rect.bottom + 15) {
-          this.nodes_[i].unhideChildren();
-          this.nodes_[i].adoptNode(child);
+          if (!this.nodes_[i].childrenHidden()) {
+            this.nodes_[i].unhideChildren();
+            this.nodes_[i].adoptNode(child);
+          }
         }
       }
     }

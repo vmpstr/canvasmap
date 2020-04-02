@@ -337,8 +337,8 @@ const define = () => {
           }
 
           const next_item_rect = this.children_[i].getBoundingClientRect();
-          if ((!saw_child && (next_item_rect.y > child_rect.y)) ||
-              (saw_child && (next_item_rect.y - child_rect.height > child_rect.y))) {
+          if ((!saw_child && (next_item_rect.y + 0.5 * next_item_rect.height > child_rect.y)) ||
+              (saw_child && (next_item_rect.y + 0.5 * next_item_rect.height - child_rect.height > child_rect.y))) {
             const local_distance = next_item_rect.y - child_rect.y;
             if (local_distance < next_distance) {
               next_distance = local_distance;
@@ -353,7 +353,7 @@ const define = () => {
           }
         }
         child.remove();
-        if (previous_item) {
+        if (previous_item && !previous_item.childrenHidden()) {
           previous_item.unhideChildren();
           previous_item.adoptNode(child);
         } else {

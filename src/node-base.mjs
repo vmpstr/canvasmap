@@ -158,6 +158,10 @@ export class NodeBase extends HTMLElement {
     return this.children_.length > 0;
   }
 
+  childrenHidden() {
+    return this.childrenHidden_ && this.children_.length > 0;
+  }
+
   resetPosition() {
     this.style.left = '0';
     this.style.top = '0';
