@@ -36,6 +36,9 @@ const define = () => {
     opacity: 40%;
   }
   .selection_container {
+    display: flex;
+    flex-shrink: 1;
+
     width: 100%;
     max-width: max-content;
     position: relative;

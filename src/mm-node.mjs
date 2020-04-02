@@ -89,6 +89,9 @@ const define = () => {
   }
 
   .label_selection {
+    display: flex;
+    flex-shrink: 1;
+
     width: 100%;
     max-width: max-content;
     border-radius: inherit;
