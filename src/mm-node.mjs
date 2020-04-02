@@ -349,7 +349,7 @@ const define = () => {
               next_distance = local_distance;
               next_item = this.children_[i];
             }
-          } else if (next_item_rect.y < child_rect.y && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
+          } else if (!saw_child && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
             const local_distance = child_rect.y - next_item_rect.y;
             if (local_distance < previous_distance) {
               previous_distance = local_distance;

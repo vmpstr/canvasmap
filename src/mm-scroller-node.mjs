@@ -352,9 +352,12 @@ const define = () => {
       const rect = this.getBoundingClientRect();
       const child_rect = child.getBoundingClientRect();
       const padding_slack = 15;
+      const container_will_shrink =
+          this.children_[this.children_.length - 1] == child &&
+          this.shadowRoot.querySelector(".container").style.maxHeight == "";
       if (child_rect.left > rect.right ||
           child_rect.right < rect.left ||
-          (child_rect.top - padding_slack) > (rect.bottom - child_rect.height) ||
+          (child_rect.top - padding_slack) > (rect.bottom - (container_will_shrink && child_rect.height)) ||
           child_rect.top < rect.top ||
           // If our parent isn't our map (ie we're a child of something
           // then if the x is to our x's left, reparent up.
@@ -382,7 +385,7 @@ const define = () => {
               next_distance = local_distance;
               next_item = this.children_[i];
             }
-          } else if (next_item_rect.y < child_rect.y && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
+          } else if (!saw_child && child_rect.x > next_item_rect.x + 25 /* TODO: margin?*/) {
             const local_distance = child_rect.y - next_item_rect.y;
             if (local_distance < previous_distance) {
               previous_distance = local_distance;
