@@ -43,33 +43,37 @@ export class NodeDragControl {
       clientPoint = [e.clientX, e.clientY];
     }
 
-    let rect = this.node_.getBoundingClientRect();
-    if (!this.dragTarget_) {
-      if (e.shiftKey || e.ctrlKey) {
-        this.dragTarget_ = this.node_.clone();
-        this.node_.parent.adoptNode(
-          this.dragTarget_,
-          Nodes.childOrdinal(this.node_, this.node_.parent));
-        this.dragTarget_.position = [rect.x, rect.y];
+    cancelAnimationFrame(this.dragRafId_);
+    this.dragRafId_ = requestAnimationFrame(() => {
+      if (!this.dragTarget_) {
+        if (e.shiftKey || e.ctrlKey) {
+          this.dragTarget_ = this.node_.clone();
+          this.node_.parent.adoptNode(
+            this.dragTarget_,
+            Nodes.childOrdinal(this.node_, this.node_.parent));
+          let rect = this.node_.getBoundingClientRect();
+          this.dragTarget_.position = [rect.x, rect.y];
 
-        App.undoStack.setNodeDragTarget(this.dragTarget_);
-      } else {
-        this.dragTarget_ = this.node_;
+          App.undoStack.setNodeDragTarget(this.dragTarget_);
+        } else {
+          this.dragTarget_ = this.node_;
+        }
       }
-    }
+      console.assert(this.dragTarget_);
+
+      this.dragTarget_.classList.add('dragged');
+      this.dragTarget_.position =
+        [this.dragOffset_[0] + clientPoint[0],
+         this.dragOffset_[1] + clientPoint[1]];
+      this.dragTarget_.parent.onDraggedChild(this.dragTarget_);
+    });
+
     e.stopPropagation();
-
-    console.assert(this.dragTarget_);
-
-    this.dragTarget_.classList.add('dragged');
-    this.dragTarget_.position =
-      [this.dragOffset_[0] + clientPoint[0],
-       this.dragOffset_[1] + clientPoint[1]];
-    this.dragTarget_.parent.onDraggedChild(this.dragTarget_);
   }
 
   onDragEnd_(e) {
     console.assert(this.dragTarget_);
+    cancelAnimationFrame(this.dragRafId_);
     this.dragTarget_.classList.remove('dragged');
     e.stopPropagation();
     App.undoStack.endNodeDrag();

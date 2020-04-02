@@ -316,8 +316,8 @@ const define = () => {
       const padding_slack = 15;
       if (child_rect.left > rect.right ||
           child_rect.right < rect.left ||
-          (child_rect.top - padding_slack) > rect.bottom ||
-          child_rect.bottom < rect.top ||
+          (child_rect.top - padding_slack) > (rect.bottom - child_rect.height) ||
+          child_rect.top < rect.top ||
           // If our parent isn't our map (ie we're a child of something
           // then if the x is to our x's left, reparent up.
           // TODO(vmpstr): this might not be true for other non-tree maps.
@@ -329,9 +329,16 @@ const define = () => {
         let next_distance = 1e6;
         let previous_item = null;
         let previous_distance = 1e6;
+        let saw_child = false;
         for (let i = 0; i < this.children_.length; ++i) {
+          if (this.children_[i] == child) {
+            saw_child = true;
+            continue;
+          }
+
           const next_item_rect = this.children_[i].getBoundingClientRect();
-          if (next_item_rect.y > child_rect.y) {
+          if ((!saw_child && (next_item_rect.y > child_rect.y)) ||
+              (saw_child && (next_item_rect.y - child_rect.height > child_rect.y))) {
             const local_distance = next_item_rect.y - child_rect.y;
             if (local_distance < next_distance) {
               next_distance = local_distance;
