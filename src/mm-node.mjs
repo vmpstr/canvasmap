@@ -30,25 +30,83 @@ const define = () => {
   :host {
     display: flex;
     flex-shrink: 1;
-    border-radius: var(${Style.toEffective("border-radius")});
   }
   .container {
     width: 100%;
     position: relative;
-    border-radius: inherit;
   }
+
+  /* selection_container contains the self content boxes and puts in the selection border.
+     This is also responsible for box shadows / material feel / on hover reactions.
+  */
+  .selection_container {
+    position: relative;
+    display: flex;
+    flex-shrink: 1;
+    width: 100%;
+    max-width: max-content;
+    border-radius: var(${Style.toEffective("border-radius")});
+
+    box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.5);
+    transition: box-shadow 200ms, transform 200ms, z-index 200ms;
+  }
+  .selection_container:hover {
+    box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3);
+    z-index: 10;
+  }
+  @media (min-resolution: 192dpi) {
+    .selection_container:hover {
+      transform: scale(1.01);
+    }
+    :host(.has_parent_edge) .selection_container {
+      transform-origin: left;
+    }
+  }
+  :host(.selected) .selection_container {
+    margin: -1px;
+    border: 1px solid blue;
+  }
+  :host(.selected) .selection_container:hover {
+    box-shadow: 0px 10px 10px 0px rgba(0,0,255,0.5);
+  }
+  :host(.selected) .selection_container {
+    box-shadow: 0px 2px 3px 0px rgba(0,0,255,0.7);
+  }
+
+  /* content_container is responsible for holding decorators and label. This is also
+     responsible for most user styles (background, border, padding)
+  */
+  .content_container {
+    border-radius: inherit;
+    padding-left: var(${Style.toEffective("horizontal-padding")});
+    padding-right: var(${Style.toEffective("horizontal-padding")});
+    padding-top: var(${Style.toEffective("vertical-padding")});
+    padding-bottom: var(${Style.toEffective("vertical-padding")});
+    background: var(${Style.toEffective("background")});
+    border: var(${Style.toEffective("border")});
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 1;
+  }
+  .leading_decorators {
+  }
+  .trailing_decorators {
+  }
+
   .label {
     box-sizing: border-box;
-    width: 100%;
+    xxwidth: 100%;
 
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 
-    padding-left: var(${Style.toEffective("horizontal-padding")});
-    padding-right: var(${Style.toEffective("horizontal-padding")});
-    padding-top: var(${Style.toEffective("vertical-padding")});
-    padding-bottom: var(${Style.toEffective("vertical-padding")});
+    xxpadding-left: var(${Style.toEffective("horizontal-padding")});
+    xxpadding-right: var(${Style.toEffective("horizontal-padding")});
+    xxpadding-top: var(${Style.toEffective("vertical-padding")});
+    xxpadding-bottom: var(${Style.toEffective("vertical-padding")});
   }
   ${Style.selectors.kChildArea} {
     position: relative;
@@ -86,30 +144,6 @@ const define = () => {
     background: var(${Style.toEffective("background")});
     border: var(${Style.toEffective("border")});
     box-sizing: border-box;
-  }
-
-  .label_selection {
-    display: flex;
-    flex-shrink: 1;
-
-    width: 100%;
-    max-width: max-content;
-    border-radius: inherit;
-    box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.5);
-    transition: box-shadow 200ms, transform 200ms, z-index 200ms;
-  }
-  .label_selection:hover {
-    box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.3);
-    z-index: 10;
-  }
-
-  @media (min-resolution: 192dpi) {
-    .label_selection:hover {
-      transform: scale(1.01);
-    }
-  }
-  :host(.has_parent_edge) .label_selection {
-    transform-origin: left;
   }
 
   .parent_edge {
@@ -166,16 +200,20 @@ const define = () => {
     height: 100%;
   }
 
-  :host(.selected) .label_selection {
-    margin: -1px;
-    border: 1px solid blue;
-
+  .url_icon {
+    margin: 5px;
+    align-self: center;
+    border: 2px solid black;
+    border-radius: 5px;
+    width: 10px;
+    height: 10px;
   }
-  :host(.selected) .label_selection:hover {
-    box-shadow: 0px 10px 10px 0px rgba(0,0,255,0.5);
-  }
-  :host(.selected) .label_selection {
-    box-shadow: 0px 2px 3px 0px rgba(0,0,255,0.7);
+  .sample_label {
+    background: orange;
+    height: 15px;
+    align-self: center;
+    padding: 3px;
+    width: max-content;
   }
 
   :host(.dragged) {
@@ -184,16 +222,16 @@ const define = () => {
 
   const body = `
   <div class=container>
-    <div class=label_flexer>
-      <div class=label_selection>
-        <div class=label_holder>
-          <div class=label></div>
-        </div>
-        <div class=ew_drag_handle><div class=ew_drag_handle_cursor></div></div>
-        <div class="child_toggle expanded"></div>
-        <div class=parent_edge></div>
-        <div class=child_edge></div>
+    <div class=selection_container>
+      <div class=content_container>
+        <div class=leading_decorators></div>
+        <div class=label></div>
+        <div class=trailing_decorators></div>
       </div>
+      <div class=ew_drag_handle><div class=ew_drag_handle_cursor></div></div>
+      <div class="child_toggle expanded"></div>
+      <div class=child_edge></div>
+      <div class=parent_edge></div>
     </div>
     <div class=${Style.classes.kChildArea}>
       <slot></slot>
@@ -224,8 +262,8 @@ const define = () => {
       this.registerEventHandlers_();
 
       if (this.deferredData_) {
-        const label_holder = this.shadowRoot.querySelector(".label_holder");
-        label_holder.style.width = this.deferredData_.label_width;
+        const content_container = this.shadowRoot.querySelector(".content_container");
+        content_container.style.width = this.deferredData_.label_width;
         delete this.deferredData_;
       }
 
@@ -246,13 +284,13 @@ const define = () => {
 
       const label = this.shadowRoot.querySelector(".label");
       const drag_handle = this.shadowRoot.querySelector(".ew_drag_handle");
-      const label_holder = this.shadowRoot.querySelector(".label_holder");
+      const content_container = this.shadowRoot.querySelector(".content_container");
 
-      this.dragControl_ = new Handlers.NodeDragControl(this, label_holder);
+      this.dragControl_ = new Handlers.NodeDragControl(this, content_container);
       this.dragHandleControl_ = new Handlers.DragHandleControl(
-        this, label_holder, {'ew': drag_handle});
+        this, content_container, {'ew': drag_handle});
 
-      label_holder.addEventListener("click", (e) => {
+      content_container.addEventListener("click", (e) => {
         this.select();
         App.mouseTracker.handledClick(this, e);
       });
@@ -264,10 +302,10 @@ const define = () => {
       if (!this.shadowRoot)
         return 0;
       return this.shadowRoot.querySelector(".parent_edge").getBoundingClientRect().top -
-             this.shadowRoot.querySelector(".label_flexer").getBoundingClientRect().top;
+             this.shadowRoot.querySelector(".content_container").getBoundingClientRect().top;
     }
     get node_type() { return "node"; }
-    get hero() { return this.shadowRoot.querySelector(".label_holder"); }
+    get hero() { return this.shadowRoot.querySelector(".content_container"); }
 
     getContextMenu() {
       return ContextMenuHelpers.createMenu([
@@ -383,11 +421,11 @@ const define = () => {
 
     getSizingInfo() {
       return {
-        label_width: this.shadowRoot.querySelector(".label_holder").style.width
+        label_width: this.shadowRoot.querySelector(".content_container").style.width
       };
     }
     setSizingInfo(info) {
-      this.shadowRoot.querySelector(".label_holder").style.width =
+      this.shadowRoot.querySelector(".content_container").style.width =
         info.label_width;
     }
 
@@ -396,7 +434,7 @@ const define = () => {
       this.label = data.label || '<deprecated label>';
       this.position = data.position || [0, 0];
       if (this.shadowRoot) {
-        this.shadowRoot.querySelector(".label_holder").style.width = data.label_width;
+        this.shadowRoot.querySelector(".content_container").style.width = data.label_width;
       } else {
         if (!this.deferredData_)
           this.deferredData_ = {};
@@ -430,9 +468,9 @@ const define = () => {
         styles: []
       };
       // Serialize width of the element.
-      const label_holder = this.shadowRoot && this.shadowRoot.querySelector(".label_holder");
-      if (label_holder && label_holder.style.width)
-        data['label_width'] = label_holder.style.width;
+      const content_container = this.shadowRoot && this.shadowRoot.querySelector(".content_container");
+      if (content_container && content_container.style.width)
+        data['label_width'] = content_container.style.width;
 
       const all_styles = Style.getAllCustomStyles();
       for (let i = 0; i < all_styles.length; ++i) {
