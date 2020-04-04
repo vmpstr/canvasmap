@@ -31,6 +31,10 @@ const define = () => {
     display: flex;
     flex-shrink: 1;
   }
+  :host(.dragged) {
+    opacity: 40%;
+  }
+
   .container {
     width: 100%;
     position: relative;
@@ -45,6 +49,7 @@ const define = () => {
     flex-shrink: 1;
     width: 100%;
     max-width: max-content;
+    min-width: 20px;
     border-radius: var(${Style.toEffective("border-radius")});
 
     box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.5);
@@ -86,28 +91,33 @@ const define = () => {
     border: var(${Style.toEffective("border")});
     box-sizing: border-box;
 
+    min-width: 20px;
+    max-width: max-content;
+
     display: flex;
     flex-direction: row;
     flex-shrink: 1;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow: hidden;
   }
+
+  /* decorators (containers) before and after the label */
   .leading_decorators {
+    margin-right: 3px;
   }
   .trailing_decorators {
+    margin-left: 3px;
   }
 
+  /* label itself */
   .label {
-    box-sizing: border-box;
-    xxwidth: 100%;
-
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-
-    xxpadding-left: var(${Style.toEffective("horizontal-padding")});
-    xxpadding-right: var(${Style.toEffective("horizontal-padding")});
-    xxpadding-top: var(${Style.toEffective("vertical-padding")});
-    xxpadding-bottom: var(${Style.toEffective("vertical-padding")});
   }
+
+  /* child area */
   ${Style.selectors.kChildArea} {
     position: relative;
     contain: layout;
@@ -121,31 +131,16 @@ const define = () => {
   ${Style.selectors.kChildArea}${Style.selectors.kHidden} > * {
     display: none;
   }
+
+  /* children */
   ::slotted(*) {
     position: relative;
     margin-top: 5px;
     width: 100%;
     max-width: max-content;
   }
-  .label_flexer {
-    display: flex;
-    position: relative;
-    flex-shrink: 1;
-    max-width: max-content;
-    width: 100%;
-    border-radius: inherit;
-  }
-  .label_holder {
-    width: 100%;
-    min-width: 20px;
-    max-width: max-content;
-    position: relative;
-    border-radius: inherit;
-    background: var(${Style.toEffective("background")});
-    border: var(${Style.toEffective("border")});
-    box-sizing: border-box;
-  }
 
+  /* the curved arc up to the parent if any */
   .parent_edge {
     position: absolute;
     bottom: 50%;
@@ -156,6 +151,7 @@ const define = () => {
     border-left: 1px solid black;
     border-radius: 0px 0px 0px 10px;
   }
+  /* straight edge down to the children if any */
   .child_edge {
     position: absolute;
     top: 100%;
@@ -164,6 +160,7 @@ const define = () => {
     left: 14px;
     height: 50px;
   }
+  /* child toggle button */
   .child_toggle {
     position: absolute;
     top: 100%;
@@ -184,6 +181,8 @@ const define = () => {
   .child_toggle.expanded:hover {
     background: indianred;
   }
+
+  /* drag handle */
   .ew_drag_handle {
     position: absolute;
     box-sizing: content-box;
@@ -193,6 +192,7 @@ const define = () => {
     height: 70%;
     opacity: 0.01;
   }
+  /* work around for crbug.com/1066971 */
   .ew_drag_handle_cursor {
     cursor: ew-resize;
     margin: 1px;
@@ -200,6 +200,7 @@ const define = () => {
     height: 100%;
   }
 
+  /* sample divs */
   .url_icon {
     margin: 5px;
     align-self: center;
@@ -209,15 +210,15 @@ const define = () => {
     height: 10px;
   }
   .sample_label {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
     background: orange;
     height: 15px;
     align-self: center;
     padding: 3px;
     width: max-content;
-  }
-
-  :host(.dragged) {
-    opacity: 40%;
+    white-space: nowrap;
   }`;
 
   const body = `
