@@ -316,6 +316,10 @@ const define = () => {
       ]);
     }
 
+    getLabelEditArea() {
+      return this.shadowRoot.querySelector(".selection_container");
+    }
+
     // Misc ======================================================================
     computeEdges_() {
       if (!this.shadowRoot || !this.parent_)

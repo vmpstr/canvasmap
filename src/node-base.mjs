@@ -41,7 +41,8 @@ export class NodeBase extends HTMLElement {
     console.assert(slot);
     console.assert(child_toggle);
 
-    this.labelEditor_ = new Handlers.LabelEditor(this, label);
+    // If content container is there, use that for the event.
+    this.labelEditor_ = new Handlers.LabelEditor(this, label, this.getLabelEditArea());
     this.childResizeObserver_ = new ResizeObserver(() => this.computeEdges_());
 
     slot.addEventListener("slotchange", (e) => this.onSlotChange_(e));
@@ -68,6 +69,9 @@ export class NodeBase extends HTMLElement {
   }
   getChildCustomStyle(property) {
     console.error("base child custom style");
+  }
+  getLabelEditArea() {
+    return undefined;
   }
 
   setCustomStyle(property, value) {

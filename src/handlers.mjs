@@ -154,10 +154,11 @@ export class DragHandleControl {
 }
 
 export class LabelEditor {
-  constructor(node, label) {
+  constructor(node, label, label_edit_area) {
     this.node_ = node;
     this.labelElement_ = label;
-    this.labelElement_.addEventListener("dblclick", (e) => this.startLabelEdit(e));
+    const event_target = label_edit_area || label;
+    event_target.addEventListener("dblclick", (e) => this.startLabelEdit(e));
     this.labelElement_.innerText = this.node_.label;
     this.labelElement_.title = this.node_.label;
     this.editing_ = false;
