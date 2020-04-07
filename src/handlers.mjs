@@ -164,11 +164,17 @@ export class LabelEditor {
     this.editing_ = false;
 
     this.endLabelEdit_ = this.endLabelEdit_.bind(this);
+    this.dragHandler_ = this.dragHandler_.bind(this);
   }
 
   set label(v) {
     this.labelElement_.innerText = v;
     this.labelElement_.title = v;
+  }
+
+  dragHandler_(e) {
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   startLabelEdit(e) {
@@ -198,6 +204,7 @@ export class LabelEditor {
     el.style.overflow = "visible";
     el.style.width = "min-content";
     this.editing_ = true;
+    el.addEventListener("dragstart", this.dragHandler_);
 
     // Create a new range for all of the contents.
     const range = document.createRange();
@@ -231,6 +238,7 @@ export class LabelEditor {
     // Restore ellipsis if necessary.
     e.target.style.overflow = "";
     e.target.style.width = "";
+    e.target.removeEventListener("dragstart", this.dragHandler_);
     this.editing_ = false;
 
     e.target.innerText = e.target.innerText.trim();
