@@ -40,6 +40,12 @@ const define = () => {
     position: relative;
   }
 
+  /* contains the selection_container and all the child toggles/edges */
+  .child_accessories_container {
+    width: 100%;
+    position: relative;
+  }
+
   /* selection_container contains the self content boxes and puts in the selection border.
      This is also responsible for box shadows / material feel / on hover reactions.
   */
@@ -223,13 +229,15 @@ const define = () => {
 
   const body = `
   <div class=container>
-    <div class=selection_container>
-      <div class=content_container>
-        <div class=leading_decorators></div>
-        <div class=label></div>
-        <div class=trailing_decorators></div>
+    <div class=child_accessories_container>
+      <div class=selection_container>
+        <div class=content_container>
+          <div class=leading_decorators></div>
+          <div class=label></div>
+          <div class=trailing_decorators></div>
+        </div>
+        <div class=ew_drag_handle><div class=ew_drag_handle_cursor></div></div>
       </div>
-      <div class=ew_drag_handle><div class=ew_drag_handle_cursor></div></div>
       <div class="child_toggle expanded"></div>
       <div class=child_edge></div>
       <div class=parent_edge></div>
