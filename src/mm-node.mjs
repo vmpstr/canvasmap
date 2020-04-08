@@ -38,6 +38,10 @@ const define = () => {
   .container {
     width: 100%;
     position: relative;
+    transition: z-index 200ms;
+  }
+  .container:hover {
+    z-index: 10;
   }
 
   /* contains the selection_container and all the child toggles/edges */
