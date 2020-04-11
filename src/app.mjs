@@ -48,36 +48,41 @@ export async function initialize(version) {
   mouseTracker = new MouseTracker;
 
   // No mm- deps.
-  const undoModule = await import(`./undo-stack.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
+  const undoModule = await import(`./undo-stack.mjs?v=${version()}`)
+  await undoModule.initialize(version)
   undoStack = new undoModule.UndoStack;
 
-  const pasteModule = await import(`./paste-buffer.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
+  const pasteModule = await import(`./paste-buffer.mjs?v=${version()}`)
+  await pasteModule.initialize(version)
   pasteBuffer = new pasteModule.PasteBuffer;
 
-  let contextModule = await import(`./context-menu-control.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
+  const contextModule = await import(`./context-menu-control.mjs?v=${version()}`)
+  await contextModule.initialize(version)
   contextMenuControl = new contextModule.ContextMenuControl;
 
   // Mms async.
-  import(`./mm-map.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
-  import(`./mm-node.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
-  import(`./mm-context-menu.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
-  import(`./mm-context-menu-item.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
-  import(`./mm-scroller-node.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
-  import(`./mm-color-sample.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
+  const mmMap = await import(`./mm-map.mjs?v=${version()}`)
+  await mmMap.initialize(version)
+
+  const mmNode = await import(`./mm-node.mjs?v=${version()}`)
+  await mmNode.initialize(version)
+
+  const mmContextMenu = await import(`./mm-context-menu.mjs?v=${version()}`)
+  await mmContextMenu.initialize(version)
+
+  const mmContextMenuItem = await import(`./mm-context-menu-item.mjs?v=${version()}`)
+  await mmContextMenuItem.initialize(version)
+
+  const mmScrollerNode = await import(`./mm-scroller-node.mjs?v=${version()}`)
+  await mmScrollerNode.initialize(version)
+
+  const mmColorSample = await import(`./mm-color-sample.mjs?v=${version()}`)
+  await mmColorSample.initialize(version)
 
   // Has mm- deps.
-  const dialogModule = await import(`./dialog-control.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
-  dialogControl = new dialogModule.DialogControl;
+  const dialogControlModule = await import(`./dialog-control.mjs?v=${version()}`)
+  await dialogControlModule.initialize(version)
+  dialogControl = new dialogControlModule.DialogControl;
 
   const promises = [
     customElements.whenDefined('mm-map'),
