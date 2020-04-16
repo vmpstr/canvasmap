@@ -7,8 +7,11 @@ export async function initialize(version) {
   initialized = true;
   App = await import(`./app.mjs?v=${version()}`).then(
     async m => { await m.initialize(version); return m });
-  StyleDialogModule = await import(`./mm-style-dialog.mjs?v=${version()}`).then(
-    async m => { await m.initialize(version); return m });
+
+  await import(`./mm-style-dialog.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version) });
+  await import(`./mm-node-url-dialog.mjs?v=${version()}`).then(
+    async m => { await m.initialize(version) });
 }
 
 export class DialogControl {
@@ -22,6 +25,14 @@ export class DialogControl {
     this.activeDialog_.node = node;
     this.activeDialog_.position = position;
     document.body.appendChild(this.activeDialog_);
+  }
+
+  showNodeUrlDialog(node, position) {
+    hide.hideDialog();
+
+    this.activeDialog_ = document.createElement("mm-node-url-dialog");
+    this.activeDialog_.node = node;
+    this.activeDialog_.position = position;
   }
 
   hideDialog() {
