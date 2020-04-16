@@ -310,6 +310,12 @@ const define = () => {
     }
 
     // Getters ===================================================================
+    set url(v) {
+      this.url_ = v;
+      // TODO(vmpstr): Notify has url now? Update style.
+    }
+
+    // Getters ===================================================================
     get has_child_edges() { return true; }
     get parent_edge_offset() {
       if (!this.shadowRoot)
@@ -319,10 +325,12 @@ const define = () => {
     }
     get node_type() { return "node"; }
     get hero() { return this.shadowRoot.querySelector(".content_container"); }
+    get url() { return this.url_; }
 
     getContextMenu() {
       return ContextMenuHelpers.createMenu([
         ContextMenuHelpers.menus.editLabel(() => this.startLabelEdit()),
+        ContextMenuHelpers.menus.editUrl((_, position) => this.editUrl(position)),
         ContextMenuHelpers.menus.convertTo(this.node_type, (type) => this.convertToType(type)),
         ContextMenuHelpers.menus.selfStyle((action, position) => this.selfStyleAction(action, position))
       ]);
@@ -333,6 +341,10 @@ const define = () => {
     }
 
     // Misc ======================================================================
+    editUrl(position) {
+      App.dialogControl.showNodeUrlDialog(this, position);
+    }
+
     computeEdges_() {
       if (!this.shadowRoot || !this.parent_)
         return;

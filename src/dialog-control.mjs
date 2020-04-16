@@ -28,11 +28,12 @@ export class DialogControl {
   }
 
   showNodeUrlDialog(node, position) {
-    hide.hideDialog();
+    this.hideDialog();
 
     this.activeDialog_ = document.createElement("mm-node-url-dialog");
     this.activeDialog_.node = node;
     this.activeDialog_.position = position;
+    document.body.appendChild(this.activeDialog_);
   }
 
   hideDialog() {

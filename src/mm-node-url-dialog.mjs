@@ -23,7 +23,7 @@ const define = () => {
   :host {
     position: absolute;
     background: white;
-    width: 250px;
+    width: 350px;
     box-shadow: 0 0 10px 0;
     border-radius: 5px;
     border: 1px solid black;
@@ -35,7 +35,6 @@ const define = () => {
     flex-direction: column;
 
     width: calc(100% - 10px);
-    height: calc(100% - 10px);
 
     margin: 3px;
   }
@@ -56,80 +55,53 @@ const define = () => {
   .title {
     font-weight: semi-bold;
   }
+
+  .url_entry {
+    display: flex;
+    flex-direction: row;
+  }
+  .url_entry > .label {
+    flex-shrink: 1;
+  }
+  .url_entry > .entry {
+    flex-grow: 1;
+  }
+
+  .track_changes_entry {
+    display: flex;
+    flex-direction: row;
+  }
+  .track_changes_entry > .entry {
+  }
+  .track_changes_entry > .label {
+  }
+
   .dialog_control {
-    font-weight: bold;
     display: flex;
     flex-direction: row;
-    width: max-content;
   }
-  .maximize_button {
+  .dialog_control > .save {
   }
-  .close_button {
-  }
-
-  /* property selection */
-  .selection_container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-
-    width: 100%;
-  }
-  .property_title {
-  }
-  .property_selector {
-  }
-
-  .properties_container {
-    position: relative;
-  }
-
-  .property_container {
-    position: absolute;
-    top: 0;
-    left: 0;
-
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
-
-  /* description */
-  .property_description {
-    font-size: small;
-  }
-
-  /* property editing */
-  .property_editor_container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .current_value {
-    font-weight: bold;
-  }
-  .property_editor_container > mm-color-sample {
-    width: 50px;
-    height: 25px;
-    border-radius: 5px;
-    border: 1px solid black;
-    margin-top: 3px;
+  .dialog_control > .cancel {
   }`;
 
   const body = `
     <div class=container>
       <div class=header>
-        <div class=title></div>
-        <div class=dialog_control>
-          <div class=maximize_button>m</div>
-          <div class=close_button>X</div>
-        </div>
+        <div class=title>Edit URL</div>
       </div>
-      <div class=selection_container>
-        <div class=property_title>property:&nbsp;</div>
-        <select class=property_selector></select>
+      <div class=url_entry>
+        <div class=label>URL</div>
+        <input type=text class=entry></input>
       </div>
-      <div class=properties_container></div>
+      <div class=track_changes_entry>
+        <input disabled id=track_input type=checkbox class=entry>
+        <label for=track_input>Track changes</label>
+      </div>
+      <div class=dialog_control>
+        <input class=save type=button value="Save"></input>
+        <input class=cancel type=button value="Cancel"></input>
+      </div>
     </div>
   `;
 
@@ -149,223 +121,13 @@ const define = () => {
       this.shadowRoot.innerHTML = `
         <style>${style}</style>
         <body>${body}</body>`;
-
-      this.customizeForNode_();
-      this.registerEventHandlers_();
+      this.registerCallbacks_();
+      this.shadowRoot.querySelector(".url_entry > .entry").focus();
     }
 
-    customizeForNode_() {
-      this.shadowRoot.querySelector(".title").innerText =
-        `${Nodes.prettyName(this.node_.node_type)} style`;
-
-      const select = this.shadowRoot.querySelector(".property_selector");
-      select.addEventListener("change", () => this.selectionChanged_());
-
-      const propertiesContainer = this.shadowRoot.querySelector(".properties_container");
-
-      this.styles_ = Style.getCustomStylesForType(this.node_.node_type);
-      console.assert(this.styles_.length);
-      for (let i = 0; i < this.styles_.length; ++i) {
-        let option = document.createElement("option");
-        if (i == 0)
-          option.selected = "selected";
-        option.value = i;
-        option.innerText = this.styles_[i];
-        select.appendChild(option);
-
-        let container = document.createElement("div");
-        container.classList.add("property_container");
-        container.id = `property_container_${i}`;
-        container.style.visibility = "hidden";
-        container.style.zIndex = "-1";
-        propertiesContainer.appendChild(container);
-
-        let description = document.createElement("div");
-        description.classList.add("property_description");
-        description.innerText = Style.toDescription(this.styles_[i]);
-        container.appendChild(description);
-
-        let control = document.createElement("div");
-        control.classList.add("property_editor_container");
-        container.appendChild(control);
-
-        this.buildPropertyEditor_(control, this.styles_[i]);
-      }
-
-      let maxHeight = 0;
-      for (let i = 0; i < this.styles_.length; ++i) {
-        const height =
-          propertiesContainer.querySelector(`#property_container_${i}`)
-            .getBoundingClientRect().height;
-        maxHeight = Math.max(maxHeight, height);
-      }
-      propertiesContainer.style.minHeight = `${Math.ceil(maxHeight)}px`;
-
-      this.selectedOption_ = 0;
-      this.selectionChanged_();
+    registerCallbacks_() {
     }
 
-    buildPropertyEditor_(container, style) {
-      if (style == "border-radius") {
-        const current = document.createElement("div");
-        current.classList.add("current_value");
-
-        const slider = document.createElement("input");
-        slider.type = "range";
-        slider.min = 0;
-        slider.max = 25;
-        slider.value = parseInt(this.node_.getEffectiveCustomStyle(style));
-        const update_inputs = () => {
-          current.innerText = `${slider.value}px`;
-        };
-        const callback = () => {
-          update_inputs();
-          App.undoStack.willChangeStyle(this.node_, Style.toSelf(style));
-          this.node_.setCustomStyle(Style.toSelf(style), `${slider.value}px`);
-          App.undoStack.didChangeStyle();
-        };
-        slider.addEventListener("input", callback);
-        update_inputs();
-
-        container.appendChild(current);
-        container.appendChild(slider);
-      } else if (style == "border") {
-        const current = document.createElement("div");
-        current.classList.add("current_value");
-
-        const values = this.node_.getEffectiveCustomStyle(style).trim().split(" ");
-
-        const slider = document.createElement("input");
-        slider.type = "range";
-        slider.min = 0;
-        slider.max = 10;
-        slider.value = parseInt(values[0]);
-
-        const select = document.createElement("select");
-        const options = [
-          "none", "solid", "dotted", "dashed", "double",
-          "groove", "ridge", "inset", "outset"];
-        for (let i = 0; i < options.length; ++i) {
-          let option = document.createElement("option");
-          option.value = options[i];
-          option.innerText = options[i];
-          if (values[1] == options[i])
-            option.selected = "selected";
-          select.appendChild(option);
-        }
-
-        // TODO(vmpstr): util
-        const div = document.createElement("div");
-        div.style.color = values.slice(2).join(" ");
-        div.style.visibility = "hidden";
-        div.style.width = "0px";
-        div.style.height = "0px";
-        document.body.appendChild(div);
-        const value = getComputedStyle(div).getPropertyValue("color");
-        const a = value.match(/rgba?\((.*)\)/)[1].split(", ").map(Number);
-        let rgba;
-        if (a.length == 3) {
-          rgba = [a[0], a[1], a[2], 1];
-        } else {
-          console.assert(a.length == 4);
-          rgba = a;
-        }
-        div.remove();
-
-        const sample = document.createElement("mm-color-sample");
-        sample.rgba = rgba;
-
-        const update_inputs = () => {
-          current.innerText = `${slider.value}px ${select.value} rgba(${sample.rgba.join(",")})`;
-        };
-        const callback = () => {
-          update_inputs();
-          App.undoStack.willChangeStyle(this.node_, Style.toSelf(style));
-          this.node_.setCustomStyle(Style.toSelf(style), current.innerText);
-          App.undoStack.didChangeStyle();
-        };
-        select.addEventListener("change", callback);
-        slider.addEventListener("input", callback);
-        sample.onChange(callback);
-
-        update_inputs();
-        container.appendChild(current);
-        container.appendChild(slider);
-        container.appendChild(select);
-        container.appendChild(sample);
-      } else if (style == "background") {
-        const current = document.createElement("div");
-        current.classList.add("current_value");
-
-        const initial = this.node_.getEffectiveCustomStyle(style).trim();
-
-        // TODO(vmpstr): util
-        const div = document.createElement("div");
-        div.style.color = initial;
-        div.style.visibility = "hidden";
-        div.style.width = "0px";
-        div.style.height = "0px";
-        document.body.appendChild(div);
-        const value = getComputedStyle(div).getPropertyValue("color");
-        const a = value.match(/rgba?\((.*)\)/)[1].split(", ").map(Number);
-        let rgba;
-        if (a.length == 3) {
-          rgba = [a[0], a[1], a[2], 1];
-        } else {
-          console.assert(a.length == 4);
-          rgba = a;
-        }
-        div.remove();
-
-        const sample = document.createElement("mm-color-sample");
-        sample.rgba = rgba;
-
-        const update_inputs = () => {
-          current.innerText = `rgba(${sample.rgba.join(",")})`;
-        };
-        const callback = () => {
-          update_inputs();
-          App.undoStack.willChangeStyle(this.node_, Style.toSelf(style));
-          this.node_.setCustomStyle(Style.toSelf(style), current.innerText);
-          App.undoStack.didChangeStyle();
-        };
-        sample.onChange(callback);
-
-        update_inputs();
-        container.appendChild(current);
-        container.appendChild(sample);
-      }
-    }
-
-    selectionChanged_() {
-      const select = this.shadowRoot.querySelector(".property_selector");
-      console.assert(select.value >= 0 && select.value < this.styles_.length);
-
-      const currentContainer =
-        this.shadowRoot.querySelector(`#property_container_${this.selectedOption_}`);
-      currentContainer.style.visibility = "hidden";
-      currentContainer.style.zIndex = "-1";
-
-      this.selectedOption_ = select.value;
-
-      const newContainer =
-        this.shadowRoot.querySelector(`#property_container_${this.selectedOption_}`);
-      newContainer.style.visibility = "visible";
-      newContainer.style.zIndex = "0";
-    }
-
-    registerEventHandlers_() {
-      const closeButton = this.shadowRoot.querySelector(".close_button");
-      closeButton.addEventListener("click", () => App.dialogControl.hideDialog());
-
-      const header = this.shadowRoot.querySelector(".header");
-      header.setAttribute("draggable", true);
-      header.addEventListener("dragstart", (e) => this.onDragStart_(e));
-      header.addEventListener("drag", (e) => this.onDrag_(e));
-      header.addEventListener("dragend", (e) => this.onDragEnd_(e));
-
-      this.shadowRoot.addEventListener("keydown", (e) => { e.stopPropagation() });
-    }
 
     set position(v) {
       this.style.left = `${v[0]}px`;

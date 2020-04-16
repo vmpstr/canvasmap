@@ -17,6 +17,14 @@ class Menus {
     };
   }
 
+  editUrl(callback) {
+    return {
+      text: "Edit URL",
+      shortcut: "",
+      callback: callback
+    };
+  }
+
   convertTo(from, callback) {
     const result = {
       text: "Convert to",
