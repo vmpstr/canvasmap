@@ -110,8 +110,9 @@ const define = () => {
 
     background: rgba(0, 0, 0, 0.05);
   }
-  ${Style.selectors.kChildArea}${Style.selectors.kHidden} > * {
-    display: none;
+  ${Style.selectors.kChildArea}${Style.selectors.kHidden} {
+    visibility: hidden;
+    height: 0;
   }
   ::slotted(*) {
     position: relative;
