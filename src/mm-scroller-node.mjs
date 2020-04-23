@@ -326,6 +326,13 @@ const define = () => {
     }
 
     // Misc ======================================================================
+    onSlotChange_() {
+      super.onSlotChange_();
+      const container = this.shadowRoot.querySelector(".container");
+      const container_rect = container.getBoundingClientRect();
+      if (parseInt(container.style.width) > container_rect.width)
+        container.style.width = "";
+    }
     computeEdges_() {
       if (!this.shadowRoot || !this.parent_)
         return;
