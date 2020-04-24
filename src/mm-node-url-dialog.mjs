@@ -122,12 +122,72 @@ const define = () => {
         <style>${style}</style>
         <body>${body}</body>`;
       this.registerCallbacks_();
-      this.shadowRoot.querySelector(".url_entry > .entry").focus();
+
+      const url_entry = this.shadowRoot.querySelector(".url_entry > .entry");
+      url_entry.value = this.node_.url;
+      url_entry.select();
+
+      const track_input = this.shadowRoot.querySelector(".track_changes_entry > .entry");
+      if (this.node_.trackUrl)
+        track_input.setAttribute("checked", "");
+
+      this.onInputChanged_();
     }
 
     registerCallbacks_() {
+      const container = this.shadowRoot.querySelector(".container");
+      const url_input = this.shadowRoot.querySelector(".url_entry > .entry");
+      const cancel = this.shadowRoot.querySelector(".dialog_control > .cancel");
+      const save = this.shadowRoot.querySelector(".dialog_control > .save");
+      const track_input = this.shadowRoot.querySelector(".track_changes_entry > .entry");
+      container.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+        if (e.key == "Tab") {
+          if (!container.contains(e.target) || e.target == cancel) {
+            e.preventDefault();
+            url_input.select();
+          }
+        } else if (e.key == "Escape") {
+          this.cancel_();
+        }
+      });
+
+      url_input.addEventListener("keydown", (e) => {
+        if (e.key == "Enter")
+          this.save_();
+      });
+
+      url_input.addEventListener("input", (e) => {
+        this.onInputChanged_();
+      });
+
+      cancel.addEventListener("click", () => this.cancel_());
+      save.addEventListener("click", () => this.save_());
     }
 
+    cancel_() {
+      App.dialogControl.hideDialog();
+    }
+    save_() {
+      const url_input = this.shadowRoot.querySelector(".url_entry > .entry");
+      const track_input = this.shadowRoot.querySelector(".track_changes_entry > .entry");
+
+      this.node_.url = url_input.value;
+      this.node_.trackUrl = track_input.checked;
+      App.dialogControl.hideDialog();
+    }
+    onInputChanged_() {
+      const url_input = this.shadowRoot.querySelector(".url_entry > .entry");
+      const track_input = this.shadowRoot.querySelector(".track_changes_entry > .entry");
+
+      const github_regex = /^(https?:\/\/)?(www.)?github.com\/[^\/]+\/issues\/\d+$/;
+      if (github_regex.test(url_input.value)) {
+        track_input.removeAttribute("disabled");
+      } else {
+        track_input.setAttribute("disabled", "");
+        track_input.removeAttribute("checked");
+      }
+    }
 
     set position(v) {
       this.style.left = `${v[0]}px`;

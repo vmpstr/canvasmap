@@ -314,6 +314,15 @@ const define = () => {
       this.url_ = v;
       // TODO(vmpstr): Notify has url now? Update style.
     }
+    get url() {
+      return this.url_ || "";
+    }
+    set trackUrl(v) {
+      this.urlTracked_ = v;
+    }
+    get trackUrl() {
+      return this.urlTracked_ || false;
+    }
 
     // Getters ===================================================================
     get has_child_edges() { return true; }
@@ -325,7 +334,6 @@ const define = () => {
     }
     get node_type() { return "node"; }
     get hero() { return this.shadowRoot.querySelector(".content_container"); }
-    get url() { return this.url_; }
 
     getContextMenu() {
       return ContextMenuHelpers.createMenu([
