@@ -305,6 +305,26 @@ class ChildToggleTransaction extends Transaction {
   }
 }
 
+class UrlChangeTransaction extends Transaction {
+  constructor(target) {
+    super(target);
+    this.old_url_ = super.target.url;
+  }
+
+  apply() {
+    super.target.url = this.new_url_;
+  }
+
+  undo() {
+    super.target.url = this.old_url_;
+  }
+
+  done() {
+    this.new_url_ = super.target.url;
+    return this.old_url_ != this.new_url_;
+  }
+}
+
 export class UndoStack {
   constructor() {
     this.currentTransaction_ = null;
@@ -402,6 +422,14 @@ export class UndoStack {
     this.currentTransaction_ = new StyleHunkChangeTransaction(target, properties);
   }
   didChangeStyle() {
+    this.recordTransactionIfNeeded_();
+  }
+
+  willChangeUrl(target) {
+    console.assert(!this.currentTransaction_);
+    this.currentTransaction_ = new UrlChangeTransaction(target);
+  }
+  didChangeUrl() {
     this.recordTransactionIfNeeded_();
   }
 

@@ -143,9 +143,16 @@ const define = () => {
       container.addEventListener("keydown", (e) => {
         e.stopPropagation();
         if (e.key == "Tab") {
-          if (!container.contains(e.target) || e.target == cancel) {
-            e.preventDefault();
-            url_input.select();
+          if (e.shiftKey) {
+            if (!container.contains(e.target) || e.target == url_input) {
+              e.preventDefault();
+              cancel.focus();
+            }
+          } else {
+            if (!container.contains(e.target) || e.target == cancel) {
+              e.preventDefault();
+              url_input.select();
+            }
           }
         } else if (e.key == "Escape") {
           this.cancel_();

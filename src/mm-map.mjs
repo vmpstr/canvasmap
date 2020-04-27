@@ -173,6 +173,14 @@ const define = () => {
         return;
       }
 
+      if (action == Shortcuts.action.kEditUrl) {
+        e.preventDefault();
+        e.stopPropagation();
+        const rect = node.getBoundingClientRect();
+        node.editUrl([rect.x, rect.y]);
+        return;
+      }
+
       let child;
       if (e.key == "Tab" || e.key == "Enter") {
         child = Nodes.createNode("node", this);

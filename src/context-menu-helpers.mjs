@@ -20,7 +20,7 @@ class Menus {
   editUrl(callback) {
     return {
       text: "Edit URL",
-      shortcut: "",
+      shortcut: "ctrl+k",
       callback: callback
     };
   }

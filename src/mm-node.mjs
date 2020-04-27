@@ -282,6 +282,9 @@ const define = () => {
       if (this.deferredData_) {
         const content_container = this.shadowRoot.querySelector(".content_container");
         content_container.style.width = this.deferredData_.label_width;
+
+        this.url = this.deferredData_.url;
+
         delete this.deferredData_;
       }
 
@@ -325,7 +328,10 @@ const define = () => {
 
     // Getters ===================================================================
     set url(v) {
+      App.undoStack.willChangeUrl(this);
       this.url_ = v;
+      App.undoStack.didChangeUrl();
+
       this.notifyUrlChanged_();
     }
     get url() {
@@ -364,7 +370,9 @@ const define = () => {
 
     // Misc ======================================================================
     notifyUrlChanged_() {
-      this.shadowRoot.querySelector(".url_icon").style.display = this.url_ ? "" : "none";
+      const url_icon = this.shadowRoot.querySelector(".url_icon");
+      url_icon.style.display = this.url_ ? "" : "none";
+      url_icon.title = this.url_ || "";
     }
     editUrl(position) {
       App.dialogControl.showNodeUrlDialog(this, position);
@@ -489,10 +497,12 @@ const define = () => {
       this.position = data.position || [0, 0];
       if (this.shadowRoot) {
         this.shadowRoot.querySelector(".content_container").style.width = data.label_width;
+        this.url = data.url || "";
       } else {
         if (!this.deferredData_)
           this.deferredData_ = {};
         this.deferredData_['label_width'] = data.label_width;
+        this.deferredData_['url'] = data.url || "";
       }
 
       // TODO(vmpstr): backcompat
@@ -518,6 +528,7 @@ const define = () => {
         type: 'node',
         position: this.position,
         children_hidden: this.childrenHidden_,
+        url: this.url,
         nodes: [],
         styles: []
       };

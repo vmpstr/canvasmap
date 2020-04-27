@@ -6,6 +6,7 @@ export const action = {
   kRedo: "redo",
   kLabelEdit: "label_edit",
   kDelete: "delete",
+  kEditUrl: "edit_url",
 };
 
 export function eventToAction(e) {
@@ -20,6 +21,9 @@ export function eventToAction(e) {
     return action.kUndo;
   if (e.key == 'y' && e.ctrlKey)
     return action.kRedo;
+
+  if (e.key == 'k' && e.ctrlKey)
+    return action.kEditUrl;
 
   return action.kNoAction;
 }
