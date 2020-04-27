@@ -212,12 +212,15 @@ const define = () => {
 
   /* sample divs */
   .url_icon {
-    margin: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
     align-self: center;
     border: 2px solid black;
     border-radius: 5px;
     width: 10px;
     height: 10px;
+    background: pink;
+    cursor: pointer;
   }
   .sample_label {
     display: table-cell;
@@ -236,7 +239,9 @@ const define = () => {
     <div class=child_accessories_container>
       <div class=selection_container>
         <div class=content_container>
-          <div class=leading_decorators></div>
+          <div class=leading_decorators>
+            <div class=url_icon></div>
+          </div>
           <div class=label></div>
           <div class=trailing_decorators></div>
         </div>
@@ -290,6 +295,7 @@ const define = () => {
 
       // Recompute the edges just in case we hid children.
       this.computeEdges_();
+      this.notifyUrlChanged_();
     }
 
     registerEventHandlers_() {
@@ -307,12 +313,20 @@ const define = () => {
         this.select();
         App.mouseTracker.handledClick(this, e);
       });
+
+      const url_icon = this.shadowRoot.querySelector(".url_icon");
+      url_icon.addEventListener("click", (e) => {
+        const http_regex = /^https?:\/\//;
+        const url = (http_regex.test(this.url_) ? "" : "http://") + this.url;
+        window.open(url, "_blank");
+        App.mouseTracker.handledClick(this, e);
+      });
     }
 
     // Getters ===================================================================
     set url(v) {
       this.url_ = v;
-      // TODO(vmpstr): Notify has url now? Update style.
+      this.notifyUrlChanged_();
     }
     get url() {
       return this.url_ || "";
@@ -349,6 +363,9 @@ const define = () => {
     }
 
     // Misc ======================================================================
+    notifyUrlChanged_() {
+      this.shadowRoot.querySelector(".url_icon").style.display = this.url_ ? "" : "none";
+    }
     editUrl(position) {
       App.dialogControl.showNodeUrlDialog(this, position);
     }
