@@ -10,7 +10,7 @@ let next_context_id_ = 1;
 export class Context {
   constructor(name) {
     this.id_ = next_context_id_++;
-    this.name_ = name;
+    this.name_ = name || "";
     this.items_ = [];
     // TODO(vmpstr): implement these.
     this.worklog_ = null;
