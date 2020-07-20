@@ -1,12 +1,5 @@
 let next_context_id_ = 1;
 
-/*
- - id
- - name
- - (list) top level items
- - worklog
- - timeline
-*/
 export class Context {
   constructor(name) {
     this.id_ = next_context_id_++;
@@ -27,6 +20,8 @@ export class Context {
     return this.name_;
   }
   set name(v) {
+    if (v == this.name_)
+      return;
     this.name_ = v;
     this.notifyObservers_();
   }
@@ -58,7 +53,7 @@ export class Context {
   }
   notifyObservers_() {
     this.change_observers_.forEach((observer) => {
-      observer.notifyContextChanged(this);
+      observer(this);
     });
   }
 };
