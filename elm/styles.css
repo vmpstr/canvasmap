@@ -13,12 +13,24 @@ body {
 }
 
 .topchild {
+  box-sizing: border-box;
   position: absolute;
-  width: 200px;
-  height: 50px;
+  contain: layout;
   background: pink;
   border-radius: 10px;
   border: 1px solid black;
 }
 
+.ewhandle {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  right: -3px;
+  width: 6px;
+  cursor: ew-resize;
+}
+
+.debug {
+  background: orange;
+}
 

@@ -11,22 +11,37 @@ import Debug
 
 type Msg 
   = MsgNoop
-  | MsgOnDragStart String
+  | MsgOnDragStart DragIdType
   | MsgOnDragBy Draggable.Delta
   | MsgOnDragEnd
-  | MsgDraggableInternal (Draggable.Msg String)
+  | MsgDraggableInternal (Draggable.Msg DragIdType)
   | MsgSizeChanged SizeChangedData
+
+type DragIdType
+  = DragSelf String
+  | DragEWSize String
 
 topChildToHtml : TopChild -> Html.Html Msg
 topChildToHtml child =
+  let
+      (left, top) = child.position
+      (width, height) = child.size
+  in
   div
     [ id child.id
     , class "topchild"
-    , Draggable.mouseTrigger child.id MsgDraggableInternal
-    , style "left" (String.fromInt (Tuple.first child.position) ++ "px")
-    , style "top" (String.fromInt (Tuple.second child.position) ++ "px")
+    , Draggable.mouseTrigger (DragSelf child.id) MsgDraggableInternal
+    , style "left" (String.fromInt left ++ "px")
+    , style "top" (String.fromInt top ++ "px")
+    , style "width" (String.fromInt width ++ "px")
+    , style "height" (String.fromInt height ++ "px")
     ]
-    []
+    [ div
+        [ class "ewhandle"
+        , Draggable.mouseTrigger (DragEWSize child.id) MsgDraggableInternal
+        ]
+        []
+    ]
 
 view : Model -> Html.Html Msg
 view model =
@@ -51,7 +66,7 @@ sizeChangeDecoder =
     |> required "id" Decode.string
     |> required "size" (Decode.list Decode.float)
 
-dragConfig : Draggable.Config String Msg
+dragConfig : Draggable.Config DragIdType Msg
 dragConfig =
     Draggable.customConfig
       [ Draggable.Events.onDragBy MsgOnDragBy
@@ -67,22 +82,17 @@ adjustPosition child (dx, dy) =
     in
     { child | position = position }
 
-dragChildBy : List TopChild -> Maybe String -> Draggable.Delta -> (List TopChild)
-dragChildBy children maybeId delta =
-  case maybeId of 
-    Just id ->
-      case children of
-        (firstChild :: rest) ->
-          if firstChild.id == id then
-            [adjustPosition firstChild delta] ++ rest
-          else
-            [firstChild] ++ (dragChildBy rest maybeId delta)
+dragChildBy : List TopChild -> String -> Draggable.Delta -> (List TopChild)
+dragChildBy children id delta =
+  case children of
+    (firstChild :: rest) ->
+      if firstChild.id == id then
+        [adjustPosition firstChild delta] ++ rest
+      else
+        [firstChild] ++ (dragChildBy rest id delta)
 
-        [] ->
-          []
-
-    Nothing ->
-        children
+    [] ->
+      []
 
 adjustSize : List TopChild -> String -> List Float -> List TopChild
 adjustSize children id size =
@@ -91,7 +101,7 @@ adjustSize children id size =
         if firstChild.id == id then
           case size of
             (width :: height :: []) ->
-              (Debug.log "child adjusted size " [{ firstChild | size = (round width, round height) }]) ++ rest
+              [{ firstChild | size = (round width, round height) }] ++ rest
 
             _ ->
                children
@@ -101,6 +111,25 @@ adjustSize children id size =
       [] ->
         []
 
+adjustChildSize : TopChild -> Draggable.Delta -> TopChild
+adjustChildSize child (dw, dh) =
+    let
+        (w, h) = child.size
+        size = (round (toFloat w + dw), round (toFloat h + dh))
+    in
+    { child | size = size }
+
+resizeChildBy : List TopChild -> String -> Draggable.Delta -> (List TopChild)
+resizeChildBy children id delta =
+  case children of
+    (firstChild :: rest) ->
+      if firstChild.id == id then
+        [adjustChildSize firstChild delta] ++ rest
+      else
+        [firstChild] ++ (resizeChildBy rest id delta)
+
+    [] ->
+      []
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -112,7 +141,19 @@ update msg model =
         nocmd { model | dragId = Just id }
 
     MsgOnDragBy delta ->
-        nocmd { model | children = dragChildBy model.children model.dragId delta }
+        case model.dragId of
+          Just (DragSelf id) ->
+            nocmd { model | children = dragChildBy model.children id delta }
+
+          Just (DragEWSize id) ->
+            let
+                (dx, dy) = delta
+                adjustment = (dx, 0)
+            in
+            nocmd { model | children = resizeChildBy model.children id adjustment }
+
+          Nothing ->
+            nocmd model
 
     MsgOnDragEnd ->
         nocmd { model | dragId = Nothing }
@@ -130,9 +171,9 @@ type alias TopChild =
   }
 
 type alias Model =
-  { drag: Draggable.State String
+  { drag: Draggable.State DragIdType
   , children: List TopChild
-  , dragId: Maybe String
+  , dragId: Maybe DragIdType
   , nextTopChildId : Int
   }
 
@@ -140,8 +181,8 @@ initModel : Model
 initModel =
   { drag = Draggable.init
   , children = 
-     [ { id = "tc0", position = (0, 0), size = (0, 0) }
-     , { id = "tc1", position = (100, 200), size = (0, 0) }
+     [ { id = "tc0", position = (0, 0), size = (200, 50) }
+     , { id = "tc1", position = (100, 200), size = (200, 50) }
      ]
   , dragId = Nothing
   , nextTopChildId = 2
@@ -170,7 +211,7 @@ subscriptions model =
 main : Program () Model Msg
 main =
   Browser.element
-      { init = \() -> ( initModel, onElementCreated (List.map (\child -> child.id)  initModel.children) )
+      { init = \() -> ( initModel, onElementCreated (List.map .id initModel.children) )
       , view = view
       , update = update
       , subscriptions = subscriptions
