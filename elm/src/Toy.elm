@@ -1,10 +1,13 @@
-module Toy exposing (main)
+port module Toy exposing (main)
 
 import Draggable
 import Draggable.Events
 import Html exposing (div)
-import Html.Attributes exposing (..)
+import Html.Attributes exposing (class, style, id)
 import Browser
+import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (required)
+import Debug
 
 type Msg 
   = MsgNoop
@@ -12,11 +15,13 @@ type Msg
   | MsgOnDragBy Draggable.Delta
   | MsgOnDragEnd
   | MsgDraggableInternal (Draggable.Msg String)
+  | MsgSizeChanged SizeChangedData
 
 topChildToHtml : TopChild -> Html.Html Msg
 topChildToHtml child =
   div
-    [ class "topchild"
+    [ id child.id
+    , class "topchild"
     , Draggable.mouseTrigger child.id MsgDraggableInternal
     , style "left" (String.fromInt (Tuple.first child.position) ++ "px")
     , style "top" (String.fromInt (Tuple.second child.position) ++ "px")
@@ -31,6 +36,20 @@ view model =
 
 nocmd : Model -> ( Model, Cmd msg )
 nocmd model = ( model, Cmd.none )
+
+port sizeChanged  : (Decode.Value -> msg) -> Sub msg
+port onElementCreated : List String -> Cmd msg
+
+type alias SizeChangedData =
+  { id : String
+  , size : List Float
+  }
+
+sizeChangeDecoder : Decode.Decoder SizeChangedData
+sizeChangeDecoder =
+  Decode.succeed SizeChangedData
+    |> required "id" Decode.string
+    |> required "size" (Decode.list Decode.float)
 
 dragConfig : Draggable.Config String Msg
 dragConfig =
@@ -65,6 +84,24 @@ dragChildBy children maybeId delta =
     Nothing ->
         children
 
+adjustSize : List TopChild -> String -> List Float -> List TopChild
+adjustSize children id size =
+    case children of
+      (firstChild :: rest) ->
+        if firstChild.id == id then
+          case size of
+            (width :: height :: []) ->
+              (Debug.log "child adjusted size " [{ firstChild | size = (round width, round height) }]) ++ rest
+
+            _ ->
+               children
+        else
+          [firstChild] ++ (adjustSize rest id size)
+
+      [] ->
+        []
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
@@ -83,9 +120,13 @@ update msg model =
     MsgDraggableInternal dragMsg ->
         Draggable.update dragConfig dragMsg model
 
+    MsgSizeChanged data ->
+        nocmd { model | children = adjustSize model.children data.id data.size }
+
 type alias TopChild =
   { id: String
   , position: (Int, Int)
+  , size: (Int, Int)
   }
 
 type alias Model =
@@ -99,21 +140,37 @@ initModel : Model
 initModel =
   { drag = Draggable.init
   , children = 
-     [ { id = "tc0", position = (0, 0) }
-     , { id = "tc1", position = (100, 200) }
+     [ { id = "tc0", position = (0, 0), size = (0, 0) }
+     , { id = "tc1", position = (100, 200), size = (0, 0) }
      ]
   , dragId = Nothing
   , nextTopChildId = 2
   }
 
+
+toMsgOrNoop : (data -> Msg) -> Result err data -> Msg
+toMsgOrNoop toMsg result =
+  case result of
+      Ok data ->
+        toMsg data
+
+      Err _ ->
+        MsgNoop
+
+resizeSubscription : Model -> Sub Msg
+resizeSubscription model =
+  sizeChanged (Decode.decodeValue sizeChangeDecoder >> (toMsgOrNoop MsgSizeChanged))
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Draggable.subscriptions MsgDraggableInternal model.drag
+  [ Draggable.subscriptions MsgDraggableInternal model.drag
+  , resizeSubscription model
+  ] |> Sub.batch
 
 main : Program () Model Msg
 main =
   Browser.element
-      { init = \() -> ( initModel, Cmd.none )
+      { init = \() -> ( initModel, onElementCreated (List.map (\child -> child.id)  initModel.children) )
       , view = view
       , update = update
       , subscriptions = subscriptions

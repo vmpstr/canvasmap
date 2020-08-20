@@ -18,6 +18,7 @@ body {
   height: 50px;
   background: pink;
   border-radius: 10px;
+  border: 1px solid black;
 }
 
 
