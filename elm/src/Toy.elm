@@ -28,13 +28,22 @@ childToHtml child =
   let
       (width, height) = child.size
   in
-  div
-    [ class "child"
-    , style "width" (String.fromInt width ++ "px")
-    , style "height" (String.fromInt height ++ "px")
-    , Draggable.mouseTrigger (DragChild child.id) MsgDraggableInternal
-    ]
-    []
+  div [ style "position" "relative" ]
+  [
+    div
+      [ class "child"
+      , style "width" (String.fromInt width ++ "px")
+      , style "height" (String.fromInt height ++ "px")
+      , Draggable.mouseTrigger (DragChild child.id) MsgDraggableInternal
+      ]
+      []
+    ,
+    div
+      [ class "childarea"
+      , Draggable.mouseTrigger DragNone MsgDraggableInternal
+      ]
+      (List.map childToHtml (unpackChildren child.children))
+  ]
 
 topChildToHtml : TopChild -> Html.Html Msg
 topChildToHtml child =
@@ -307,7 +316,10 @@ initModel =
      , { id = "tc1"
        , position = (100, 200)
        , size = (200, 50)
-       , children = [ { id = "c0", size = (150, 50), children = SubChildren [] }
+       , children = [ { id = "c0", size = (150, 50), children =
+                           SubChildren
+                           [ { id = "sub1", size = (200, 50), children = SubChildren [] } ]
+                      }
                     , { id = "c1", size = (250, 50), children = SubChildren [] }
                     ]
        }
