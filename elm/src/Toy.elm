@@ -9,7 +9,7 @@ import Json.Decode as Decode
 import Json.Decode.Pipeline exposing (required)
 import Debug
 
-type Msg 
+type Msg
   = MsgNoop
   | MsgOnDragStart DragIdType
   | MsgOnDragBy Draggable.Delta
@@ -18,8 +18,22 @@ type Msg
   | MsgSizeChanged SizeChangedData
 
 type DragIdType
-  = DragSelf String
+  = DragNone
+  | DragSelf String
   | DragEWSize String
+
+childToHtml : Child -> Html.Html Msg
+childToHtml child =
+  let
+      (width, height) = child.size
+  in
+  div
+    [ class "child"
+    , style "width" (String.fromInt width ++ "px")
+    , style "height" (String.fromInt height ++ "px")
+    , Draggable.mouseTrigger (DragSelf child.id) MsgDraggableInternal
+    ]
+    []
 
 topChildToHtml : TopChild -> Html.Html Msg
 topChildToHtml child =
@@ -41,6 +55,11 @@ topChildToHtml child =
         , Draggable.mouseTrigger (DragEWSize child.id) MsgDraggableInternal
         ]
         []
+    , div
+        [ class "childarea"
+        , Draggable.mouseTrigger DragNone MsgDraggableInternal
+        ]
+        (List.map childToHtml child.children)
     ]
 
 view : Model -> Html.Html Msg
@@ -137,7 +156,7 @@ update msg model =
     MsgNoop ->
       nocmd model
 
-    MsgOnDragStart id -> 
+    MsgOnDragStart id ->
         nocmd { model | dragId = Just id }
 
     MsgOnDragBy delta ->
@@ -151,6 +170,9 @@ update msg model =
                 adjustment = (dx, 0)
             in
             nocmd { model | children = resizeChildBy model.children id adjustment }
+
+          Just DragNone ->
+            nocmd model
 
           Nothing ->
             nocmd model
@@ -168,6 +190,12 @@ type alias TopChild =
   { id: String
   , position: (Int, Int)
   , size: (Int, Int)
+  , children: List Child
+  }
+
+type alias Child =
+  { id: String
+  , size: (Int, Int)
   }
 
 type alias Model =
@@ -180,9 +208,16 @@ type alias Model =
 initModel : Model
 initModel =
   { drag = Draggable.init
-  , children = 
-     [ { id = "tc0", position = (0, 0), size = (200, 50) }
-     , { id = "tc1", position = (100, 200), size = (200, 50) }
+  , children =
+     [ { id = "tc0", position = (0, 0), size = (200, 50), children = [] }
+     , { id = "tc1"
+       , position = (100, 200)
+       , size = (200, 50)
+       , children =
+         [ { id = "c0", size = (150, 50) }
+         , { id = "c1", size = (250, 50) }
+         ]
+       }
      ]
   , dragId = Nothing
   , nextTopChildId = 2

@@ -34,3 +34,17 @@ body {
   background: orange;
 }
 
+.childarea {
+  position: relative;
+  top: 100%;
+  padding-left: 25px;
+}
+
+.child {
+  margin-top: 5px;
+  box-sizing: border-box;
+  position: relative;
+  background: lightgreen;
+  border-radius: 10px;
+  border: 1px solid black;
+}
