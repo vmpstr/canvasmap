@@ -21,6 +21,7 @@ type DragIdType
   = DragNone
   | DragSelf String
   | DragEWSize String
+  | DragChild String
 
 childToHtml : Child -> Html.Html Msg
 childToHtml child =
@@ -31,7 +32,7 @@ childToHtml child =
     [ class "child"
     , style "width" (String.fromInt width ++ "px")
     , style "height" (String.fromInt height ++ "px")
-    , Draggable.mouseTrigger (DragSelf child.id) MsgDraggableInternal
+    , Draggable.mouseTrigger (DragChild child.id) MsgDraggableInternal
     ]
     []
 
@@ -150,6 +151,90 @@ resizeChildBy children id delta =
     [] ->
       []
 
+
+removeChild : List Child -> String -> List Child
+removeChild children id =
+  case children of
+    (firstChild :: rest) ->
+      if (firstChild.id == id) then
+        rest
+      else
+        [ { firstChild | children = SubChildren (removeChild (unpackChildren firstChild.children) id) } ] ++
+        removeChild rest id
+
+    [] ->
+      []
+
+removeTopChild : List TopChild -> String -> List TopChild
+removeTopChild children id =
+  case children of
+    (firstChild :: rest) ->
+      if (firstChild.id == id) then
+        rest
+      else
+        [ { firstChild | children = removeChild firstChild.children id } ] ++
+        removeTopChild rest id
+
+    [] ->
+      []
+
+childToTop : Child -> TopChild
+childToTop child =
+  TopChild child.id (0, 0) child.size (unpackChildren child.children)
+
+unpackChildren : SubChildren -> List Child
+unpackChildren (SubChildren children) =
+  children
+
+findChildInner : List Child -> String -> Maybe Child
+findChildInner children id =
+  case children of
+    (firstChild :: rest) ->
+      if (firstChild.id == id) then
+        Just firstChild
+      else
+        case findChildInner (unpackChildren firstChild.children) id of
+          Just child ->
+            Just child
+
+          Nothing ->
+            findChildInner rest id
+
+    [] ->
+      Nothing
+
+findChild : List TopChild -> String -> Maybe Child
+findChild children id =
+  case children of
+    (firstChild :: rest) ->
+      if (firstChild.id == id) then
+        Nothing
+      else
+        case findChildInner firstChild.children id of
+          Just child ->
+            Just child
+
+          Nothing ->
+            findChild rest id
+
+    [] ->
+      Nothing
+
+
+reparentToTop : List TopChild -> String -> List TopChild
+reparentToTop children id =
+  let
+      maybechild = findChild children id
+      removedList = removeTopChild children id
+  in
+  case maybechild of
+    Just child ->
+      removedList ++ [childToTop child]
+
+    Nothing ->
+      children
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
@@ -170,6 +255,9 @@ update msg model =
                 adjustment = (dx, 0)
             in
             nocmd { model | children = resizeChildBy model.children id adjustment }
+
+          Just (DragChild id) ->
+            nocmd { model | children = reparentToTop model.children id, dragId = Just (DragSelf id) }
 
           Just DragNone ->
             nocmd model
@@ -196,7 +284,10 @@ type alias TopChild =
 type alias Child =
   { id: String
   , size: (Int, Int)
+  , children: SubChildren
   }
+
+type SubChildren = SubChildren (List Child)
 
 type alias Model =
   { drag: Draggable.State DragIdType
@@ -209,14 +300,16 @@ initModel : Model
 initModel =
   { drag = Draggable.init
   , children =
-     [ { id = "tc0", position = (0, 0), size = (200, 50), children = [] }
+     [ { id = "tc0"
+       , position = (0, 0)
+       , size = (200, 50)
+       , children = [] }
      , { id = "tc1"
        , position = (100, 200)
        , size = (200, 50)
-       , children =
-         [ { id = "c0", size = (150, 50) }
-         , { id = "c1", size = (250, 50) }
-         ]
+       , children = [ { id = "c0", size = (150, 50), children = SubChildren [] }
+                    , { id = "c1", size = (250, 50), children = SubChildren [] }
+                    ]
        }
      ]
   , dragId = Nothing
