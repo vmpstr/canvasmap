@@ -12,7 +12,7 @@ body {
   overflow: auto;
 }
 
-.topchild {
+.top_child {
   box-sizing: border-box;
   position: absolute;
   contain: layout;

@@ -1,57 +1,12 @@
 <!doctype html>
 <link rel=stylesheet href=styles.css></link>
 
-<div id="canvasmap"></div>
+<div id="map"></div>
 
-<script src="toy.js"></script>
+<script src="map.js"></script>
 <script>
-let childMutationObserver;
-let resizeObserver;
-let updateRAFHandle;
-let observed = {};
-
-function updateObserved() {
-  for (let id in observed) {
-    if (observed[id] && observed[id].id != id) {
-      resizeObserver.unobserve(observed[id]);
-      observed[id] = null;
-    }
-
-    if (!observed[id]) {
-      let e = document.getElementById(id);
-      if (e) {
-        observed[id] = e;
-        resizeObserver.observe(e, { box: 'border-box' });
-      }
-    }
-  }
-}
-
 onload = () => {
-  const app = Elm.Toy.init({ node: document.getElementById("canvasmap") });
-
-  resizeObserver = new ResizeObserver((entries) => {
-    for (let entry of entries) {
-      app.ports.sizeChanged.send(
-        { id: entry.target.id
-        , size: [entry.borderBoxSize[0].inlineSize, entry.borderBoxSize[0].blockSize]
-        }
-      );
-    }
-  });
-
-  childMutationObserver = new MutationObserver(() => {
-    cancelAnimationFrame(updateRAFHandle);
-    updateRAFHandle = requestAnimationFrame(() => updateObserved());
-  });
-  childMutationObserver.observe(document.body, { childList: true, subtree: true });
-
-  app.ports.onElementCreated.subscribe((ids) => {
-    for (let i = 0; i < ids.length; ++i)
-      observed[ids[i]] = observed[ids[i]] || null;
-    cancelAnimationFrame(updateRAFHandle);
-    updateRAFHandle = requestAnimationFrame(() => updateObserved());
-  });
+  const app = Elm.Map.init({ node: document.getElementById("map") });
 };
 </script>
 
