@@ -5,8 +5,52 @@
 
 <script src="map.js"></script>
 <script>
+let app = undefined;
+
+let lastX = 0;
+let lastY = 0;
+let id = "";
+let dragging = false;
+function onPointerDown(e) {
+  document.body.addEventListener("pointermove", onPointerMove);
+  document.body.addEventListener("pointerup", onPointerUp);
+  lastX = e.x;
+  lastY = e.y;
+  id = e.targetId;
+}
+
+function onPointerMove(e) {
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+
+  if (!dragging) {
+    const d2 = dx * dx + dy * dy;
+    dragging = d2 >= 100;
+    if (dragging) {
+      lastX = e.clientX;
+      lastY = e.clientY;
+    }
+    return;
+  }
+  lastX = e.clientX;
+  lastY = e.clientY;
+
+  app.ports.portOnDrag.send({
+    targetId : id,
+    dx : dx,
+    dy : dy
+  });
+}
+
+function onPointerUp(e) {
+  dragging = false;
+  document.body.removeEventListener("pointermove", onPointerMove);
+  document.body.removeEventListener("pointerup", onPointerUp);
+}
+
 onload = () => {
-  const app = Elm.Map.init({ node: document.getElementById("map") });
+  app = Elm.Map.init({ node: document.getElementById("map") });
+  app.ports.portOnPointerDown.subscribe(onPointerDown);
 };
 </script>
 
