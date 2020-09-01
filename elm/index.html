@@ -20,6 +20,8 @@ function onPointerDown(e) {
 }
 
 function onPointerMove(e) {
+  e.preventDefault();
+
   const dx = e.clientX - lastX;
   const dy = e.clientY - lastY;
 
@@ -43,6 +45,8 @@ function onPointerMove(e) {
 }
 
 function onPointerUp(e) {
+  e.preventDefault();
+
   dragging = false;
   document.body.removeEventListener("pointermove", onPointerMove);
   document.body.removeEventListener("pointerup", onPointerUp);

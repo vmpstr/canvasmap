@@ -4,7 +4,7 @@ import Debug
 import Browser
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, style)
-import Html.Events exposing (on)
+import Html.Events exposing (custom)
 import Json.Decode as Decoder exposing (Decoder, succeed, int, string, float)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 
@@ -81,14 +81,28 @@ type alias OnPointerDownPortData =
   , y : Float
   }
 
-onPointerDownDecoder : String -> Decoder Msg
+type alias MsgWithEventOptions =
+  { message: Msg
+  , stopPropagation: Bool
+  , preventDefault: Bool
+  }
+
+toPreventDefaultMsg : Msg -> MsgWithEventOptions
+toPreventDefaultMsg msg =
+  { message = msg
+  , stopPropagation = True
+  , preventDefault = False
+  }
+
+onPointerDownDecoder : String -> Decoder MsgWithEventOptions
 onPointerDownDecoder targetId =
-  Decoder.map MsgOnPointerDown 
-    (succeed OnPointerDownPortData
-      |> hardcoded targetId
-      |> required "pointerType" string
-      |> required "clientX" float
-      |> required "clientY" float)
+  Decoder.map toPreventDefaultMsg
+    (Decoder.map MsgOnPointerDown 
+      (succeed OnPointerDownPortData
+        |> hardcoded targetId
+        |> required "pointerType" string
+        |> required "clientX" float
+        |> required "clientY" float))
 
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
 port portOnDrag : (Decoder.Value -> msg) -> Sub msg
@@ -100,7 +114,13 @@ initModel =
                  , nodeType = TopLevel
                  , position = { x = 10, y = 10 }
                  , size = { x = 200, y = 50 }
-                 , children = Children []
+                 , children = Children [ { id = "e3"
+                                         , nodeType = Child
+                                         , position = { x = 0, y = 0 }
+                                         , size = { x = 200, y = 50 }
+                                         , children = Children []
+                                         }
+                                       ]
                  }
                , { id = "e2"
                  , nodeType = TopLevel
@@ -121,16 +141,28 @@ viewNode : Node -> Html Msg
 viewNode node =
   case node.nodeType of
     TopLevel ->
-      div [ on "pointerdown" (onPointerDownDecoder node.id)
-          , class "top_child"
-          , style "width" (asPx node.size.x)
-          , style "height" (asPx node.size.y)
-          , style "left" (asPx node.position.x)
-          , style "top" (asPx node.position.y)
-          ] [ text "hello" ]
+      div
+        [ custom "pointerdown" (onPointerDownDecoder node.id)
+        , class "top_child"
+        , style "width" (asPx node.size.x)
+        , style "height" (asPx node.size.y)
+        , style "left" (asPx node.position.x)
+        , style "top" (asPx node.position.y)
+        ]
+        [ text "hello"
+        , div [ class "child_area" ] (childList node.children |> List.map viewNode)
+        ]
 
     Child ->
-      div [] []
+      div
+        [ custom "pointerdown" (onPointerDownDecoder node.id)
+        , class "child"
+        , style "width" (asPx node.size.x)
+        , style "height" (asPx node.size.y)
+        ]
+        [ text "hello"
+        , div [ class "child_area" ] (childList node.children |> List.map viewNode)
+        ]
 
 dragPosition : OnDragData -> Children -> Children
 dragPosition { targetId, dx, dy } (Children nodes) =
