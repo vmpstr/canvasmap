@@ -21,6 +21,25 @@ body {
   border: 1px solid black;
 }
 
+.child {
+  margin-top: 5px;
+  box-sizing: border-box;
+  position: relative;
+  background: lightgreen;
+  border-radius: 10px;
+  border: 1px solid black;
+}
+
+.content {
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.child_area {
+  position: relative;
+  padding-left: 25px;
+}
+
 .ewhandle {
   position: absolute;
   top: 3px;
@@ -34,17 +53,3 @@ body {
   background: orange;
 }
 
-.childarea {
-  position: relative;
-  top: 100%;
-  padding-left: 25px;
-}
-
-.child {
-  margin-top: 5px;
-  box-sizing: border-box;
-  position: relative;
-  background: lightgreen;
-  border-radius: 10px;
-  border: 1px solid black;
-}

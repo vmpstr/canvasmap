@@ -149,7 +149,7 @@ viewNode node =
         , style "left" (asPx node.position.x)
         , style "top" (asPx node.position.y)
         ]
-        [ text "hello"
+        [ div [ class "content" ] [ text "hello" ]
         , div [ class "child_area" ] (childList node.children |> List.map viewNode)
         ]
 
@@ -160,7 +160,7 @@ viewNode node =
         , style "width" (asPx node.size.x)
         , style "height" (asPx node.size.y)
         ]
-        [ text "hello"
+        [ div [ class "content" ] [ text "hello" ]
         , div [ class "child_area" ] (childList node.children |> List.map viewNode)
         ]
 
