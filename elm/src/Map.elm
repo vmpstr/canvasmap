@@ -118,6 +118,18 @@ initModel =
                                          , nodeType = Child
                                          , position = { x = 0, y = 0 }
                                          , size = { x = 200, y = 50 }
+                                         , children = Children [ { id = "e4"
+                                                                 , nodeType = Child
+                                                                 , position = { x = 0, y = 0 }
+                                                                 , size = { x = 200, y = 50 }
+                                                                 , children = Children []
+                                                                 }
+                                                               ]
+                                         },
+                                         { id = "e5"
+                                         , nodeType = Child
+                                         , position = { x = 0, y = 0 }
+                                         , size = { x = 200, y = 50 }
                                          , children = Children []
                                          }
                                        ]
@@ -142,27 +154,33 @@ viewNode node =
   case node.nodeType of
     TopLevel ->
       div
-        [ custom "pointerdown" (onPointerDownDecoder node.id)
-        , class "top_child"
-        , style "width" (asPx node.size.x)
-        , style "height" (asPx node.size.y)
-        , style "left" (asPx node.position.x)
-        , style "top" (asPx node.position.y)
+        [ class "top_child"
+          , style "left" (asPx node.position.x)
+          , style "top" (asPx node.position.y)
         ]
-        [ div [ class "content" ] [ text "hello" ]
+        [ div
+          [ custom "pointerdown" (onPointerDownDecoder node.id)
+          , class "content"
+          , style "width" (asPx node.size.x)
+          , style "height" (asPx node.size.y)
+          ]
+          [ text "hello"
+          ]
         , div [ class "child_area" ] (childList node.children |> List.map viewNode)
         ]
 
     Child ->
-      div
-        [ custom "pointerdown" (onPointerDownDecoder node.id)
-        , class "child"
-        , style "width" (asPx node.size.x)
-        , style "height" (asPx node.size.y)
-        ]
-        [ div [ class "content" ] [ text "hello" ]
-        , div [ class "child_area" ] (childList node.children |> List.map viewNode)
-        ]
+      div []
+        [ div
+            [ custom "pointerdown" (onPointerDownDecoder node.id)
+            , class "child"
+            , style "width" (asPx node.size.x)
+            , style "height" (asPx node.size.y)
+            ]
+            [ div [ class "content" ] [ text "hello" ]
+            ]
+         , div [ class "child_area" ] (childList node.children |> List.map viewNode)
+         ]
 
 dragPosition : OnDragData -> Children -> Children
 dragPosition { targetId, dx, dy } (Children nodes) =

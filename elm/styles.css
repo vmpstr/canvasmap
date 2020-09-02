@@ -16,6 +16,9 @@ body {
   box-sizing: border-box;
   position: absolute;
   contain: layout;
+}
+
+.top_child > .content {
   background: pink;
   border-radius: 10px;
   border: 1px solid black;
