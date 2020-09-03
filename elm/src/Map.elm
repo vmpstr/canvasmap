@@ -202,6 +202,14 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     MsgOnPointerDown data ->
+      let
+        path1 = Debug.log "path1 " (findNode childList (childList model.nodes) "e1")
+        path2 = Debug.log "path2 " (findNode childList (childList model.nodes) "e2")
+        path3 = Debug.log "path3 " (findNode childList (childList model.nodes) "e3")
+        path4 = Debug.log "path4 " (findNode childList (childList model.nodes) "e4")
+        path5 = Debug.log "path5 " (findNode childList (childList model.nodes) "e5")
+        path6 = Debug.log "path6 " (findNode childList (childList model.nodes) "e6")
+      in
       (model, portOnPointerDown data )
 
     MsgOnDrag data ->
@@ -237,3 +245,30 @@ main =
       , update = update
       , subscriptions = subscriptions
       }
+
+
+type Path
+  = AtIndex Int
+  | InSubtree Int Path
+
+findNode : (b -> List { c | children : b, id : a })
+           -> List { c | children : b, id : a }
+           -> a
+           -> Maybe Path
+findNode unpack nodes target =
+  let
+      indexed = List.indexedMap Tuple.pair nodes
+      results = List.filterMap returnOrRecurse indexed
+
+      returnOrRecurse : (Int, { c | children : b, id : a }) -> Maybe Path
+      returnOrRecurse (index, node) =
+        if node.id == target then
+          Just (AtIndex index)
+        else
+          case findNode unpack (unpack node.children) target of
+            Nothing ->
+              Nothing
+            Just result ->
+              Just (InSubtree index result)
+  in
+  List.head results
