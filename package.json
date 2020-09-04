@@ -9,7 +9,9 @@
   "babel": {
     "env": {
       "test": {
-        "plugins": ["@babel/plugin-transform-modules-commonjs"]
+        "plugins": [
+          "@babel/plugin-transform-modules-commonjs"
+        ]
       }
     }
   },
@@ -17,5 +19,8 @@
     "transform": {
       "^.+\\.m?js$": "babel-jest"
     }
+  },
+  "dependencies": {
+    "elm-test": "^0.19.1-revision2"
   }
 }
