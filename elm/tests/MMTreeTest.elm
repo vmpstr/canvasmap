@@ -21,19 +21,19 @@ pack : List Node -> Tree
 pack = Tree
 
 
+findNode = MMTree.findNode unpack
 
 smallTree : Tree
 smallTree =
-  Tree [ { id = "123",
-           children = Tree [ { id = "234"
-                             , children = Tree []
-                             }
-                           ]
+  Tree [ { id = "123"
+         , children = Tree [ { id = "234" , children = Tree [] } ]
          }
        , { id = "345",
-           children = Tree []
+         , children = Tree []
          }
        ]
+
+smallTreeNodes = unpack smallTree
 
 suite : Test
 suite =
@@ -42,22 +42,22 @@ suite =
         [ test "found at index 0" <|
             \_ ->
               Expect.equal
-                (MMTree.findNode unpack (unpack smallTree) "123")
+                (findNode smallTreeNodes "123")
                 (Just (AtIndex 0))
         , test "found at index 1" <|
             \_ ->
               Expect.equal
-                (MMTree.findNode unpack (unpack smallTree) "345")
+                (findNode smallTreeNodes "345")
                 (Just (AtIndex 1))
         , test "found in subtree" <|
             \_ ->
               Expect.equal
-                (MMTree.findNode unpack (unpack smallTree) "234")
+                (findNode smallTreeNodes "234")
                 (Just (InSubtree 0 (AtIndex 0)))
         , test "not found" <|
             \_ ->
               Expect.equal
-                (MMTree.findNode unpack (unpack smallTree) "777")
+                (findNode smallTreeNodes "777")
                 Nothing
         ]
     ]
