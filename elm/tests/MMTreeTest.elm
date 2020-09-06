@@ -6,6 +6,8 @@ import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
 
+-- Data
+
 type alias Node =
   { id : String
   , children : Tree
@@ -20,20 +22,46 @@ unpack (Tree nodes) =
 pack : List Node -> Tree
 pack = Tree
 
-
-findNode = MMTree.findNode unpack
-
 smallTree : Tree
 smallTree =
   Tree [ { id = "123"
          , children = Tree [ { id = "234" , children = Tree [] } ]
          }
-       , { id = "345",
+       , { id = "345"
          , children = Tree []
          }
        ]
 
 smallTreeNodes = unpack smallTree
+
+-- Testing function
+
+findNode = MMTree.findNode unpack
+
+removeNode = MMTree.removeNode pack unpack
+
+-- Helpers
+
+nodesToString : List Node -> String
+nodesToString nodes =
+  case nodes of
+    (first :: allbutone) ->
+      let
+          sub =
+            if first.children == (pack []) then
+              ""
+            else
+              "(" ++ nodesToString (unpack first.children) ++ ")"
+      in
+      case allbutone of
+        (second :: rest) ->
+          first.id ++ sub ++ " " ++ nodesToString allbutone
+        [] ->
+          first.id ++ sub
+    [] ->
+      ""
+
+-- Tests
 
 suite : Test
 suite =
@@ -59,6 +87,35 @@ suite =
               Expect.equal
                 (findNode smallTreeNodes "777")
                 Nothing
+        ]
+    , describe "removeNode"
+        [ test "remove child" <|
+            \_ ->
+                let
+                    resultingNodes = removeNode smallTreeNodes (InSubtree 0 (AtIndex 0))
+                    result = nodesToString resultingNodes
+                in
+                Expect.equal
+                  result
+                  "123 345"
+        , test "remove leaf" <|
+            \_ ->
+                let
+                    resultingNodes = removeNode smallTreeNodes (AtIndex 1)
+                    result = nodesToString resultingNodes
+                in
+                Expect.equal
+                  result
+                  "123(234)"
+        , test "remove inner" <|
+            \_ ->
+                let
+                    resultingNodes = removeNode smallTreeNodes (AtIndex 0)
+                    result = nodesToString resultingNodes
+                in
+                Expect.equal
+                  result
+                  "345"
         ]
     ]
 
