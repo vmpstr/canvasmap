@@ -40,6 +40,47 @@ removeNode pack unpack nodes path =
     InSubtree index subpath ->
       let
           recurse node =
-            { node | children = pack (removeNode pack unpack (unpack node.children) subpath) }
+            { node |
+                children
+                  = pack (removeNode pack unpack (unpack node.children) subpath)
+            }
       in
       List.Extra.updateAt index recurse nodes
+
+
+takeNode : (List { c | children : b } -> b)
+           -> (b -> List { c | children : b })
+           -> List { c | children : b }
+           -> Path
+           -> (Maybe { c | children : b }, List { c | children : b })
+takeNode pack unpack nodes path =
+  (List.head nodes, nodes)
+
+
+nodeAt : (b -> List { c | children : b })
+         -> List { c | children : b }
+         -> Path
+         -> Maybe { c | children : b }
+nodeAt unpack nodes path =
+  List.head nodes
+
+
+addNode : (List { c | children : b } -> b)
+          -> (b -> List { c | children : b })
+          -> List { c | children : b }
+          -> Path
+          -> { c | children : b }
+          -> List { c | children : b }
+addNode pack unpack nodes path newNode =
+  nodes
+
+
+moveNode : (List { c | children : b } -> b)
+           -> (b -> List { c | children : b })
+           -> List { c | children : b }
+           -> Path
+           -> Path
+           -> List { c | children : b }
+moveNode pack unpack nodes from to =
+  nodes
+
