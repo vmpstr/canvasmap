@@ -1,6 +1,6 @@
 module MMTreeTest exposing (..)
 
-import MMTree exposing (..)
+import MMTree exposing (Path(..))
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
@@ -40,6 +40,10 @@ findNode = MMTree.findNode unpack
 
 removeNode = MMTree.removeNode pack unpack
 
+takeNode = MMTree.takeNode pack unpack
+
+nodeAt = MMTree.nodeAt unpack
+
 -- Helpers
 
 nodesToString : List Node -> String
@@ -60,6 +64,14 @@ nodesToString nodes =
           first.id ++ sub
     [] ->
       ""
+
+nodeIdOrNull : Maybe Node -> String
+nodeIdOrNull maybeNode =
+  case maybeNode of
+    Just node ->
+      node.id
+    Nothing ->
+      "null"
 
 -- Tests
 
@@ -116,6 +128,87 @@ suite =
                 Expect.equal
                   result
                   "345"
+        , test "remove non-existent" <|
+            \_ ->
+                let
+                    resultingNodes = removeNode smallTreeNodes (InSubtree 0 (AtIndex 3))
+                    result = nodesToString resultingNodes
+                in
+                Expect.equal
+                  result
+                  "123(234) 345"
+        ]
+    , describe "takeNode"
+        [ test "take child" <|
+            \_ ->
+                let
+                    (node, resultingNodes) = takeNode smallTreeNodes (InSubtree 0 (AtIndex 0))
+                    result = nodesToString resultingNodes
+                in
+                Expect.equal
+                  (result, nodeIdOrNull node)
+                  ("123 345", "234")
+        , test "take leaf" <|
+            \_ ->
+                let
+                    (node, resultingNodes) = takeNode smallTreeNodes (AtIndex 1)
+                    result = nodesToString resultingNodes
+                in
+                Expect.equal
+                  (result, nodeIdOrNull node)
+                  ("123(234)", "345")
+        , test "take inner" <|
+            \_ ->
+                let
+                    (node, resultingNodes) = takeNode smallTreeNodes (AtIndex 0)
+                    result = nodesToString resultingNodes
+                in
+                Expect.equal
+                  (result, nodeIdOrNull node)
+                  ("345", "123")
+        , test "take non-existent" <|
+            \_ ->
+                let
+                    (node, resultingNodes) = takeNode smallTreeNodes (InSubtree 0 (AtIndex 3))
+                    result = nodesToString resultingNodes
+                in
+                Expect.equal
+                  (result, nodeIdOrNull node)
+                  ("123(234) 345", "null")
+        ]
+    , describe "nodeAt"
+        [ test "child" <|
+            \_ ->
+                let
+                    node = nodeAt smallTreeNodes (InSubtree 0 (AtIndex 0))
+                in
+                Expect.equal
+                  (nodeIdOrNull node)
+                  "234"
+        , test "take leaf" <|
+            \_ ->
+                let
+                    node = nodeAt smallTreeNodes (AtIndex 1)
+                in
+                Expect.equal
+                  (nodeIdOrNull node)
+                  "345"
+        , test "take inner" <|
+            \_ ->
+                let
+                    node = nodeAt smallTreeNodes (AtIndex 0)
+                in
+                Expect.equal
+                  (nodeIdOrNull node)
+                  "123"
+        , test "take non-existent" <|
+            \_ ->
+                let
+                    node = nodeAt smallTreeNodes (InSubtree 0 (AtIndex 3))
+                in
+                Expect.equal
+                  (nodeIdOrNull node)
+                  "null"
         ]
     ]
 

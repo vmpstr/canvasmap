@@ -54,7 +54,10 @@ takeNode : (List { c | children : b } -> b)
            -> Path
            -> (Maybe { c | children : b }, List { c | children : b })
 takeNode pack unpack nodes path =
-  (List.head nodes, nodes)
+  let
+      node = nodeAt unpack nodes path
+  in
+  (node, removeNode pack unpack nodes path)
 
 
 nodeAt : (b -> List { c | children : b })
@@ -62,7 +65,15 @@ nodeAt : (b -> List { c | children : b })
          -> Path
          -> Maybe { c | children : b }
 nodeAt unpack nodes path =
-  List.head nodes
+  case path of
+    InSubtree index subpath ->
+      case List.Extra.getAt index nodes of
+        Just node ->
+          nodeAt unpack (unpack node.children) subpath
+        Nothing ->
+          Nothing
+    AtIndex index ->
+      List.Extra.getAt index nodes
 
 
 addNode : (List { c | children : b } -> b)
