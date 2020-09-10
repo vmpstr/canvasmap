@@ -44,6 +44,10 @@ takeNode = MMTree.takeNode pack unpack
 
 nodeAt = MMTree.nodeAt unpack
 
+addNode = MMTree.addNode pack unpack
+
+moveNode = MMTree.moveNode pack unpack
+
 -- Helpers
 
 nodesToString : List Node -> String
@@ -209,6 +213,74 @@ suite =
                 Expect.equal
                   (nodeIdOrNull node)
                   "null"
+        ]
+    , describe "addNode"
+        [ test "grandchild" <|
+            \_ ->
+                let
+                    nodes = addNode
+                              smallTreeNodes
+                              (InSubtree 0 (InSubtree 0 (AtIndex 0)))
+                              { id = "7", children = Tree [] }
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234(7)) 345"
+        , test "before child" <|
+            \_ ->
+                let
+                    nodes = addNode
+                              smallTreeNodes
+                              (InSubtree 0 (AtIndex 0))
+                              { id = "7", children = Tree [] }
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(7 234) 345"
+        , test "after child" <|
+            \_ ->
+                let
+                    nodes = addNode
+                              smallTreeNodes
+                              (InSubtree 0 (AtIndex 1))
+                              { id = "7", children = Tree [] }
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234 7) 345"
+        , test "between nodes" <|
+            \_ ->
+                let
+                    nodes = addNode
+                              smallTreeNodes
+                              (AtIndex 1)
+                              { id = "7", children = Tree [] }
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 7 345"
+        , test "after last node" <|
+            \_ ->
+                let
+                    nodes = addNode
+                              smallTreeNodes
+                              (AtIndex 2)
+                              { id = "7", children = Tree [] }
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345 7"
+        , test "non-possible location" <|
+            \_ ->
+                let
+                    nodes = addNode
+                              smallTreeNodes
+                              (AtIndex 3)
+                              { id = "7", children = Tree [] }
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345"
         ]
     ]
 
