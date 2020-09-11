@@ -282,6 +282,162 @@ suite =
                   (nodesToString nodes)
                   "123(234) 345"
         ]
+    , describe "moveNode"
+        [ test "leaf to sibling before" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (InSubtree 0 (AtIndex 0))
+                              (AtIndex 0)
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "234 123 345"
+        , test "leaf to sibling after" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (InSubtree 0 (AtIndex 0))
+                              (AtIndex 1)
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123 234 345"
+        , test "leaf to sibling last" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (InSubtree 0 (AtIndex 0))
+                              (AtIndex 2)
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123 345 234"
+        , test "leaf child of sibling" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (InSubtree 0 (AtIndex 0))
+                              (InSubtree 1 (AtIndex 0))
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123 345(234)"
+        , test "parent to self-child prepend (not-possible)" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 0)
+                              (InSubtree 0 (AtIndex 0))
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345"
+        , test "parent to self-child append (not-possible)" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 0)
+                              (InSubtree 0 (AtIndex 1))
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345"
+        , test "reorder sibling to after" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 0)
+                              (AtIndex 1)
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "345 123(234)"
+        , test "reorder sibling to after (too far)" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 0)
+                              (AtIndex 2)
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345"
+        , test "subtree to nest under sibling" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 0)
+                              (InSubtree 1 (AtIndex 0))
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "345(123(234))"
+        , test "reorder sibling to before" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 1)
+                              (AtIndex 0)
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "345 123(234)"
+        , test "sibling to child before" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 1)
+                              (InSubtree 0 (AtIndex 0))
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(345 234)"
+        , test "sibling to child after" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 1)
+                              (InSubtree 0 (AtIndex 1))
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234 345)"
+        , test "sibling to child after (too far)" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 1)
+                              (InSubtree 0 (AtIndex 2))
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345"
+        , test "sibling to grandchild" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 1)
+                              (InSubtree 0 (InSubtree 0 (AtIndex 0)))
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234(345))"
+        ]
     ]
 
 
