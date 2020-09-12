@@ -48,6 +48,8 @@ addNode = MMTree.addNode pack unpack
 
 moveNode = MMTree.moveNode pack unpack
 
+isValidPath = MMTree.isValidPath unpack
+
 -- Helpers
 
 nodesToString : List Node -> String
@@ -459,6 +461,28 @@ suite =
                 Expect.equal
                   (nodesToString nodes)
                   "123(234) 345"
+        ]
+    , describe "isValidPath"
+        [ test "123" <|
+            \_ ->
+                Expect.true "123"
+                  (isValidPath smallTreeNodes (AtIndex 0))
+        , test "234" <|
+            \_ ->
+                Expect.true "234"
+                  (isValidPath smallTreeNodes (InSubtree 0 (AtIndex 0)))
+        , test "345" <|
+            \_ ->
+                Expect.true "345"
+                  (isValidPath smallTreeNodes (AtIndex 1))
+        , test "non-existent child" <|
+            \_ ->
+                Expect.false "child"
+                  (isValidPath smallTreeNodes (InSubtree 0 (AtIndex 1)))
+        , test "non-existent sibling" <|
+            \_ ->
+                Expect.false "sibling"
+                  (isValidPath smallTreeNodes (AtIndex 2))
         ]
     ]
 

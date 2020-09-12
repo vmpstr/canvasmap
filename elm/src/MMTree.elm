@@ -112,3 +112,24 @@ moveNode : (List { c | children : b } -> b)
 moveNode pack unpack nodes from to =
   nodes
 
+
+isValidPath : (b -> List { c | children : b })
+              -> List { c | children : b }
+              -> Path
+              -> Bool
+isValidPath unpack nodes path =
+  case path of
+    InSubtree index subpath ->
+      let
+        tail = List.drop index nodes
+      in
+      case tail of
+        (first :: rest) ->
+          isValidPath unpack (unpack first.children) subpath
+        _ ->
+          False
+    AtIndex index ->
+      List.length nodes > index
+
+      
+
