@@ -122,19 +122,14 @@ moveNode pack unpack nodes from to =
       (removed, removedResult) = takeNode pack unpack nodes from
       maybeAdjustedTo = adjustPathForMove from to
   in
-  case maybeAdjustedTo of
-    Just adjustedTo ->
-      case removed of
-        Just node ->
-          if isValidInsertionPath unpack removedResult adjustedTo then
-            addNode pack unpack removedResult adjustedTo node
-          else
-            nodes
-        Nothing ->
-          nodes
-    Nothing ->
+  case (maybeAdjustedTo, removed) of
+    (Just adjustedTo, Just node) ->
+      if isValidInsertionPath unpack removedResult adjustedTo then
+        addNode pack unpack removedResult adjustedTo node
+      else
+        nodes
+    _ ->
       nodes
-
 
 isValidPath : (b -> List { c | children : b })
               -> List { c | children : b }
