@@ -50,6 +50,8 @@ moveNode = MMTree.moveNode pack unpack
 
 isValidPath = MMTree.isValidPath unpack
 
+isValidInsertionPath = MMTree.isValidInsertionPath unpack
+
 -- Helpers
 
 nodesToString : List Node -> String
@@ -483,6 +485,40 @@ suite =
             \_ ->
                 Expect.false "sibling"
                   (isValidPath smallTreeNodes (AtIndex 2))
+        ]
+    , describe "isValidInsertionPath"
+        [ test "before 123" <|
+            \_ ->
+                Expect.true "before 123"
+                  (isValidInsertionPath smallTreeNodes (AtIndex 0))
+        , test "before 234" <|
+            \_ ->
+                Expect.true "before 234"
+                  (isValidInsertionPath smallTreeNodes (InSubtree 0 (AtIndex 0)))
+        , test "before 345" <|
+            \_ ->
+                Expect.true "before 345"
+                  (isValidInsertionPath smallTreeNodes (AtIndex 1))
+        , test "after 234" <|
+            \_ ->
+                Expect.true "after 234"
+                  (isValidInsertionPath smallTreeNodes (InSubtree 0 (AtIndex 1)))
+        , test "after 345" <|
+            \_ ->
+                Expect.true "after 345"
+                  (isValidInsertionPath smallTreeNodes (AtIndex 2))
+        , test "grandchild" <|
+            \_ ->
+                Expect.true "grandchild"
+                  (isValidInsertionPath smallTreeNodes (InSubtree 0 (InSubtree 0 (AtIndex 0))))
+        , test "past siblings + 1" <|
+            \_ ->
+                Expect.false "past siblings"
+                  (isValidInsertionPath smallTreeNodes (AtIndex 3))
+        , test "past child + 1" <|
+            \_ ->
+                Expect.false "past siblings"
+                  (isValidInsertionPath smallTreeNodes (InSubtree 0 (AtIndex 2)))
         ]
     ]
 
