@@ -94,16 +94,14 @@ addNode pack unpack nodes path newNode =
       in
       List.Extra.updateAt index recurse nodes
     AtIndex index ->
-      case index of
-        0 ->
-          newNode :: nodes
-        _ ->
-          case nodes of
-            (first :: rest) ->
-              first :: (addNode pack unpack rest (AtIndex (index - 1)) newNode)
-            [] ->
-              nodes
-
+      if List.length nodes < index then
+        nodes
+      else
+        let
+            head = List.take index nodes
+            tail = List.drop index nodes
+        in
+        head ++ newNode :: tail
 
 moveNode : (List { c | children : b } -> b)
            -> (b -> List { c | children : b })
