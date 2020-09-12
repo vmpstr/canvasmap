@@ -110,7 +110,22 @@ moveNode : (List { c | children : b } -> b)
            -> Path
            -> List { c | children : b }
 moveNode pack unpack nodes from to =
-  nodes
+  let
+      (removed, removedResult) = takeNode pack unpack nodes from
+      maybeAdjustedTo = adjustPathAfterRemoval from to
+  in
+  case maybeAdjustedTo of
+    Just adjustedTo ->
+      case removed of
+        Just node ->
+          if isValidInsertionPath unpack removedResult adjustedTo then
+            addNode pack unpack removedResult adjustedTo node
+          else
+            nodes
+        Nothing ->
+          nodes
+    Nothing ->
+      nodes
 
 
 isValidPath : (b -> List { c | children : b })
@@ -131,5 +146,25 @@ isValidPath unpack nodes path =
     AtIndex index ->
       List.length nodes > index
 
-      
+isValidInsertionPath : (b -> List { c | children : b })
+                        -> List { c | children : b }
+                        -> Path
+                        -> Bool
+isValidInsertionPath unpack nodes path =
+  case path of
+    InSubtree index subpath ->
+      let
+        tail = List.drop index nodes
+      in
+      case tail of
+        (first :: rest) ->
+          isValidInsertionPath unpack (unpack first.children) subpath
+        _ ->
+          False
+    AtIndex index ->
+      List.length nodes >= index
+
+adjustPathAfterRemoval : Path -> Path -> Maybe Path
+adjustPathAfterRemoval removed path =
+  Just path
 
