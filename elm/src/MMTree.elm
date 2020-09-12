@@ -1,5 +1,13 @@
 module MMTree exposing (..)
 
+{- TODOs
+ - Put pack/unpack into a record
+ - Type alias record for easier type annotations
+ - Rename moveTo to moveToBefore (vs moveToAfter?)
+ - Read through List and List.Extra to condense functions
+ - Write more tests for deeper trees
+ -}
+
 import List.Extra
 
 type Path
