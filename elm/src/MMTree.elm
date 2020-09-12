@@ -6,6 +6,7 @@ module MMTree exposing (..)
  - Rename moveTo to moveToBefore (vs moveToAfter?)
  - Read through List and List.Extra to condense functions
  - Write more tests for deeper trees
+ - Take a root tree object, as opposed to a list of nodes
  -}
 
 import List.Extra
