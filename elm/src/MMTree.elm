@@ -83,7 +83,26 @@ addNode : (List { c | children : b } -> b)
           -> { c | children : b }
           -> List { c | children : b }
 addNode pack unpack nodes path newNode =
-  nodes
+  case path of
+    InSubtree index subpath ->
+      let
+          recurse node =
+            { node |
+                children
+                  = pack (addNode pack unpack (unpack node.children) subpath newNode)
+            }
+      in
+      List.Extra.updateAt index recurse nodes
+    AtIndex index ->
+      case index of
+        0 ->
+          newNode :: nodes
+        _ ->
+          case nodes of
+            (first :: rest) ->
+              first :: (addNode pack unpack rest (AtIndex (index - 1)) newNode)
+            [] ->
+              nodes
 
 
 moveNode : (List { c | children : b } -> b)

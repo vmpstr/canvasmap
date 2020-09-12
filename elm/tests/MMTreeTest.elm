@@ -437,6 +437,28 @@ suite =
                 Expect.equal
                   (nodesToString nodes)
                   "123(234(345))"
+        , test "to non-existent" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 0)
+                              (InSubtree 3 (AtIndex 0))
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345"
+        , test "from non-existent" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (InSubtree 3 (AtIndex 0))
+                              (AtIndex 0)
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345"
         ]
     ]
 
