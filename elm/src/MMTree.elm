@@ -112,7 +112,7 @@ moveNode : (List { c | children : b } -> b)
 moveNode pack unpack nodes from to =
   let
       (removed, removedResult) = takeNode pack unpack nodes from
-      maybeAdjustedTo = adjustPathAfterRemoval from to
+      maybeAdjustedTo = adjustPathForMove from to
   in
   case maybeAdjustedTo of
     Just adjustedTo ->
@@ -164,7 +164,36 @@ isValidInsertionPath unpack nodes path =
     AtIndex index ->
       List.length nodes >= index
 
-adjustPathAfterRemoval : Path -> Path -> Maybe Path
-adjustPathAfterRemoval removed path =
-  Just path
+adjustPathForMove : Path -> Path -> Maybe Path
+adjustPathForMove removed path =
+  case (removed, path) of
+    (AtIndex ri, AtIndex pi) ->
+      if ri == pi then
+        Nothing
+      else if ri < pi then
+        Just (AtIndex (pi - 1))
+      else
+        Just (AtIndex pi)
+    (AtIndex ri, InSubtree pi psub) ->
+      if ri == pi then
+        Nothing
+      else if ri < pi then
+        Just (InSubtree (pi - 1) psub)
+      else
+        Just (InSubtree pi psub)
+    (InSubtree ri rsub, AtIndex pi) ->
+      Just path
+    (InSubtree ri rsub, InSubtree pi psub) ->
+      if ri == pi then
+        let
+            maybeSub = adjustPathForMove rsub psub
+        in
+        case maybeSub of
+          Just sub ->
+            Just (InSubtree pi sub)
+          Nothing ->
+            Nothing
+      else
+        Just path
+
 

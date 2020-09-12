@@ -353,13 +353,46 @@ suite =
                 Expect.equal
                   (nodesToString nodes)
                   "123(234) 345"
-        , test "reorder sibling to after" <|
+        , test "same path short" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 0)
+                              (AtIndex 0)
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345"
+        , test "same path long" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (InSubtree 0 (AtIndex 0))
+                              (InSubtree 0 (AtIndex 0))
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345"
+        , test "try to reorder sibling (but same spot)" <|
             \_ ->
                 let
                     nodes = moveNode
                               smallTreeNodes
                               (AtIndex 0)
                               (AtIndex 1)
+                in
+                Expect.equal
+                  (nodesToString nodes)
+                  "123(234) 345"
+        , test "reorder sibling to after" <|
+            \_ ->
+                let
+                    nodes = moveNode
+                              smallTreeNodes
+                              (AtIndex 0)
+                              (AtIndex 2)
                 in
                 Expect.equal
                   (nodesToString nodes)
@@ -370,7 +403,7 @@ suite =
                     nodes = moveNode
                               smallTreeNodes
                               (AtIndex 0)
-                              (AtIndex 2)
+                              (AtIndex 3)
                 in
                 Expect.equal
                   (nodesToString nodes)
