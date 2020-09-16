@@ -3,7 +3,7 @@ port module Map exposing (main)
 import Debug
 import Browser
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, style)
+import Html.Attributes exposing (class, style, attribute)
 import Html.Events exposing (custom)
 import Json.Decode as Decoder exposing (Decoder, succeed, int, string, float)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
@@ -147,41 +147,60 @@ initModel =
 view : Model -> Html Msg
 view model =
   div [ class "map" ]
-      (childList model.nodes |> List.map viewNode)
+      (childList model.nodes |> List.indexedMap viewTopNode)
 
 
-viewNode : Node -> Html Msg
-viewNode node =
-  case node.nodeType of
-    TopLevel ->
-      div
-        [ class "top_child"
-          , style "left" (asPx node.position.x)
-          , style "top" (asPx node.position.y)
-        ]
-        [ div
+viewTopNode : Int -> Node -> Html Msg
+viewTopNode index node =
+  let
+    path = String.fromInt index
+  in
+  div
+    [ class "top_child"
+      , style "left" (asPx node.position.x)
+      , style "top" (asPx node.position.y)
+    ]
+    [ div
+      [ custom "pointerdown" (onPointerDownDecoder node.id)
+      , class "content"
+      , style "width" (asPx node.size.x)
+      , style "height" (asPx node.size.y)
+      ]
+      [ text "hello"
+      ]
+    , div
+      [ class "child_area" ]
+      ((childList node.children |> List.indexedMap (viewChildNode path) |> List.concat) ++
+       [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))])
+    ]
+
+viewChildNode : String -> Int -> Node -> List (Html Msg)
+viewChildNode parentPath index node =
+  let
+    path = parentPath ++ " " ++ String.fromInt index
+  in
+  [ viewBeacon path
+  , div []
+      [ div
           [ custom "pointerdown" (onPointerDownDecoder node.id)
-          , class "content"
+          , class "child"
           , style "width" (asPx node.size.x)
           , style "height" (asPx node.size.y)
           ]
-          [ text "hello"
+          [ div [ class "content" ] [ text "hello" ]
           ]
-        , div [ class "child_area" ] (childList node.children |> List.map viewNode)
-        ]
+       , div
+         [ class "child_area" ]
+         ((childList node.children |> List.indexedMap (viewChildNode path) |> List.concat) ++
+          [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))])
+       ]
+   ]
 
-    Child ->
-      div []
-        [ div
-            [ custom "pointerdown" (onPointerDownDecoder node.id)
-            , class "child"
-            , style "width" (asPx node.size.x)
-            , style "height" (asPx node.size.y)
-            ]
-            [ div [ class "content" ] [ text "hello" ]
-            ]
-         , div [ class "child_area" ] (childList node.children |> List.map viewNode)
-         ]
+viewBeacon : String -> Html Msg
+viewBeacon path =
+  div [ class "beacon"
+      , attribute "path" path
+      ] []
 
 dragPosition : OnDragData -> Children -> Children
 dragPosition { targetId, dx, dy } (Children nodes) =

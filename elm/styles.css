@@ -56,3 +56,11 @@ body {
   background: orange;
 }
 
+.beacon {
+  margin-left: -5px;
+  margin-bottom: -5px;
+  width: 5px;
+  height: 5px;
+  background: orange;
+}
+
