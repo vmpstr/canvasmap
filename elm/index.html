@@ -37,11 +37,31 @@ function onPointerMove(e) {
   lastX = e.clientX;
   lastY = e.clientY;
 
+  const target_rect = document.getElementById(id).getBoundingClientRect();
   app.ports.portOnDrag.send({
-    targetId : id,
-    dx : dx,
-    dy : dy
+    targetId: id,
+    dx: dx,
+    dy: dy,
+    geometry: {
+      target: {
+        position: { x: target_rect.x, y: target_rect.y },
+        size: { x: target_rect.width, y: target_rect.height }
+      },
+      beacons: getBeacons()
+    }
   });
+}
+
+function getBeacons() {
+  let result = []
+  Array.from(document.getElementsByClassName("beacon")).forEach((e) => {
+    const rect = e.getBoundingClientRect();
+    result.push({
+      path: e.getAttribute("path"),
+      location: { x: rect.x, y: rect.y }
+    });
+  });
+  return result;
 }
 
 function onPointerUp(e) {

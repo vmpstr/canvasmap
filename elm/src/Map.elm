@@ -3,11 +3,17 @@ port module Map exposing (main)
 import Debug
 import Browser
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, style, attribute)
+import Html.Attributes exposing (class, style, attribute, id)
 import Html.Events exposing (custom)
-import Json.Decode as Decoder exposing (Decoder, succeed, int, string, float)
+import Json.Decode as Decoder exposing (Decoder, succeed, int, string, float, list)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import MMTree exposing (Path(..))
+
+{- TODOs
+ - I think it's overkill to have Vector and not array
+ - Refactor a whole lot of this into separate decoders module
+ - Move path functionality into something like MMTree.Path
+ -}
 
 type Msg
   = MsgNoop
@@ -25,6 +31,7 @@ type alias OnDragData =
   { targetId : String
   , dx : Float
   , dy : Float
+  , geometry : Geometry
   }
 
 type alias Geometry =
@@ -33,8 +40,8 @@ type alias Geometry =
   }
 
 type alias Beacon =
-  { id : String
-  , rect : Rect
+  { path : Path
+  , location : Vector
   }
 
 type NodeType 
@@ -156,7 +163,8 @@ viewTopNode index node =
     path = String.fromInt index
   in
   div
-    [ class "top_child"
+    [ id node.id
+      , class "top_child"
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
     ]
@@ -182,8 +190,9 @@ viewChildNode parentPath index node =
   [ viewBeacon path
   , div []
       [ div
-          [ custom "pointerdown" (onPointerDownDecoder node.id)
+          [ id node.id
           , class "child"
+          , custom "pointerdown" (onPointerDownDecoder node.id)
           , style "width" (asPx node.size.x)
           , style "height" (asPx node.size.y)
           ]
@@ -203,7 +212,7 @@ viewBeacon path =
       ] []
 
 dragPosition : OnDragData -> Children -> Children
-dragPosition { targetId, dx, dy } (Children nodes) =
+dragPosition { targetId, dx, dy, geometry } (Children nodes) =
   let 
     updatePosition : Vector -> Vector
     updatePosition position =
@@ -233,12 +242,71 @@ update msg model =
 init : () -> (Model, Cmd Msg)
 init () = (initModel, Cmd.none)
 
+prependPath : Int -> Maybe Path -> Path
+prependPath index maybePath =
+  case maybePath of
+    Just path ->
+      InSubtree index path
+    Nothing ->
+      AtIndex index
+
+stringToPath : String -> Maybe Path
+stringToPath s =
+  let
+    stringList = String.split " " s
+    intList = List.filterMap String.toInt (String.split " " s)
+
+    maybePrepend index mpath =
+      Just (prependPath index mpath)
+  in
+  if List.length stringList == List.length intList then
+    List.foldr maybePrepend Nothing intList
+  else
+    Nothing
+
+decodePath : String -> Decoder Path
+decodePath s =
+  case stringToPath s of
+    Just path ->
+      succeed path
+    Nothing ->
+      Decoder.fail ("Invalid path: " ++ s)
+
+pathDecoder : Decoder Path
+pathDecoder =
+  string |> Decoder.andThen decodePath
+
+beaconDecoder : Decoder Beacon
+beaconDecoder =
+  succeed Beacon
+    |> required "path" pathDecoder
+    |> required "location" vectorDecoder
+
+vectorDecoder : Decoder Vector
+vectorDecoder =
+  succeed Vector
+    |> required "x" float
+    |> required "y" float
+
+rectDecoder : Decoder Rect
+rectDecoder =
+  succeed Rect
+    |> required "position" vectorDecoder
+    |> required "size" vectorDecoder
+
+geometryDecoder : Decoder Geometry
+geometryDecoder =
+  succeed Geometry
+    |> required "target" rectDecoder
+    |> required "beacons" (list beaconDecoder)
+
 onDragDecoder : Decoder OnDragData
 onDragDecoder =
   succeed OnDragData
     |> required "targetId" string
     |> required "dx" float
     |> required "dy" float
+    |> required "geometry" geometryDecoder
 
 onDragSubscription : Model -> Sub Msg
 onDragSubscription model =
