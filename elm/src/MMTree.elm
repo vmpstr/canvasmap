@@ -7,6 +7,7 @@ module MMTree exposing (..)
  - Read through List and List.Extra to condense functions
  - Write more tests for deeper trees
  - Take a root tree object, as opposed to a list of nodes
+ - Test updateNode
  -}
 
 import List.Extra
@@ -200,4 +201,23 @@ adjustPathForMove removed path =
       else
         Just path
 
+updateNode : (List { c | children: b } -> b)
+           -> (b -> List { c | children: b })
+           -> List { c | children: b }
+           -> Path
+           -> ({ c | children: b } -> { c | children: b })
+           -> List { c | children: b }
+updateNode pack unpack nodes path updater =
+  case path of
+    AtIndex index ->
+      List.Extra.updateAt index updater nodes
+    InSubtree index subpath ->
+      let
+          recurse node =
+            { node |
+                children
+                  = pack (updateNode pack unpack (unpack node.children) subpath updater)
+            }
+      in
+      List.Extra.updateAt index recurse nodes
 

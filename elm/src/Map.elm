@@ -12,7 +12,18 @@ import MMTree exposing (Path(..))
 {- TODOs
  - I think it's overkill to have Vector and not array
  - Refactor a whole lot of this into separate decoders module
+ - Test everything
  - Move path functionality into something like MMTree.Path
+ - Model.drag_id should be drag_path?
+ -}
+
+{- Thoughts
+ - When dragging, I need to draw two version of the dragged node:
+   - anchored to a beacon (maybe)
+   - under the mouse cursor
+   Because of how I've set this up, the 'id' should be on the dragged
+   node under the cursor, since js will port over the position information
+   and that's what we should use to figure out where to anchor the element
  -}
 
 type Msg
@@ -61,9 +72,17 @@ type alias Node =
 
 type alias Model =
   { nodes : Children
+  , drag_id : Maybe String
   }
 
+-- MMTree customization
+findNode = MMTree.findNode childList
 
+moveNode = MMTree.moveNode Children childList
+
+updateNode = MMTree.updateNode Children childList
+
+-- Helpers
 childList : Children -> List Node
 childList (Children nodes) =
   nodes
@@ -102,6 +121,7 @@ toPreventDefaultMsg msg =
   , preventDefault = False
   }
 
+-- Functionality
 onPointerDownDecoder : String -> Decoder MsgWithEventOptions
 onPointerDownDecoder targetId =
   Decoder.map toPreventDefaultMsg
@@ -149,6 +169,7 @@ initModel =
                  , children = Children []
                  }
                ]
+  , drag_id = Nothing
   }
 
 view : Model -> Html Msg
@@ -211,21 +232,57 @@ viewBeacon path =
       , attribute "path" path
       ] []
 
+findClosestBeacon : Path -> Geometry -> Maybe Beacon
+findClosestBeacon path geometry =
+  Nothing
+
+updateNodePosition : List Node -> Path -> (Float, Float) -> List Node
+updateNodePosition nodes path (dx, dy) =
+  let
+      addDelta node =
+        let
+            x = node.position.x + dx
+            y = node.position.y + dy
+            position = Vector x y
+        in
+        { node | position = position }
+  in
+  updateNode nodes path addDelta
+
+setNodePosition : List Node -> Path -> (Float, Float) -> List Node
+setNodePosition nodes path (x, y) =
+  let
+      setPosition node =
+        let
+            position = Debug.log "abs pos " (Vector x y)
+        in
+        { node | position = position }
+  in
+  updateNode nodes path setPosition
+
 dragPosition : OnDragData -> Children -> Children
 dragPosition { targetId, dx, dy, geometry } (Children nodes) =
   let 
-    updatePosition : Vector -> Vector
-    updatePosition position =
-      { x = position.x + dx, y = position.y + dy }
-
-    updateNode : Node -> Node
-    updateNode node =
-      if node.id == targetId then
-        { node | position = updatePosition node.position }
-      else
-        node
+    mtargetPath = findNode nodes targetId
   in
-  Children (List.map updateNode nodes)
+  case mtargetPath of
+    Just path ->
+      let
+        mbeacon = findClosestBeacon path geometry
+        updatedNodes =
+          case path of
+            AtIndex index ->
+              updateNodePosition nodes path (dx, dy)
+            InSubtree _ _ ->
+              setNodePosition nodes path (geometry.target.position.x + dx, geometry.target.position.y + dy)
+      in
+      case mbeacon of
+        Just beacon ->
+          Children (moveNode updatedNodes path beacon.path)
+        Nothing ->
+          Children (moveNode updatedNodes path (AtIndex 0))
+    Nothing ->
+      Children nodes
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
