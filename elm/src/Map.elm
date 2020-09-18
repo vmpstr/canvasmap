@@ -15,6 +15,8 @@ import MMTree exposing (Path(..))
  - Test everything
  - Move path functionality into something like MMTree.Path
  - Model.dragId should be drag_path?
+ - Gotta figure out an elegant way to have view with beacons and view without
+ - maybe write some comments or documentation
  -}
 
 {- Thoughts
@@ -83,6 +85,8 @@ findNode = MMTree.findNode childList
 moveNode = MMTree.moveNode Children childList
 
 updateNode = MMTree.updateNode Children childList
+
+nodeAt = MMTree.nodeAt childList
 
 -- Helpers
 childList : Children -> List Node
@@ -176,19 +180,64 @@ initModel =
   , dragId = Nothing
   }
 
+nodeAtById : List Node -> String -> Maybe Node
+nodeAtById nodes id =
+  case findNode nodes id of
+    Just path ->
+      nodeAt nodes path
+    Nothing ->
+      Nothing
+
 view : Model -> Html Msg
 view model =
-  div [ class "map" ]
-      (childList model.nodes |> List.indexedMap viewTopNode)
-
-
-viewTopNode : Int -> Node -> Html Msg
-viewTopNode index node =
   let
-    path = String.fromInt index
+      nodes = childList model.nodes
+      divChildren = List.indexedMap (viewTopNode model.dragId) nodes
   in
+  case model.dragId of
+    Just id ->
+      let
+          mnode = nodeAtById (childList model.nodes) id
+      in
+      case mnode of
+        Just node ->
+          div [ class "map" ] ((viewDragNode node) :: divChildren)
+        Nothing ->
+          div [ class "map" ] divChildren
+    Nothing ->
+      div [ class "map" ] divChildren
+
+viewDragNode : Node -> Html Msg
+viewDragNode node =
   div
     [ id node.id
+      , class "top_child"
+      , style "left" (asPx node.position.x)
+      , style "top" (asPx node.position.y)
+    ]
+    [ div
+      [ class "content"
+      , style "width" (asPx node.size.x)
+      , style "height" (asPx node.size.y)
+      ]
+      [ text "hello"
+      ]
+    , div
+      [ class "child_area" ] []
+    ]
+
+viewTopNode : Maybe String -> Int -> Node -> Html Msg
+viewTopNode mdragId index node =
+  let
+    path = String.fromInt index
+    nodeId =
+      if mdragId == Just node.id then
+        "shadow-" ++ node.id
+      else
+        node.id
+  in
+  div
+    [ id nodeId
       , class "top_child"
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
@@ -203,14 +252,19 @@ viewTopNode index node =
       ]
     , div
       [ class "child_area" ]
-      ((childList node.children |> List.indexedMap (viewChildNode path) |> List.concat) ++
+      ((childList node.children |> List.indexedMap (viewChildNode path mdragId) |> List.concat) ++
        [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))])
     ]
 
-viewChildNode : String -> Int -> Node -> List (Html Msg)
-viewChildNode parentPath index node =
+viewChildNode : String -> Maybe String -> Int -> Node -> List (Html Msg)
+viewChildNode parentPath mdragId index node =
   let
     path = parentPath ++ " " ++ String.fromInt index
+    nodeId =
+      if mdragId == Just node.id then
+        "shadow-" ++ node.id
+      else
+        node.id
   in
   [ viewBeacon path
   , div []
@@ -225,7 +279,7 @@ viewChildNode parentPath index node =
           ]
        , div
          [ class "child_area" ]
-         ((childList node.children |> List.indexedMap (viewChildNode path) |> List.concat) ++
+         ((childList node.children |> List.indexedMap (viewChildNode path mdragId) |> List.concat) ++
           [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))])
        ]
    ]
