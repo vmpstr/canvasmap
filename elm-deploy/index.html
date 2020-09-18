@@ -1,0 +1,93 @@
+<!doctype html>
+<link rel=stylesheet href=styles.css></link>
+
+<div id="map"></div>
+
+<script src="map.js"></script>
+<script>
+let app = undefined;
+
+let lastX = 0;
+let lastY = 0;
+let id = "";
+let dragging = false;
+function onPointerDown(e) {
+  document.body.addEventListener("pointermove", onPointerMove);
+  document.body.addEventListener("pointerup", onPointerUp);
+  lastX = e.x;
+  lastY = e.y;
+  id = e.targetId;
+}
+
+function onPointerMove(e) {
+  e.preventDefault();
+
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+
+  if (!dragging) {
+    const d2 = dx * dx + dy * dy;
+    dragging = d2 >= 100;
+    if (dragging) {
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      const target_rect = document.getElementById(id).getBoundingClientRect();
+      app.ports.portOnDragStart.send({
+        targetId: id,
+        geometry: {
+          target: {
+            position: { x: target_rect.x, y: target_rect.y },
+            size: { x: target_rect.width, y: target_rect.height }
+          }
+        }
+      });
+    }
+    return;
+  }
+  lastX = e.clientX;
+  lastY = e.clientY;
+
+  const target_rect = document.getElementById(id).getBoundingClientRect();
+  app.ports.portOnDragBy.send({
+    targetId: id,
+    dx: dx,
+    dy: dy,
+    geometry: {
+      target: {
+        position: { x: target_rect.x, y: target_rect.y },
+        size: { x: target_rect.width, y: target_rect.height }
+      },
+      beacons: getBeacons()
+    }
+  });
+}
+
+function getBeacons() {
+  let result = []
+  Array.from(document.getElementsByClassName("beacon")).forEach((e) => {
+    const rect = e.getBoundingClientRect();
+    result.push({
+      path: e.getAttribute("path"),
+      location: { x: rect.x, y: rect.y }
+    });
+  });
+  return result;
+}
+
+function onPointerUp(e) {
+  e.preventDefault();
+
+  dragging = false;
+  document.body.removeEventListener("pointermove", onPointerMove);
+  document.body.removeEventListener("pointerup", onPointerUp);
+
+  app.ports.portOnDragStop.send();
+}
+
+onload = () => {
+  app = Elm.Map.init({ node: document.getElementById("map") });
+  app.ports.portOnPointerDown.subscribe(onPointerDown);
+};
+</script>
+

@@ -1,0 +1,73 @@
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.map {
+  background: lightblue;
+  contain: layout;
+  width: 100%;
+  height: 100vh;
+  overflow: auto;
+}
+
+.top_child {
+  box-sizing: border-box;
+  position: absolute;
+  contain: layout;
+}
+
+.top_child > .content {
+  background: pink;
+  border-radius: 10px;
+  border: 1px solid black;
+}
+
+.child {
+  margin-top: 5px;
+  box-sizing: border-box;
+  position: relative;
+  background: lightgreen;
+  border-radius: 10px;
+  border: 1px solid black;
+}
+
+.content {
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.child_area {
+  position: relative;
+  padding-left: 25px;
+}
+
+.ewhandle {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  right: -3px;
+  width: 6px;
+  cursor: ew-resize;
+}
+
+.debug {
+  background: orange;
+}
+
+.beacon {
+  margin-left: -5px;
+  margin-bottom: -5px;
+  width: 5px;
+  height: 5px;
+  background: orange;
+}
+
+.shadow {
+  opacity: 0.5
+}
+.shadow + .child_area {
+  opacity: 0.5;
+}
+
