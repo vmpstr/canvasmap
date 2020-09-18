@@ -3,7 +3,7 @@ port module Map exposing (main)
 import Debug
 import Browser
 import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, style, attribute, id)
+import Html.Attributes exposing (class, classList, style, attribute, id)
 import Html.Events exposing (custom)
 import Json.Decode as Decoder exposing (Decoder, succeed, int, string, float, list)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
@@ -214,13 +214,14 @@ viewDragNode node =
       , class "top_child"
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
+      , style "z-index" "100"
     ]
     [ div
       [ class "content"
       , style "width" (asPx node.size.x)
       , style "height" (asPx node.size.y)
       ]
-      [ text "hello"
+      [ text ("hello " ++ node.id)
       ]
     , div
       [ class "child_area" ] []
@@ -230,15 +231,15 @@ viewTopNode : Maybe String -> Int -> Node -> Html Msg
 viewTopNode mdragId index node =
   let
     path = String.fromInt index
-    nodeId =
+    (nodeId, shadow) =
       if mdragId == Just node.id then
-        "shadow-" ++ node.id
+        ("shadow-" ++ node.id, True)
       else
-        node.id
+        (node.id, False)
   in
   div
     [ id nodeId
-      , class "top_child"
+      , classList [("top_child", True), ("shadow", shadow)]
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
     ]
@@ -248,7 +249,7 @@ viewTopNode mdragId index node =
       , style "width" (asPx node.size.x)
       , style "height" (asPx node.size.y)
       ]
-      [ text "hello"
+      [ text ("hello " ++ node.id)
       ]
     , div
       [ class "child_area" ]
@@ -260,22 +261,22 @@ viewChildNode : String -> Maybe String -> Int -> Node -> List (Html Msg)
 viewChildNode parentPath mdragId index node =
   let
     path = parentPath ++ " " ++ String.fromInt index
-    nodeId =
+    (nodeId, shadow) =
       if mdragId == Just node.id then
-        "shadow-" ++ node.id
+        ("shadow-" ++ node.id, True)
       else
-        node.id
+        (node.id, False)
   in
   [ viewBeacon path
   , div []
       [ div
           [ id node.id
-          , class "child"
+          , classList [("child", True), ("shadow", shadow)]
           , custom "pointerdown" (onPointerDownDecoder node.id)
           , style "width" (asPx node.size.x)
           , style "height" (asPx node.size.y)
           ]
-          [ div [ class "content" ] [ text "hello" ]
+          [ div [ class "content" ] [ text ("hello " ++ node.id) ]
           ]
        , div
          [ class "child_area" ]
@@ -290,9 +291,58 @@ viewBeacon path =
       , attribute "path" path
       ] []
 
-findClosestBeacon : Path -> Geometry -> Maybe Beacon
-findClosestBeacon path geometry =
-  Nothing
+
+isSubpath : Path -> Path -> Bool
+isSubpath path lead =
+  case (path, lead) of
+    (AtIndex pi, AtIndex li) ->
+      False -- even if pi == li, it's not a subpath
+    (AtIndex pi, InSubtree li lsub) ->
+      False -- path stops short of the lead
+    (InSubtree pi psub, AtIndex li) ->
+      pi == li -- if path goes into the subtree of lead, it's a subpath
+    (InSubtree pi psub, InSubtree li lsub) ->
+      if pi == li then
+        isSubpath psub lsub -- recurse
+      else
+        False -- path diverges
+
+
+findClosestBeaconPath : Path -> Geometry -> Maybe Path
+findClosestBeaconPath ignorePath geometry =
+  let
+    validPath path =
+      not (isSubpath path ignorePath)
+
+    filteredBeacons = List.filter (\beacon -> validPath beacon.path) geometry.beacons
+
+    tx = geometry.target.position.x
+    ty = geometry.target.position.y + 0.5 * geometry.target.size.y
+
+    computeDistance beacon =
+      let
+          bx = beacon.location.x
+          by = beacon.location.y
+      in
+      sqrt ((bx - tx) * (bx - tx) + (by - ty) * (by - ty))
+
+    toDistanceBeacon beacon =
+      { distance = computeDistance beacon
+      , path = beacon.path
+      }
+
+    distanceBeacons = List.map toDistanceBeacon filteredBeacons
+
+    sorted = List.sortBy .distance distanceBeacons
+  in
+  case List.head sorted of
+    Just distanceBeacon ->
+      if distanceBeacon.distance > 200 then
+        Nothing
+      else
+        Just distanceBeacon.path
+    Nothing ->
+      Nothing
 
 updateNodePosition : List Node -> Path -> (Float, Float) -> List Node
 updateNodePosition nodes path (dx, dy) =
@@ -337,15 +387,27 @@ applyDragByData { targetId, dx, dy, geometry } (Children nodes) =
   case mtargetPath of
     Just path ->
       let
-        mbeacon = findClosestBeacon path geometry
+        mbeaconPath = findClosestBeaconPath path geometry
         updatedNodes =
           updateNodePosition nodes path (dx, dy)
       in
-      case mbeacon of
-        Just beacon ->
-          Children (moveNode updatedNodes path beacon.path)
+      case mbeaconPath of
+        Just beaconPath ->
+          Children (moveNode updatedNodes path beaconPath)
         Nothing ->
-          Children (moveNode updatedNodes path (AtIndex 0))
+          {- the problem is that if we do a move, we need to somehow force a
+             raf, because ignored path changes, so we end up using self
+             beacons. The "fix" is to not reorder top level items, which
+             only fixes it for some cases, but it's "good enough". The right
+             solution here is to not ever draw self beacons for neither the
+             dragged element nor its shadow.
+             TODO(vmpstr): Do the right solution.
+          -}
+          case path of
+            AtIndex _ ->
+              Children updatedNodes 
+            InSubtree _ _ ->
+              Children (moveNode updatedNodes path (AtIndex 0))
     Nothing ->
       Children nodes
 

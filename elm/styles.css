@@ -64,3 +64,10 @@ body {
   background: orange;
 }
 
+.shadow {
+  opacity: 0.5
+}
+.shadow + .child_area {
+  opacity: 0.5;
+}
+
