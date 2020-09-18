@@ -31,6 +31,17 @@ function onPointerMove(e) {
     if (dragging) {
       lastX = e.clientX;
       lastY = e.clientY;
+
+      const target_rect = document.getElementById(id).getBoundingClientRect();
+      app.ports.portOnDragStart.send({
+        targetId: id,
+        geometry: {
+          target: {
+            position: { x: target_rect.x, y: target_rect.y },
+            size: { x: target_rect.width, y: target_rect.height }
+          }
+        }
+      });
     }
     return;
   }
@@ -38,7 +49,7 @@ function onPointerMove(e) {
   lastY = e.clientY;
 
   const target_rect = document.getElementById(id).getBoundingClientRect();
-  app.ports.portOnDrag.send({
+  app.ports.portOnDragBy.send({
     targetId: id,
     dx: dx,
     dy: dy,
@@ -70,6 +81,8 @@ function onPointerUp(e) {
   dragging = false;
   document.body.removeEventListener("pointermove", onPointerMove);
   document.body.removeEventListener("pointerup", onPointerUp);
+
+  app.ports.portOnDragStop.send();
 }
 
 onload = () => {

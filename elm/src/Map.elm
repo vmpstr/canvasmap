@@ -14,7 +14,7 @@ import MMTree exposing (Path(..))
  - Refactor a whole lot of this into separate decoders module
  - Test everything
  - Move path functionality into something like MMTree.Path
- - Model.drag_id should be drag_path?
+ - Model.dragId should be drag_path?
  -}
 
 {- Thoughts
@@ -28,7 +28,9 @@ import MMTree exposing (Path(..))
 
 type Msg
   = MsgNoop
-  | MsgOnDrag OnDragData
+  | MsgOnDragStart OnDragData
+  | MsgOnDragBy OnDragData
+  | MsgOnDragStop
   | MsgOnPointerDown OnPointerDownPortData
 
 
@@ -72,7 +74,7 @@ type alias Node =
 
 type alias Model =
   { nodes : Children
-  , drag_id : Maybe String
+  , dragId : Maybe String
   }
 
 -- MMTree customization
@@ -133,7 +135,9 @@ onPointerDownDecoder targetId =
         |> required "clientY" float))
 
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
-port portOnDrag : (Decoder.Value -> msg) -> Sub msg
+port portOnDragStart : (Decoder.Value -> msg) -> Sub msg
+port portOnDragBy : (Decoder.Value -> msg) -> Sub msg
+port portOnDragStop : (Decoder.Value -> msg) -> Sub msg
 
 initModel : Model
 initModel =
@@ -169,7 +173,7 @@ initModel =
                  , children = Children []
                  }
                ]
-  , drag_id = Nothing
+  , dragId = Nothing
   }
 
 view : Model -> Html Msg
@@ -254,14 +258,25 @@ setNodePosition nodes path (x, y) =
   let
       setPosition node =
         let
-            position = Debug.log "abs pos " (Vector x y)
+            position = Vector x y
         in
         { node | position = position }
   in
   updateNode nodes path setPosition
 
-dragPosition : OnDragData -> Children -> Children
-dragPosition { targetId, dx, dy, geometry } (Children nodes) =
+applyDragStartData : OnDragData -> Children -> Children
+applyDragStartData { targetId, geometry } (Children nodes) =
+  let 
+    mtargetPath = findNode nodes targetId
+  in
+  case mtargetPath of
+    Just path ->
+      Children (setNodePosition nodes path (geometry.target.position.x, geometry.target.position.y))
+    Nothing ->
+      Children nodes
+
+applyDragByData : OnDragData -> Children -> Children
+applyDragByData { targetId, dx, dy, geometry } (Children nodes) =
   let 
     mtargetPath = findNode nodes targetId
   in
@@ -270,11 +285,7 @@ dragPosition { targetId, dx, dy, geometry } (Children nodes) =
       let
         mbeacon = findClosestBeacon path geometry
         updatedNodes =
-          case path of
-            AtIndex index ->
-              updateNodePosition nodes path (dx, dy)
-            InSubtree _ _ ->
-              setNodePosition nodes path (geometry.target.position.x + dx, geometry.target.position.y + dy)
+          updateNodePosition nodes path (dx, dy)
       in
       case mbeacon of
         Just beacon ->
@@ -288,10 +299,18 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     MsgOnPointerDown data ->
-      (model, portOnPointerDown data )
+      (model, portOnPointerDown data)
 
-    MsgOnDrag data ->
-      ({ model | nodes = dragPosition data model.nodes }, Cmd.none)
+    MsgOnDragStart data ->
+      ({ model | nodes = applyDragStartData data model.nodes
+               , dragId = Just data.targetId
+               }, Cmd.none)
+
+    MsgOnDragBy data ->
+      ({ model | nodes = applyDragByData data model.nodes }, Cmd.none)
+
+    MsgOnDragStop ->
+      ({ model | dragId = Nothing }, Cmd.none)
 
     _ ->
       (model, Cmd.none)
@@ -355,23 +374,33 @@ geometryDecoder : Decoder Geometry
 geometryDecoder =
   succeed Geometry
     |> required "target" rectDecoder
-    |> required "beacons" (list beaconDecoder)
+    |> optional "beacons" (list beaconDecoder) []
 
 onDragDecoder : Decoder OnDragData
 onDragDecoder =
   succeed OnDragData
     |> required "targetId" string
-    |> required "dx" float
-    |> required "dy" float
+    |> optional "dx" float 0
+    |> optional "dy" float 0
     |> required "geometry" geometryDecoder
 
-onDragSubscription : Model -> Sub Msg
-onDragSubscription model =
-  portOnDrag (Decoder.decodeValue onDragDecoder >> (toMsgOrNoop MsgOnDrag))
+onDragStartSubscription : Sub Msg
+onDragStartSubscription =
+  portOnDragStart (Decoder.decodeValue onDragDecoder >> (toMsgOrNoop MsgOnDragStart))
+
+onDragBySubscription : Sub Msg
+onDragBySubscription =
+  portOnDragBy (Decoder.decodeValue onDragDecoder >> (toMsgOrNoop MsgOnDragBy))
+
+onDragStopSubscription : Sub Msg
+onDragStopSubscription =
+  portOnDragStop (\_ -> MsgOnDragStop)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  [ onDragSubscription model
+  [ onDragStartSubscription
+  , onDragBySubscription
+  , onDragStopSubscription
   ] |> Sub.batch
 
 main : Program () Model Msg
