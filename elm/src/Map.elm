@@ -16,6 +16,10 @@ import MMTree exposing (Path(..))
  - Move path functionality into something like MMTree.Path
  - Gotta figure out an elegant way to have view with beacons and view without
  - maybe write some comments or documentation
+ - the beacon finding anchor should depend on where the drag is moving:
+    moving down: maybe bot left corner, moving up: maybe top left corner
+ - beacon finding should filter to ignore beacons to the right so that
+    nodes don't attach as children so much
  -}
 
 {- Thoughts
@@ -232,6 +236,7 @@ viewTopNode drawBeacons mdragState index node =
   let
     path = String.fromInt index
     (nodeId, shadow, drawChildBeacons) = getViewParams drawBeacons mdragState node
+    onTop = index < 0
 
     tailBeacons =
       if drawChildBeacons then
@@ -241,7 +246,7 @@ viewTopNode drawBeacons mdragState index node =
   in
   div
     [ id nodeId
-      , classList [("top_child", True), ("shadow", shadow)]
+      , classList [("top_child", True), ("shadow", shadow), ("on_top", onTop)]
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
     ]

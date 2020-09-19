@@ -71,3 +71,7 @@ body {
   opacity: 0.5;
 }
 
+.on_top {
+  z-index: 100;
+}
+
