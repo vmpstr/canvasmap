@@ -14,7 +14,6 @@ import MMTree exposing (Path(..))
  - Refactor a whole lot of this into separate decoders module
  - Test everything
  - Move path functionality into something like MMTree.Path
- - Model.dragId should be drag_path?
  - Gotta figure out an elegant way to have view with beacons and view without
  - maybe write some comments or documentation
  -}
@@ -76,7 +75,11 @@ type alias Node =
 
 type alias Model =
   { nodes : Children
-  , dragId : Maybe String
+  , dragState : Maybe DragState
+  }
+
+type alias DragState =
+  { dragId : String
   }
 
 -- MMTree customization
@@ -177,7 +180,7 @@ initModel =
                  , children = Children []
                  }
                ]
-  , dragId = Nothing
+  , dragState = Nothing
   }
 
 nodeAtById : List Node -> String -> Maybe Node
@@ -192,12 +195,13 @@ view : Model -> Html Msg
 view model =
   let
       nodes = childList model.nodes
-      divChildren = List.indexedMap (viewTopNode model.dragId) nodes
+      drawBeacons = model.dragState /= Nothing
+      divChildren = List.indexedMap (viewTopNode drawBeacons model.dragState) nodes
   in
-  case model.dragId of
-    Just id ->
+  case model.dragState of
+    Just state ->
       let
-          mnode = nodeAtById (childList model.nodes) id
+          mnode = nodeAtById (childList model.nodes) state.dragId
       in
       case mnode of
         Just node ->
@@ -209,33 +213,31 @@ view model =
 
 viewDragNode : Node -> Html Msg
 viewDragNode node =
-  div
-    [ id node.id
-      , class "top_child"
-      , style "left" (asPx node.position.x)
-      , style "top" (asPx node.position.y)
-      , style "z-index" "100"
-    ]
-    [ div
-      [ class "content"
-      , style "width" (asPx node.size.x)
-      , style "height" (asPx node.size.y)
-      ]
-      [ text ("hello " ++ node.id)
-      ]
-    , div
-      [ class "child_area" ] []
-    ]
+  viewTopNode False Nothing -1 node
 
-viewTopNode : Maybe String -> Int -> Node -> Html Msg
-viewTopNode mdragId index node =
+getViewParams : Bool -> Maybe DragState -> Node -> (String, Bool, Bool)
+getViewParams drawBeacons mdragState node =
+  -- returning id, shadow, drawChildBeacons
+  case mdragState of
+    Just dragState ->
+      if dragState.dragId == node.id then
+        ("shadow-" ++ node.id, True, False)
+      else
+        (node.id, False, drawBeacons)
+    Nothing ->
+      (node.id, False, drawBeacons)
+
+viewTopNode : Bool -> Maybe DragState -> Int -> Node -> Html Msg
+viewTopNode drawBeacons mdragState index node =
   let
     path = String.fromInt index
-    (nodeId, shadow) =
-      if mdragId == Just node.id then
-        ("shadow-" ++ node.id, True)
+    (nodeId, shadow, drawChildBeacons) = getViewParams drawBeacons mdragState node
+
+    tailBeacons =
+      if drawChildBeacons then
+        [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))]
       else
-        (node.id, False)
+        []
   in
   div
     [ id nodeId
@@ -253,22 +255,31 @@ viewTopNode mdragId index node =
       ]
     , div
       [ class "child_area" ]
-      ((childList node.children |> List.indexedMap (viewChildNode path mdragId) |> List.concat) ++
-       [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))])
+      ((childList node.children |> List.indexedMap (viewChildNode drawChildBeacons path mdragState) |> List.concat) ++
+       tailBeacons)
     ]
 
-viewChildNode : String -> Maybe String -> Int -> Node -> List (Html Msg)
-viewChildNode parentPath mdragId index node =
+viewChildNode : Bool -> String -> Maybe DragState -> Int -> Node -> List (Html Msg)
+viewChildNode drawBeacons parentPath mdragState index node =
   let
     path = parentPath ++ " " ++ String.fromInt index
-    (nodeId, shadow) =
-      if mdragId == Just node.id then
-        ("shadow-" ++ node.id, True)
+    (nodeId, shadow, drawChildBeacons) = getViewParams drawBeacons mdragState node
+
+    headBeacons =
+      if drawBeacons then
+        [viewBeacon path]
       else
-        (node.id, False)
+        []
+
+    tailBeacons =
+      if drawChildBeacons then
+        [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))]
+      else
+        []
+
   in
-  [ viewBeacon path
-  , div []
+  headBeacons ++
+  [ div []
       [ div
           [ id node.id
           , classList [("child", True), ("shadow", shadow)]
@@ -280,8 +291,8 @@ viewChildNode parentPath mdragId index node =
           ]
        , div
          [ class "child_area" ]
-         ((childList node.children |> List.indexedMap (viewChildNode path mdragId) |> List.concat) ++
-          [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))])
+         ((childList node.children |> List.indexedMap (viewChildNode drawChildBeacons path mdragState) |> List.concat) ++
+          tailBeacons)
        ]
    ]
 
@@ -368,48 +379,61 @@ setNodePosition nodes path (x, y) =
   in
   updateNode nodes path setPosition
 
-applyDragStartData : OnDragData -> Children -> Children
-applyDragStartData { targetId, geometry } (Children nodes) =
+applyDragStartData : Maybe DragState -> Children -> OnDragData -> (Maybe DragState, Children)
+applyDragStartData mdragState (Children nodes) { targetId, geometry } =
   let 
     mtargetPath = findNode nodes targetId
   in
   case mtargetPath of
     Just path ->
-      Children (setNodePosition nodes path (geometry.target.position.x, geometry.target.position.y))
+      ( Just { dragId = targetId }
+      , Children (setNodePosition nodes path (geometry.target.position.x, geometry.target.position.y))
+      )
     Nothing ->
-      Children nodes
+      (Nothing, Children nodes)
 
-applyDragByData : OnDragData -> Children -> Children
-applyDragByData { targetId, dx, dy, geometry } (Children nodes) =
-  let 
-    mtargetPath = findNode nodes targetId
-  in
-  case mtargetPath of
-    Just path ->
-      let
-        mbeaconPath = findClosestBeaconPath path geometry
-        updatedNodes =
-          updateNodePosition nodes path (dx, dy)
-      in
-      case mbeaconPath of
-        Just beaconPath ->
-          Children (moveNode updatedNodes path beaconPath)
-        Nothing ->
-          {- the problem is that if we do a move, we need to somehow force a
-             raf, because ignored path changes, so we end up using self
-             beacons. The "fix" is to not reorder top level items, which
-             only fixes it for some cases, but it's "good enough". The right
-             solution here is to not ever draw self beacons for neither the
-             dragged element nor its shadow.
-             TODO(vmpstr): Do the right solution.
-          -}
-          case path of
-            AtIndex _ ->
-              Children updatedNodes 
-            InSubtree _ _ ->
-              Children (moveNode updatedNodes path (AtIndex 0))
+-- TODO(vmpstr): definitely refactor this.
+applyDragByData : Maybe DragState -> Children -> OnDragData -> (Maybe DragState, Children)
+applyDragByData mdragState (Children nodes) { targetId, dx, dy, geometry } =
+  case mdragState of
     Nothing ->
-      Children nodes
+      (Nothing, Children nodes)
+    Just dragState ->
+      if targetId /= dragState.dragId then
+        (Nothing, Children nodes)
+      else
+        let 
+          mtargetPath = findNode nodes targetId
+        in
+        case mtargetPath of
+          Just path ->
+            let
+              mbeaconPath = findClosestBeaconPath path geometry
+              updatedNodes = updateNodePosition nodes path (dx, dy)
+            in
+            case mbeaconPath of
+              Just beaconPath ->
+                (mdragState, Children (moveNode updatedNodes path beaconPath))
+              Nothing ->
+                {- the problem is that if we do a move, we need to somehow force a
+                   raf, because ignored path changes, so we end up using self
+                   beacons. The "fix" is to not reorder top level items, which
+                   only fixes it for some cases, but it's "good enough". The right
+                   solution here is to not ever draw self beacons for neither the
+                   dragged element nor its shadow.
+                   TODO(vmpstr): Do the right solution.
+                -}
+                case path of
+                  AtIndex _ ->
+                    (mdragState, Children updatedNodes)
+                  InSubtree _ _ ->
+                    (mdragState, Children (moveNode updatedNodes path (AtIndex 0)))
+          Nothing ->
+            (Nothing, Children nodes)
+
+nocmd : Model -> (Model, Cmd Msg)
+nocmd model =
+  (model, Cmd.none)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -418,15 +442,19 @@ update msg model =
       (model, portOnPointerDown data)
 
     MsgOnDragStart data ->
-      ({ model | nodes = applyDragStartData data model.nodes
-               , dragId = Just data.targetId
-               }, Cmd.none)
+      let
+        (dragState, nodes) = applyDragStartData model.dragState model.nodes data
+      in
+      nocmd { model | nodes = nodes, dragState = dragState }
 
     MsgOnDragBy data ->
-      ({ model | nodes = applyDragByData data model.nodes }, Cmd.none)
+      let
+        (dragState, nodes) = applyDragByData model.dragState model.nodes data
+      in
+      nocmd { model | nodes = nodes, dragState = dragState }
 
     MsgOnDragStop ->
-      ({ model | dragId = Nothing }, Cmd.none)
+      nocmd { model | dragState = Nothing }
 
     _ ->
       (model, Cmd.none)
