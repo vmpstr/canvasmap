@@ -137,13 +137,12 @@ toPreventDefaultMsg msg =
 -- Functionality
 onPointerDownDecoder : String -> Decoder MsgWithEventOptions
 onPointerDownDecoder targetId =
-  Decoder.map toPreventDefaultMsg
-    (Decoder.map MsgOnPointerDown 
-      (succeed OnPointerDownPortData
-        |> hardcoded targetId
-        |> required "pointerType" string
-        |> required "clientX" float
-        |> required "clientY" float))
+  Decoder.map (MsgOnPointerDown >> toPreventDefaultMsg)
+    (succeed OnPointerDownPortData
+      |> hardcoded targetId
+      |> required "pointerType" string
+      |> required "clientX" float
+      |> required "clientY" float)
 
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
 port portOnDragStart : (Decoder.Value -> msg) -> Sub msg
@@ -189,11 +188,11 @@ initModel =
 
 nodeAtById : List Node -> String -> Maybe Node
 nodeAtById nodes id =
-  case findNode nodes id of
-    Just path ->
-      nodeAt nodes path
-    Nothing ->
-      Nothing
+  findNode nodes id |> Maybe.andThen (nodeAt nodes)
+
+dragNode : List Node -> DragState -> Maybe Node
+dragNode nodes dragState =
+  nodeAtById nodes dragState.dragId
 
 view : Model -> Html Msg
 view model =
@@ -202,16 +201,9 @@ view model =
       drawBeacons = model.dragState /= Nothing
       divChildren = List.indexedMap (viewTopNode drawBeacons model.dragState) nodes
   in
-  case model.dragState of
-    Just state ->
-      let
-          mnode = nodeAtById (childList model.nodes) state.dragId
-      in
-      case mnode of
-        Just node ->
-          div [ class "map" ] ((viewDragNode node) :: divChildren)
-        Nothing ->
-          div [ class "map" ] divChildren
+  case model.dragState |> Maybe.andThen (dragNode nodes) of
+    Just node ->
+      div [ class "map" ] ((viewDragNode node) :: divChildren)
     Nothing ->
       div [ class "map" ] divChildren
 
@@ -243,6 +235,11 @@ viewTopNode drawBeacons mdragState index node =
         [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))]
       else
         []
+
+    childNodes =
+      childList node.children
+        |> List.indexedMap (viewChildNode drawChildBeacons path mdragState)
+        |> List.concat
   in
   div
     [ id nodeId
@@ -260,8 +257,7 @@ viewTopNode drawBeacons mdragState index node =
       ]
     , div
       [ class "child_area" ]
-      ((childList node.children |> List.indexedMap (viewChildNode drawChildBeacons path mdragState) |> List.concat) ++
-       tailBeacons)
+      (childNodes ++ tailBeacons)
     ]
 
 viewChildNode : Bool -> String -> Maybe DragState -> Int -> Node -> List (Html Msg)
@@ -282,6 +278,10 @@ viewChildNode drawBeacons parentPath mdragState index node =
       else
         []
 
+    childNodes =
+       childList node.children
+         |> List.indexedMap (viewChildNode drawChildBeacons path mdragState)
+         |> List.concat
   in
   headBeacons ++
   [ div []
@@ -296,8 +296,7 @@ viewChildNode drawBeacons parentPath mdragState index node =
           ]
        , div
          [ class "child_area" ]
-         ((childList node.children |> List.indexedMap (viewChildNode drawChildBeacons path mdragState) |> List.concat) ++
-          tailBeacons)
+         (childNodes ++ tailBeacons)
        ]
    ]
 
@@ -350,15 +349,14 @@ findClosestBeaconPath ignorePath geometry =
     distanceBeacons = List.map toDistanceBeacon filteredBeacons
 
     sorted = List.sortBy .distance distanceBeacons
-  in
-  case List.head sorted of
-    Just distanceBeacon ->
-      if distanceBeacon.distance > 200 then
-        Nothing
-      else
+
+    pathIfClose distanceBeacon =
+      if distanceBeacon.distance <= 200 then
         Just distanceBeacon.path
-    Nothing ->
-      Nothing
+      else
+        Nothing
+  in
+  List.head sorted |> Maybe.andThen pathIfClose
 
 updateNodePosition : List Node -> Path -> (Float, Float) -> List Node
 updateNodePosition nodes path (dx, dy) =
@@ -397,44 +395,36 @@ applyDragStartData mdragState (Children nodes) { targetId, geometry } =
     Nothing ->
       (Nothing, Children nodes)
 
--- TODO(vmpstr): definitely refactor this.
 applyDragByData : Maybe DragState -> Children -> OnDragData -> (Maybe DragState, Children)
 applyDragByData mdragState (Children nodes) { targetId, dx, dy, geometry } =
-  case mdragState of
+  let
+      stateIfMatchesTarget dragState =
+        if dragState.dragId == targetId then
+          Just dragState
+        else
+          Nothing
+
+      findTargetPath dragState =
+        findNode nodes dragState.dragId
+  in
+  case mdragState
+        |> Maybe.andThen stateIfMatchesTarget
+        |> Maybe.andThen findTargetPath of
+    Just targetPath ->
+      let
+        mbeaconPath = findClosestBeaconPath targetPath geometry
+        updatedNodes = updateNodePosition nodes targetPath (dx, dy)
+
+        newPath =
+          case mbeaconPath of
+            Just beaconPath ->
+              beaconPath
+            Nothing ->
+              AtIndex 0
+      in
+      (mdragState, Children (moveNode updatedNodes targetPath newPath))
     Nothing ->
       (Nothing, Children nodes)
-    Just dragState ->
-      if targetId /= dragState.dragId then
-        (Nothing, Children nodes)
-      else
-        let 
-          mtargetPath = findNode nodes targetId
-        in
-        case mtargetPath of
-          Just path ->
-            let
-              mbeaconPath = findClosestBeaconPath path geometry
-              updatedNodes = updateNodePosition nodes path (dx, dy)
-            in
-            case mbeaconPath of
-              Just beaconPath ->
-                (mdragState, Children (moveNode updatedNodes path beaconPath))
-              Nothing ->
-                {- the problem is that if we do a move, we need to somehow force a
-                   raf, because ignored path changes, so we end up using self
-                   beacons. The "fix" is to not reorder top level items, which
-                   only fixes it for some cases, but it's "good enough". The right
-                   solution here is to not ever draw self beacons for neither the
-                   dragged element nor its shadow.
-                   TODO(vmpstr): Do the right solution.
-                -}
-                case path of
-                  AtIndex _ ->
-                    (mdragState, Children updatedNodes)
-                  InSubtree _ _ ->
-                    (mdragState, Children (moveNode updatedNodes path (AtIndex 0)))
-          Nothing ->
-            (Nothing, Children nodes)
 
 nocmd : Model -> (Model, Cmd Msg)
 nocmd model =
