@@ -213,6 +213,22 @@ getViewParams drawBeacons mdragState node =
     Nothing ->
       (node.id, False, drawBeacons)
 
+viewNodeContents : Node -> Html Msg
+viewNodeContents node =
+  div
+    [ custom "pointerdown" (onPointerDownDecoder node.id)
+    , class "selection_container"
+    {-, style "width" (asPx node.size.x)-}
+    {-, style "height" (asPx node.size.y)-}
+    ]
+    [ div
+        [ class "contents_container" ]
+        [ div
+            [ class "label" ]
+            [ text ("hello " ++ node.id) ]
+        ]
+    ]
+
 viewTopNode : Bool -> Maybe DragState -> Int -> Node -> Html Msg
 viewTopNode drawBeacons mdragState index node =
   let
@@ -233,18 +249,12 @@ viewTopNode drawBeacons mdragState index node =
   in
   div
     [ id nodeId
-      , classList [("top_child", True), ("shadow", shadow), ("on_top", onTop)]
+      , class "top_child"
+      , classList [("shadow", shadow), ("on_top", onTop)]
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
     ]
-    [ div
-      [ custom "pointerdown" (onPointerDownDecoder node.id)
-      , class "content"
-      , style "width" (asPx node.size.x)
-      , style "height" (asPx node.size.y)
-      ]
-      [ text ("hello " ++ node.id)
-      ]
+    [ viewNodeContents node
     , div
       [ class "child_area" ]
       (childNodes ++ tailBeacons)
@@ -278,12 +288,8 @@ viewChildNode drawBeacons parentPath mdragState index node =
       [ div
           [ id node.id
           , classList [("child", True), ("shadow", shadow)]
-          , custom "pointerdown" (onPointerDownDecoder node.id)
-          , style "width" (asPx node.size.x)
-          , style "height" (asPx node.size.y)
           ]
-          [ div [ class "content" ] [ text ("hello " ++ node.id) ]
-          ]
+          [ viewNodeContents node ]
        , div
          [ class "child_area" ]
          (childNodes ++ tailBeacons)
