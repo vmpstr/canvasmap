@@ -14,21 +14,11 @@ import MMTree exposing (Path(..))
  - Refactor a whole lot of this into separate decoders module
  - Test everything
  - Move path functionality into something like MMTree.Path
- - Gotta figure out an elegant way to have view with beacons and view without
  - maybe write some comments or documentation
  - the beacon finding anchor should depend on where the drag is moving:
     moving down: maybe bot left corner, moving up: maybe top left corner
  - beacon finding should filter to ignore beacons to the right so that
     nodes don't attach as children so much
- -}
-
-{- Thoughts
- - When dragging, I need to draw two version of the dragged node:
-   - anchored to a beacon (maybe)
-   - under the mouse cursor
-   Because of how I've set this up, the 'id' should be on the dragged
-   node under the cursor, since js will port over the position information
-   and that's what we should use to figure out where to anchor the element
  -}
 
 type Msg
