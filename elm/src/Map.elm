@@ -255,7 +255,7 @@ viewTopNode drawBeacons mdragState index node =
       , style "top" (asPx node.position.y)
     ]
     [ viewNodeContents node
-    , div
+    , Html.node "child-area"
       [ class "child_area" ]
       (childNodes ++ tailBeacons)
     ]
@@ -290,7 +290,7 @@ viewChildNode drawBeacons parentPath mdragState index node =
           , classList [("child", True), ("shadow", shadow)]
           ]
           [ viewNodeContents node ]
-       , div
+       , Html.node "child-area"
          [ class "child_area" ]
          (childNodes ++ tailBeacons)
        ]

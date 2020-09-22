@@ -41,6 +41,7 @@ body {
 .child_area {
   position: relative;
   padding-left: 25px;
+  display: block;
 }
 
 .ewhandle {
