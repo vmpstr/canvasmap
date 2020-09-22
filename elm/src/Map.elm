@@ -255,9 +255,16 @@ viewTopNode drawBeacons mdragState index node =
       , style "top" (asPx node.position.y)
     ]
     [ viewNodeContents node
-    , Html.node "child-area"
-      [ class "child_area" ]
-      (childNodes ++ tailBeacons)
+    , div
+        [ class "child_holder" ]
+        [ div 
+            [ class "child_edge"
+            , style "height" "30px"
+            ] []
+        , Html.node "child-area"
+            [ class "child_area" ]
+            (childNodes ++ tailBeacons)
+        ]
     ]
 
 viewChildNode : Bool -> String -> Maybe DragState -> Int -> Node -> List (Html Msg)

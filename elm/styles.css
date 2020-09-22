@@ -112,3 +112,16 @@ body {
   white-space: nowrap;
 }
 
+.child_holder {
+  position: relative;
+  contain: layout;
+}
+
+.child_edge {
+  position: absolute;
+  box-sizing: border-box;
+  top: 0;
+  left: 12px;
+  width: 0;
+  border-left: 2px solid black;
+}
