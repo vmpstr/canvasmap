@@ -4,8 +4,8 @@ import Debug
 import Browser
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, classList, style, attribute, id)
-import Html.Events exposing (custom)
-import Json.Decode as Decoder exposing (Decoder, succeed, int, string, float, list)
+import Html.Events exposing (custom, on)
+import Json.Decode as Decoder exposing (Decoder, succeed, int, string, float, list, field)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import MMTree exposing (Path(..))
 
@@ -27,6 +27,7 @@ type Msg
   | MsgOnDragBy OnDragData
   | MsgOnDragStop
   | MsgOnPointerDown OnPointerDownPortData
+  | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
 
 
 type alias Vector = { x : Float, y : Float }
@@ -63,6 +64,7 @@ type alias Node =
   , nodeType : NodeType
   , position : Vector
   , size : Vector
+  , childEdgeHeight: Float
   , children : Children
   }
  
@@ -111,6 +113,11 @@ type alias OnPointerDownPortData =
   , y : Float
   }
 
+type alias OnChildEdgeHeightChangedData =
+  { targetId : String
+  , height: Float
+  }
+
 type alias MsgWithEventOptions =
   { message: Msg
   , stopPropagation: Bool
@@ -134,6 +141,13 @@ onPointerDownDecoder targetId =
       |> required "clientX" float
       |> required "clientY" float)
 
+onChildEdgeHeightChangedDecoder : String -> Decoder Msg
+onChildEdgeHeightChangedDecoder targetId =
+  Decoder.map MsgOnChildEdgeHeightChanged
+    (succeed OnChildEdgeHeightChangedData
+      |> hardcoded targetId
+      |> required "detail" (field "height" float))
+
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
 port portOnDragStart : (Decoder.Value -> msg) -> Sub msg
 port portOnDragBy : (Decoder.Value -> msg) -> Sub msg
@@ -146,14 +160,17 @@ initModel =
                  , nodeType = TopLevel
                  , position = { x = 10, y = 10 }
                  , size = { x = 200, y = 50 }
+                 , childEdgeHeight = 30
                  , children = Children [ { id = "e3"
                                          , nodeType = Child
                                          , position = { x = 0, y = 0 }
                                          , size = { x = 200, y = 50 }
+                                         , childEdgeHeight = 30
                                          , children = Children [ { id = "e4"
                                                                  , nodeType = Child
                                                                  , position = { x = 0, y = 0 }
                                                                  , size = { x = 200, y = 50 }
+                                                                 , childEdgeHeight = 30
                                                                  , children = Children []
                                                                  }
                                                                ]
@@ -162,6 +179,7 @@ initModel =
                                          , nodeType = Child
                                          , position = { x = 0, y = 0 }
                                          , size = { x = 200, y = 50 }
+                                         , childEdgeHeight = 30
                                          , children = Children []
                                          }
                                        ]
@@ -170,6 +188,7 @@ initModel =
                  , nodeType = TopLevel
                  , position = { x = 300, y = 20 }
                  , size = { x = 200, y = 50 }
+                 , childEdgeHeight = 30
                  , children = Children []
                  }
                ]
@@ -259,10 +278,12 @@ viewTopNode drawBeacons mdragState index node =
         [ class "child_holder" ]
         [ div 
             [ class "child_edge"
-            , style "height" "30px"
+            , style "height" (asPx node.childEdgeHeight)
             ] []
         , Html.node "child-area"
-            [ class "child_area" ]
+            [ class "child_area"
+            , on "childedgeheightchanged" (onChildEdgeHeightChangedDecoder node.id)
+            ]
             (childNodes ++ tailBeacons)
         ]
     ]
@@ -297,9 +318,18 @@ viewChildNode drawBeacons parentPath mdragState index node =
           , classList [("child", True), ("shadow", shadow)]
           ]
           [ viewNodeContents node ]
-       , Html.node "child-area"
-         [ class "child_area" ]
-         (childNodes ++ tailBeacons)
+      , div
+          [ class "child_holder" ]
+          [ div 
+              [ class "child_edge"
+              , style "height" (asPx node.childEdgeHeight)
+              ] []
+          , Html.node "child-area"
+              [ class "child_area"
+              , on "childedgeheightchanged" (onChildEdgeHeightChangedDecoder node.id)
+              ]
+              (childNodes ++ tailBeacons)
+          ]
        ]
    ]
 
@@ -385,6 +415,18 @@ setNodePosition nodes path (x, y) =
   in
   updateNode nodes path setPosition
 
+applyChildEdgeHeightChange : Children -> OnChildEdgeHeightChangedData -> Children
+applyChildEdgeHeightChange (Children nodes) { targetId, height } =
+  let
+      mpath = findNode nodes targetId
+      updater node = { node | childEdgeHeight = height }
+  in
+  case mpath of
+    Just path ->
+      Children (updateNode nodes path updater)
+    Nothing ->
+      Children nodes
+
 applyDragStartData : Maybe DragState -> Children -> OnDragData -> (Maybe DragState, Children)
 applyDragStartData mdragState (Children nodes) { targetId, geometry } =
   let 
@@ -454,8 +496,11 @@ update msg model =
     MsgOnDragStop ->
       nocmd { model | dragState = Nothing }
 
+    MsgOnChildEdgeHeightChanged data ->
+      nocmd { model | nodes = applyChildEdgeHeightChange model.nodes data }
+
     _ ->
-      (model, Cmd.none)
+      nocmd model
 
 init : () -> (Model, Cmd Msg)
 init () = (initModel, Cmd.none)

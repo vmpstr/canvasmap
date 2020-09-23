@@ -4,6 +4,7 @@ body {
   overflow: hidden;
   font-family: 'Lato', sans-serif;
   font-size: 15px;
+  user-select: none;
 }
 
 .map {
@@ -42,6 +43,7 @@ body {
   position: relative;
   padding-left: 25px;
   display: block;
+  contain: layout;
 }
 
 .ewhandle {
@@ -69,6 +71,10 @@ body {
   opacity: 0.4
 }
 .shadow + .child_area {
+  opacity: 0.4;
+}
+
+.shadow + .child_holder {
   opacity: 0.4;
 }
 
