@@ -8,6 +8,7 @@ import Html.Events exposing (custom, on)
 import Json.Decode as Decoder exposing (Decoder, succeed, int, string, float, list, field)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import MMTree exposing (Path(..))
+import Maybe.Extra
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -19,6 +20,7 @@ import MMTree exposing (Path(..))
     moving down: maybe bot left corner, moving up: maybe top left corner
  - beacon finding should filter to ignore beacons to the right so that
     nodes don't attach as children so much
+ - need custom hover to avoid glitchy render?
  -}
 
 type Msg
@@ -199,8 +201,8 @@ nodeAtById : List Node -> String -> Maybe Node
 nodeAtById nodes id =
   findNode nodes id |> Maybe.andThen (nodeAt nodes)
 
-dragNode : List Node -> DragState -> Maybe Node
-dragNode nodes dragState =
+getDragNode : List Node -> DragState -> Maybe Node
+getDragNode nodes dragState =
   nodeAtById nodes dragState.dragId
 
 view : Model -> Html Msg
@@ -208,13 +210,14 @@ view model =
   let
       nodes = childList model.nodes
       drawBeacons = model.dragState /= Nothing
-      divChildren = List.indexedMap (viewTopNode drawBeacons model.dragState) nodes
+      childrenViewList = List.indexedMap (viewTopNode drawBeacons model.dragState) nodes
+      dragViewList =
+        List.map viewDragNode
+          (model.dragState
+            |> Maybe.andThen (getDragNode nodes)
+            |> Maybe.Extra.toList)
   in
-  case model.dragState |> Maybe.andThen (dragNode nodes) of
-    Just node ->
-      div [ class "map" ] ((viewDragNode node) :: divChildren)
-    Nothing ->
-      div [ class "map" ] divChildren
+  div [ class "map" ] (dragViewList ++ childrenViewList)
 
 viewDragNode : Node -> Html Msg
 viewDragNode node =
