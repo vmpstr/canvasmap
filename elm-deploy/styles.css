@@ -34,14 +34,15 @@ body {
 }
 
 .parent_edge {
-  border-bottom: 2px solid rgb(50, 50, 50);
-  border-left: 2px solid rgb(50, 50, 50);
+  border-bottom: 1px solid rgb(50, 50, 50);
+  border-left: 1px solid rgb(50, 50, 50);
+  box-sizing: border-box;
   position: absolute;
   right: 100%;
   top: 0;
   height: 10px;
-  width: 11px;
-  border-radius: 0 0 0 50%;
+  width: 13px;
+  border-radius: 0 0 0 70%;
 }
 
 .content {
@@ -140,5 +141,5 @@ body {
   top: 0;
   left: 12px;
   width: 0;
-  border-left: 2px solid rgb(50, 50, 50);
+  border-left: 1px solid rgb(50, 50, 50);
 }
