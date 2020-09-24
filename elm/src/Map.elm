@@ -124,8 +124,8 @@ type alias MsgWithEventOptions =
   , preventDefault: Bool
   }
 
-toPreventDefaultMsg : Msg -> MsgWithEventOptions
-toPreventDefaultMsg msg =
+toStopPropagationMsg : Msg -> MsgWithEventOptions
+toStopPropagationMsg msg =
   { message = msg
   , stopPropagation = True
   , preventDefault = False
@@ -134,7 +134,7 @@ toPreventDefaultMsg msg =
 -- Functionality
 onPointerDownDecoder : String -> Decoder MsgWithEventOptions
 onPointerDownDecoder targetId =
-  Decoder.map (MsgOnPointerDown >> toPreventDefaultMsg)
+  Decoder.map (MsgOnPointerDown >> toStopPropagationMsg)
     (succeed OnPointerDownPortData
       |> hardcoded targetId
       |> required "pointerType" string
@@ -237,8 +237,6 @@ viewNodeContents node =
   div
     [ custom "pointerdown" (onPointerDownDecoder node.id)
     , class "selection_container"
-    {-, style "width" (asPx node.size.x)-}
-    {-, style "height" (asPx node.size.y)-}
     ]
     [ div
         [ class "contents_container" ]
