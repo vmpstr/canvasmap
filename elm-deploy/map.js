@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.ap.P === region.aD.P)
+	if (region.aq.R === region.aE.R)
 	{
-		return 'on line ' + region.ap.P;
+		return 'on line ' + region.aq.R;
 	}
-	return 'on lines ' + region.ap.P + ' through ' + region.aD.P;
+	return 'on lines ' + region.aq.R + ' through ' + region.aE.R;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.bH,
-		impl.ci,
-		impl.ca,
+		impl.bI,
+		impl.cj,
+		impl.cb,
 		function() { return function() {} }
 	);
 });
@@ -2704,9 +2704,9 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		aO: func(record.aO),
-		a8: record.a8,
-		aZ: record.aZ
+		aP: func(record.aP),
+		a9: record.a9,
+		a_: record.a_
 	}
 });
 
@@ -2974,11 +2974,11 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.aO;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a8;
+		var message = !tag ? value : tag < 3 ? value.a : value.aP;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.a9;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.aZ) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.a_) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3928,11 +3928,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.bH,
-		impl.ci,
-		impl.ca,
+		impl.bI,
+		impl.cj,
+		impl.cb,
 		function(sendToApp, initialModel) {
-			var view = impl.cj;
+			var view = impl.ck;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3964,12 +3964,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.bH,
-		impl.ci,
-		impl.ca,
+		impl.bI,
+		impl.cj,
+		impl.cb,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.ao && impl.ao(sendToApp)
-			var view = impl.cj;
+			var divertHrefToApp = impl.ap && impl.ap(sendToApp)
+			var view = impl.ck;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3977,12 +3977,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.bj);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.bk);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.cg) && (_VirtualDom_doc.title = title = doc.cg);
+				(title !== doc.ch) && (_VirtualDom_doc.title = title = doc.ch);
 			});
 		}
 	);
@@ -4038,12 +4038,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.b_;
-	var onUrlRequest = impl.b$;
+	var onUrlChange = impl.b$;
+	var onUrlRequest = impl.b0;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		ao: function(sendToApp)
+		ap: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4059,9 +4059,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.a0 === next.a0
-							&& curr.aJ === next.aJ
-							&& curr.aY.a === next.aY.a
+							&& curr.a1 === next.a1
+							&& curr.aK === next.aK
+							&& curr.aZ.a === next.aZ.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4069,13 +4069,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		bH: function(flags)
+		bI: function(flags)
 		{
-			return A3(impl.bH, flags, _Browser_getUrl(), key);
+			return A3(impl.bI, flags, _Browser_getUrl(), key);
 		},
+		ck: impl.ck,
 		cj: impl.cj,
-		ci: impl.ci,
-		ca: impl.ca
+		cb: impl.cb
 	});
 }
 
@@ -4141,17 +4141,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { bD: 'hidden', bm: 'visibilitychange' }
+		? { bE: 'hidden', bn: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { bD: 'mozHidden', bm: 'mozvisibilitychange' }
+		? { bE: 'mozHidden', bn: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { bD: 'msHidden', bm: 'msvisibilitychange' }
+		? { bE: 'msHidden', bn: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { bD: 'webkitHidden', bm: 'webkitvisibilitychange' }
-		: { bD: 'hidden', bm: 'visibilitychange' };
+		? { bE: 'webkitHidden', bn: 'webkitvisibilitychange' }
+		: { bE: 'hidden', bn: 'visibilitychange' };
 }
 
 
@@ -4232,12 +4232,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		a6: _Browser_getScene(),
-		bd: {
+		a7: _Browser_getScene(),
+		be: {
 			f: _Browser_window.pageXOffset,
 			d: _Browser_window.pageYOffset,
-			be: _Browser_doc.documentElement.clientWidth,
-			aI: _Browser_doc.documentElement.clientHeight
+			bf: _Browser_doc.documentElement.clientWidth,
+			aJ: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4247,8 +4247,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		be: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		aI: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		bf: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		aJ: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4271,15 +4271,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			a6: {
-				be: node.scrollWidth,
-				aI: node.scrollHeight
+			a7: {
+				bf: node.scrollWidth,
+				aJ: node.scrollHeight
 			},
-			bd: {
+			be: {
 				f: node.scrollLeft,
 				d: node.scrollTop,
-				be: node.clientWidth,
-				aI: node.clientHeight
+				bf: node.clientWidth,
+				aJ: node.clientHeight
 			}
 		};
 	});
@@ -4309,18 +4309,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			a6: _Browser_getScene(),
-			bd: {
+			a7: _Browser_getScene(),
+			be: {
 				f: x,
 				d: y,
-				be: _Browser_doc.documentElement.clientWidth,
-				aI: _Browser_doc.documentElement.clientHeight
+				bf: _Browser_doc.documentElement.clientWidth,
+				aJ: _Browser_doc.documentElement.clientHeight
 			},
-			bw: {
+			bx: {
 				f: x + rect.left,
 				d: y + rect.top,
-				be: rect.width,
-				aI: rect.height
+				bf: rect.width,
+				aJ: rect.height
 			}
 		};
 	});
@@ -4859,7 +4859,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {aF: fragment, aJ: host, S: path, aY: port_, a0: protocol, a1: query};
+		return {aG: fragment, aK: host, U: path, aZ: port_, a1: protocol, a2: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5143,46 +5143,51 @@ var $author$project$Map$Children = $elm$core$Basics$identity;
 var $author$project$Map$TopLevel = 0;
 var $author$project$Map$initModel = {
 	u: $elm$core$Maybe$Nothing,
-	E: _List_fromArray(
+	z: _List_fromArray(
 		[
 			{
+			x: 30,
 			t: _List_fromArray(
 				[
 					{
+					x: 30,
 					t: _List_fromArray(
 						[
 							{
+							x: 30,
 							t: _List_Nil,
-							bE: 'e4',
-							K: 1,
+							bF: 'e4',
+							M: 1,
 							h: {f: 0, d: 0},
-							B: {f: 200, d: 50}
+							D: {f: 200, d: 50}
 						}
 						]),
-					bE: 'e3',
-					K: 1,
+					bF: 'e3',
+					M: 1,
 					h: {f: 0, d: 0},
-					B: {f: 200, d: 50}
+					D: {f: 200, d: 50}
 				},
 					{
+					x: 30,
 					t: _List_Nil,
-					bE: 'e5',
-					K: 1,
+					bF: 'e5',
+					M: 1,
 					h: {f: 0, d: 0},
-					B: {f: 200, d: 50}
+					D: {f: 200, d: 50}
 				}
 				]),
-			bE: 'e1',
-			K: 0,
+			bF: 'e1',
+			M: 0,
 			h: {f: 10, d: 10},
-			B: {f: 200, d: 50}
+			D: {f: 200, d: 50}
 		},
 			{
+			x: 30,
 			t: _List_Nil,
-			bE: 'e2',
-			K: 0,
+			bF: 'e2',
+			M: 0,
 			h: {f: 300, d: 20},
-			B: {f: 200, d: 50}
+			D: {f: 200, d: 50}
 		}
 		])
 };
@@ -5203,16 +5208,16 @@ var $elm$core$Basics$composeR = F3(
 var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $author$project$Map$OnDragData = F4(
 	function (targetId, dx, dy, geometry) {
-		return {aB: dx, aC: dy, ai: geometry, U: targetId};
+		return {aC: dx, aD: dy, aj: geometry, I: targetId};
 	});
 var $elm$json$Json$Decode$float = _Json_decodeFloat;
 var $author$project$Map$Geometry = F2(
 	function (target, beacons) {
-		return {au: beacons, M: target};
+		return {av: beacons, O: target};
 	});
 var $author$project$Map$Beacon = F2(
 	function (path, location) {
-		return {ak: location, S: path};
+		return {al: location, U: path};
 	});
 var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$fail = _Json_fail;
@@ -5356,7 +5361,7 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional = F4(
 	});
 var $author$project$Map$Rect = F2(
 	function (position, size) {
-		return {h: position, B: size};
+		return {h: position, D: size};
 	});
 var $author$project$Map$rectDecoder = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
@@ -5432,26 +5437,10 @@ var $author$project$Map$subscriptions = function (model) {
 		_List_fromArray(
 			[$author$project$Map$onDragStartSubscription, $author$project$Map$onDragBySubscription, $author$project$Map$onDragStopSubscription]));
 };
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (!maybeValue.$) {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
+var $author$project$Map$childList = function (_v0) {
+	var nodes = _v0;
+	return nodes;
+};
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -5460,96 +5449,6 @@ var $elm$core$List$head = function (list) {
 	} else {
 		return $elm$core$Maybe$Nothing;
 	}
-};
-var $author$project$Map$isSubpath = F2(
-	function (path, lead) {
-		isSubpath:
-		while (true) {
-			var _v0 = _Utils_Tuple2(path, lead);
-			if (!_v0.a.$) {
-				if (!_v0.b.$) {
-					var pi = _v0.a.a;
-					var li = _v0.b.a;
-					return false;
-				} else {
-					var pi = _v0.a.a;
-					var _v1 = _v0.b;
-					var li = _v1.a;
-					var lsub = _v1.b;
-					return false;
-				}
-			} else {
-				if (!_v0.b.$) {
-					var _v2 = _v0.a;
-					var pi = _v2.a;
-					var psub = _v2.b;
-					var li = _v0.b.a;
-					return _Utils_eq(pi, li);
-				} else {
-					var _v3 = _v0.a;
-					var pi = _v3.a;
-					var psub = _v3.b;
-					var _v4 = _v0.b;
-					var li = _v4.a;
-					var lsub = _v4.b;
-					if (_Utils_eq(pi, li)) {
-						var $temp$path = psub,
-							$temp$lead = lsub;
-						path = $temp$path;
-						lead = $temp$lead;
-						continue isSubpath;
-					} else {
-						return false;
-					}
-				}
-			}
-		}
-	});
-var $elm$core$Basics$not = _Basics_not;
-var $elm$core$List$sortBy = _List_sortBy;
-var $elm$core$Basics$sqrt = _Basics_sqrt;
-var $author$project$Map$findClosestBeaconPath = F2(
-	function (ignorePath, geometry) {
-		var validPath = function (path) {
-			return !A2($author$project$Map$isSubpath, path, ignorePath);
-		};
-		var ty = geometry.M.h.d + (0.5 * geometry.M.B.d);
-		var tx = geometry.M.h.f;
-		var pathIfClose = function (distanceBeacon) {
-			return (distanceBeacon.ag <= 200) ? $elm$core$Maybe$Just(distanceBeacon.S) : $elm$core$Maybe$Nothing;
-		};
-		var filteredBeacons = A2(
-			$elm$core$List$filter,
-			function (beacon) {
-				return validPath(beacon.S);
-			},
-			geometry.au);
-		var computeDistance = function (beacon) {
-			var by = beacon.ak.d;
-			var bx = beacon.ak.f;
-			return $elm$core$Basics$sqrt(((bx - tx) * (bx - tx)) + ((by - ty) * (by - ty)));
-		};
-		var toDistanceBeacon = function (beacon) {
-			return {
-				ag: computeDistance(beacon),
-				S: beacon.S
-			};
-		};
-		var distanceBeacons = A2($elm$core$List$map, toDistanceBeacon, filteredBeacons);
-		var sorted = A2(
-			$elm$core$List$sortBy,
-			function ($) {
-				return $.ag;
-			},
-			distanceBeacons);
-		return A2(
-			$elm$core$Maybe$andThen,
-			pathIfClose,
-			$elm$core$List$head(sorted));
-	});
-var $author$project$Map$childList = function (_v0) {
-	var nodes = _v0;
-	return nodes;
 };
 var $elm$core$Tuple$pair = F2(
 	function (a, b) {
@@ -5560,7 +5459,7 @@ var $author$project$MMTree$findNode = F3(
 		var returnOrRecurse = function (_v1) {
 			var index = _v1.a;
 			var node = _v1.b;
-			if (_Utils_eq(node.bE, target)) {
+			if (_Utils_eq(node.bF, target)) {
 				return $elm$core$Maybe$Just(
 					$author$project$MMTree$AtIndex(index));
 			} else {
@@ -5750,6 +5649,156 @@ var $elm_community$list_extra$List$Extra$updateAt = F3(
 				return list;
 			}
 		}
+	});
+var $author$project$MMTree$updateNode = F5(
+	function (pack, unpack, nodes, path, updater) {
+		if (!path.$) {
+			var index = path.a;
+			return A3($elm_community$list_extra$List$Extra$updateAt, index, updater, nodes);
+		} else {
+			var index = path.a;
+			var subpath = path.b;
+			var recurse = function (node) {
+				return _Utils_update(
+					node,
+					{
+						t: pack(
+							A5(
+								$author$project$MMTree$updateNode,
+								pack,
+								unpack,
+								unpack(node.t),
+								subpath,
+								updater))
+					});
+			};
+			return A3($elm_community$list_extra$List$Extra$updateAt, index, recurse, nodes);
+		}
+	});
+var $author$project$Map$updateNode = A2($author$project$MMTree$updateNode, $elm$core$Basics$identity, $author$project$Map$childList);
+var $author$project$Map$applyChildEdgeHeightChange = F2(
+	function (_v0, _v1) {
+		var nodes = _v0;
+		var targetId = _v1.I;
+		var height = _v1.aJ;
+		var updater = function (node) {
+			return _Utils_update(
+				node,
+				{x: height});
+		};
+		var mpath = A2($author$project$Map$findNode, nodes, targetId);
+		if (!mpath.$) {
+			var path = mpath.a;
+			return A3($author$project$Map$updateNode, nodes, path, updater);
+		} else {
+			return nodes;
+		}
+	});
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (!maybeValue.$) {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $author$project$Map$isSubpath = F2(
+	function (path, lead) {
+		isSubpath:
+		while (true) {
+			var _v0 = _Utils_Tuple2(path, lead);
+			if (!_v0.a.$) {
+				if (!_v0.b.$) {
+					var pi = _v0.a.a;
+					var li = _v0.b.a;
+					return false;
+				} else {
+					var pi = _v0.a.a;
+					var _v1 = _v0.b;
+					var li = _v1.a;
+					var lsub = _v1.b;
+					return false;
+				}
+			} else {
+				if (!_v0.b.$) {
+					var _v2 = _v0.a;
+					var pi = _v2.a;
+					var psub = _v2.b;
+					var li = _v0.b.a;
+					return _Utils_eq(pi, li);
+				} else {
+					var _v3 = _v0.a;
+					var pi = _v3.a;
+					var psub = _v3.b;
+					var _v4 = _v0.b;
+					var li = _v4.a;
+					var lsub = _v4.b;
+					if (_Utils_eq(pi, li)) {
+						var $temp$path = psub,
+							$temp$lead = lsub;
+						path = $temp$path;
+						lead = $temp$lead;
+						continue isSubpath;
+					} else {
+						return false;
+					}
+				}
+			}
+		}
+	});
+var $elm$core$Basics$not = _Basics_not;
+var $elm$core$List$sortBy = _List_sortBy;
+var $elm$core$Basics$sqrt = _Basics_sqrt;
+var $author$project$Map$findClosestBeaconPath = F2(
+	function (ignorePath, geometry) {
+		var validPath = function (path) {
+			return !A2($author$project$Map$isSubpath, path, ignorePath);
+		};
+		var ty = geometry.O.h.d + (0.5 * geometry.O.D.d);
+		var tx = geometry.O.h.f;
+		var pathIfClose = function (distanceBeacon) {
+			return (distanceBeacon.ah <= 200) ? $elm$core$Maybe$Just(distanceBeacon.U) : $elm$core$Maybe$Nothing;
+		};
+		var filteredBeacons = A2(
+			$elm$core$List$filter,
+			function (beacon) {
+				return validPath(beacon.U);
+			},
+			geometry.av);
+		var computeDistance = function (beacon) {
+			var by = beacon.al.d;
+			var bx = beacon.al.f;
+			return $elm$core$Basics$sqrt(((bx - tx) * (bx - tx)) + ((by - ty) * (by - ty)));
+		};
+		var toDistanceBeacon = function (beacon) {
+			return {
+				ah: computeDistance(beacon),
+				U: beacon.U
+			};
+		};
+		var distanceBeacons = A2($elm$core$List$map, toDistanceBeacon, filteredBeacons);
+		var sorted = A2(
+			$elm$core$List$sortBy,
+			function ($) {
+				return $.ah;
+			},
+			distanceBeacons);
+		return A2(
+			$elm$core$Maybe$andThen,
+			pathIfClose,
+			$elm$core$List$head(sorted));
 	});
 var $author$project$MMTree$addNode = F5(
 	function (pack, unpack, nodes, path, newNode) {
@@ -5958,32 +6007,6 @@ var $author$project$MMTree$moveNode = F5(
 		}
 	});
 var $author$project$Map$moveNode = A2($author$project$MMTree$moveNode, $elm$core$Basics$identity, $author$project$Map$childList);
-var $author$project$MMTree$updateNode = F5(
-	function (pack, unpack, nodes, path, updater) {
-		if (!path.$) {
-			var index = path.a;
-			return A3($elm_community$list_extra$List$Extra$updateAt, index, updater, nodes);
-		} else {
-			var index = path.a;
-			var subpath = path.b;
-			var recurse = function (node) {
-				return _Utils_update(
-					node,
-					{
-						t: pack(
-							A5(
-								$author$project$MMTree$updateNode,
-								pack,
-								unpack,
-								unpack(node.t),
-								subpath,
-								updater))
-					});
-			};
-			return A3($elm_community$list_extra$List$Extra$updateAt, index, recurse, nodes);
-		}
-	});
-var $author$project$Map$updateNode = A2($author$project$MMTree$updateNode, $elm$core$Basics$identity, $author$project$Map$childList);
 var $author$project$Map$updateNodePosition = F3(
 	function (nodes, path, _v0) {
 		var dx = _v0.a;
@@ -6001,15 +6024,15 @@ var $author$project$Map$updateNodePosition = F3(
 var $author$project$Map$applyDragByData = F3(
 	function (mdragState, _v0, _v1) {
 		var nodes = _v0;
-		var targetId = _v1.U;
-		var dx = _v1.aB;
-		var dy = _v1.aC;
-		var geometry = _v1.ai;
+		var targetId = _v1.I;
+		var dx = _v1.aC;
+		var dy = _v1.aD;
+		var geometry = _v1.aj;
 		var stateIfMatchesTarget = function (dragState) {
-			return _Utils_eq(dragState.I, targetId) ? $elm$core$Maybe$Just(dragState) : $elm$core$Maybe$Nothing;
+			return _Utils_eq(dragState.K, targetId) ? $elm$core$Maybe$Just(dragState) : $elm$core$Maybe$Nothing;
 		};
 		var findTargetPath = function (dragState) {
-			return A2($author$project$Map$findNode, nodes, dragState.I);
+			return A2($author$project$Map$findNode, nodes, dragState.K);
 		};
 		var _v2 = A2(
 			$elm$core$Maybe$andThen,
@@ -6053,19 +6076,19 @@ var $author$project$Map$setNodePosition = F3(
 var $author$project$Map$applyDragStartData = F3(
 	function (mdragState, _v0, _v1) {
 		var nodes = _v0;
-		var targetId = _v1.U;
-		var geometry = _v1.ai;
+		var targetId = _v1.I;
+		var geometry = _v1.aj;
 		var mtargetPath = A2($author$project$Map$findNode, nodes, targetId);
 		if (!mtargetPath.$) {
 			var path = mtargetPath.a;
 			return _Utils_Tuple2(
 				$elm$core$Maybe$Just(
-					{I: targetId}),
+					{K: targetId}),
 				A3(
 					$author$project$Map$setNodePosition,
 					nodes,
 					path,
-					_Utils_Tuple2(geometry.M.h.f, geometry.M.h.d)));
+					_Utils_Tuple2(geometry.O.h.f, geometry.O.h.d)));
 		} else {
 			return _Utils_Tuple2($elm$core$Maybe$Nothing, nodes);
 		}
@@ -6096,10 +6119,10 @@ var $author$project$Map$portOnPointerDown = _Platform_outgoingPort(
 				[
 					_Utils_Tuple2(
 					'pointerType',
-					$elm$json$Json$Encode$string($.aX)),
+					$elm$json$Json$Encode$string($.aY)),
 					_Utils_Tuple2(
 					'targetId',
-					$elm$json$Json$Encode$string($.U)),
+					$elm$json$Json$Encode$string($.I)),
 					_Utils_Tuple2(
 					'x',
 					$elm$json$Json$Encode$float($.f)),
@@ -6118,29 +6141,37 @@ var $author$project$Map$update = F2(
 					$author$project$Map$portOnPointerDown(data));
 			case 1:
 				var data = msg.a;
-				var _v1 = A3($author$project$Map$applyDragStartData, model.u, model.E, data);
+				var _v1 = A3($author$project$Map$applyDragStartData, model.u, model.z, data);
 				var dragState = _v1.a;
 				var nodes = _v1.b;
 				return $author$project$Map$nocmd(
 					_Utils_update(
 						model,
-						{u: dragState, E: nodes}));
+						{u: dragState, z: nodes}));
 			case 2:
 				var data = msg.a;
-				var _v2 = A3($author$project$Map$applyDragByData, model.u, model.E, data);
+				var _v2 = A3($author$project$Map$applyDragByData, model.u, model.z, data);
 				var dragState = _v2.a;
 				var nodes = _v2.b;
 				return $author$project$Map$nocmd(
 					_Utils_update(
 						model,
-						{u: dragState, E: nodes}));
+						{u: dragState, z: nodes}));
 			case 3:
 				return $author$project$Map$nocmd(
 					_Utils_update(
 						model,
 						{u: $elm$core$Maybe$Nothing}));
+			case 5:
+				var data = msg.a;
+				return $author$project$Map$nocmd(
+					_Utils_update(
+						model,
+						{
+							z: A2($author$project$Map$applyChildEdgeHeightChange, model.z, data)
+						}));
 			default:
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				return $author$project$Map$nocmd(model);
 		}
 	});
 var $elm$html$Html$Attributes$stringProperty = F2(
@@ -6160,11 +6191,20 @@ var $author$project$Map$nodeAtById = F2(
 			$author$project$Map$nodeAt(nodes),
 			A2($author$project$Map$findNode, nodes, id));
 	});
-var $author$project$Map$dragNode = F2(
+var $author$project$Map$getDragNode = F2(
 	function (nodes, dragState) {
-		return A2($author$project$Map$nodeAtById, nodes, dragState.I);
+		return A2($author$project$Map$nodeAtById, nodes, dragState.K);
 	});
 var $elm$core$Basics$neq = _Utils_notEqual;
+var $elm_community$maybe_extra$Maybe$Extra$toList = function (m) {
+	if (m.$ === 1) {
+		return _List_Nil;
+	} else {
+		var x = m.a;
+		return _List_fromArray(
+			[x]);
+	}
+};
 var $elm$core$Basics$negate = function (n) {
 	return -n;
 };
@@ -6202,12 +6242,49 @@ var $author$project$Map$getViewParams = F3(
 	function (drawBeacons, mdragState, node) {
 		if (!mdragState.$) {
 			var dragState = mdragState.a;
-			return _Utils_eq(dragState.I, node.bE) ? _Utils_Tuple3('shadow-' + node.bE, true, false) : _Utils_Tuple3(node.bE, false, drawBeacons);
+			return _Utils_eq(dragState.K, node.bF) ? _Utils_Tuple3('shadow-' + node.bF, true, false) : _Utils_Tuple3(node.bF, false, drawBeacons);
 		} else {
-			return _Utils_Tuple3(node.bE, false, drawBeacons);
+			return _Utils_Tuple3(node.bF, false, drawBeacons);
 		}
 	});
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $elm$virtual_dom$VirtualDom$node = function (tag) {
+	return _VirtualDom_node(
+		_VirtualDom_noScript(tag));
+};
+var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $author$project$Map$MsgOnChildEdgeHeightChanged = function (a) {
+	return {$: 5, a: a};
+};
+var $author$project$Map$OnChildEdgeHeightChangedData = F2(
+	function (targetId, height) {
+		return {aJ: height, I: targetId};
+	});
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$hardcoded = A2($elm$core$Basics$composeR, $elm$json$Json$Decode$succeed, $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom);
+var $author$project$Map$onChildEdgeHeightChangedDecoder = function (targetId) {
+	return A2(
+		$elm$json$Json$Decode$map,
+		$author$project$Map$MsgOnChildEdgeHeightChanged,
+		A3(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'detail',
+			A2($elm$json$Json$Decode$field, 'height', $elm$json$Json$Decode$float),
+			A2(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$hardcoded,
+				targetId,
+				$elm$json$Json$Decode$succeed($author$project$Map$OnChildEdgeHeightChangedData))));
+};
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$virtual_dom$VirtualDom$attribute = F2(
@@ -6231,7 +6308,6 @@ var $author$project$Map$viewBeacon = function (path) {
 var $elm$virtual_dom$VirtualDom$Custom = function (a) {
 	return {$: 3, a: a};
 };
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var $elm$html$Html$Events$custom = F2(
 	function (event, decoder) {
 		return A2(
@@ -6244,16 +6320,15 @@ var $author$project$Map$MsgOnPointerDown = function (a) {
 };
 var $author$project$Map$OnPointerDownPortData = F4(
 	function (targetId, pointerType, x, y) {
-		return {aX: pointerType, U: targetId, f: x, d: y};
+		return {aY: pointerType, I: targetId, f: x, d: y};
 	});
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$hardcoded = A2($elm$core$Basics$composeR, $elm$json$Json$Decode$succeed, $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom);
-var $author$project$Map$toPreventDefaultMsg = function (msg) {
-	return {aO: msg, aZ: false, a8: true};
+var $author$project$Map$toStopPropagationMsg = function (msg) {
+	return {aP: msg, a_: false, a9: true};
 };
 var $author$project$Map$onPointerDownDecoder = function (targetId) {
 	return A2(
 		$elm$json$Json$Decode$map,
-		A2($elm$core$Basics$composeR, $author$project$Map$MsgOnPointerDown, $author$project$Map$toPreventDefaultMsg),
+		A2($elm$core$Basics$composeR, $author$project$Map$MsgOnPointerDown, $author$project$Map$toStopPropagationMsg),
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 			'clientY',
@@ -6281,7 +6356,7 @@ var $author$project$Map$viewNodeContents = function (node) {
 				A2(
 				$elm$html$Html$Events$custom,
 				'pointerdown',
-				$author$project$Map$onPointerDownDecoder(node.bE)),
+				$author$project$Map$onPointerDownDecoder(node.bF)),
 				$elm$html$Html$Attributes$class('selection_container')
 			]),
 		_List_fromArray(
@@ -6302,7 +6377,7 @@ var $author$project$Map$viewNodeContents = function (node) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('hello ' + node.bE)
+								$elm$html$Html$text('hello ' + node.bF)
 							]))
 					]))
 			]));
@@ -6343,7 +6418,7 @@ var $author$project$Map$viewChildNode = F5(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$id(node.bE),
+									$elm$html$Html$Attributes$id(node.bF),
 									$elm$html$Html$Attributes$classList(
 									_List_fromArray(
 										[
@@ -6353,15 +6428,47 @@ var $author$project$Map$viewChildNode = F5(
 								]),
 							_List_fromArray(
 								[
-									$author$project$Map$viewNodeContents(node)
+									$author$project$Map$viewNodeContents(node),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('parent_edge')
+										]),
+									_List_Nil)
 								])),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('child_area')
+									$elm$html$Html$Attributes$class('child_holder')
 								]),
-							_Utils_ap(childNodes, tailBeacons))
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('child_edge'),
+											A2(
+											$elm$html$Html$Attributes$style,
+											'height',
+											$author$project$Map$asPx(node.x))
+										]),
+									_List_Nil),
+									A3(
+									$elm$html$Html$node,
+									'child-area',
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('child_area'),
+											A2(
+											$elm$html$Html$Events$on,
+											'childedgeheightchanged',
+											$author$project$Map$onChildEdgeHeightChangedDecoder(node.bF))
+										]),
+									_Utils_ap(childNodes, tailBeacons))
+								]))
 						]))
 				]));
 	});
@@ -6413,48 +6520,63 @@ var $author$project$Map$viewTopNode = F4(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('child_area')
+							$elm$html$Html$Attributes$class('child_holder')
 						]),
-					_Utils_ap(childNodes, tailBeacons))
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('child_edge'),
+									A2(
+									$elm$html$Html$Attributes$style,
+									'height',
+									$author$project$Map$asPx(node.x))
+								]),
+							_List_Nil),
+							A3(
+							$elm$html$Html$node,
+							'child-area',
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('child_area'),
+									A2(
+									$elm$html$Html$Events$on,
+									'childedgeheightchanged',
+									$author$project$Map$onChildEdgeHeightChangedDecoder(node.bF))
+								]),
+							_Utils_ap(childNodes, tailBeacons))
+						]))
 				]));
 	});
 var $author$project$Map$viewDragNode = function (node) {
 	return A4($author$project$Map$viewTopNode, false, $elm$core$Maybe$Nothing, -1, node);
 };
 var $author$project$Map$view = function (model) {
-	var nodes = $author$project$Map$childList(model.E);
+	var nodes = $author$project$Map$childList(model.z);
 	var drawBeacons = !_Utils_eq(model.u, $elm$core$Maybe$Nothing);
-	var divChildren = A2(
+	var dragViewList = A2(
+		$elm$core$List$map,
+		$author$project$Map$viewDragNode,
+		$elm_community$maybe_extra$Maybe$Extra$toList(
+			A2(
+				$elm$core$Maybe$andThen,
+				$author$project$Map$getDragNode(nodes),
+				model.u)));
+	var childrenViewList = A2(
 		$elm$core$List$indexedMap,
 		A2($author$project$Map$viewTopNode, drawBeacons, model.u),
 		nodes);
-	var _v0 = A2(
-		$elm$core$Maybe$andThen,
-		$author$project$Map$dragNode(nodes),
-		model.u);
-	if (!_v0.$) {
-		var node = _v0.a;
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('map')
-				]),
-			A2(
-				$elm$core$List$cons,
-				$author$project$Map$viewDragNode(node),
-				divChildren));
-	} else {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('map')
-				]),
-			divChildren);
-	}
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('map')
+			]),
+		_Utils_ap(dragViewList, childrenViewList));
 };
 var $author$project$Map$main = $elm$browser$Browser$element(
-	{bH: $author$project$Map$init, ca: $author$project$Map$subscriptions, ci: $author$project$Map$update, cj: $author$project$Map$view});
+	{bI: $author$project$Map$init, cb: $author$project$Map$subscriptions, cj: $author$project$Map$update, ck: $author$project$Map$view});
 _Platform_export({'Map':{'init':$author$project$Map$main(
 	$elm$json$Json$Decode$succeed(0))(0)}});}(this));
