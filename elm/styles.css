@@ -40,9 +40,9 @@ body {
   position: absolute;
   right: 100%;
   top: 0;
-  height: 10px;
+  height: 50%;
   width: 13px;
-  border-radius: 0 0 0 70%;
+  border-radius: 0 0 0 50%;
 }
 
 .content {
