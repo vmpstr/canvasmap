@@ -33,6 +33,17 @@ body {
   position: relative;
 }
 
+.parent_edge {
+  border-bottom: 2px solid rgb(50, 50, 50);
+  border-left: 2px solid rgb(50, 50, 50);
+  position: absolute;
+  right: 100%;
+  top: 0;
+  height: 10px;
+  width: 11px;
+  border-radius: 0 0 0 50%;
+}
+
 .content {
   box-sizing: border-box;
   height: 100%;
@@ -129,5 +140,5 @@ body {
   top: 0;
   left: 12px;
   width: 0;
-  border-left: 2px solid black;
+  border-left: 2px solid rgb(50, 50, 50);
 }

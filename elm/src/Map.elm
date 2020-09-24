@@ -318,7 +318,9 @@ viewChildNode drawBeacons parentPath mdragState index node =
           [ id node.id
           , classList [("child", True), ("shadow", shadow)]
           ]
-          [ viewNodeContents node ]
+          [ viewNodeContents node
+          , div [ class "parent_edge" ] []
+          ]
       , div
           [ class "child_holder" ]
           [ div 
