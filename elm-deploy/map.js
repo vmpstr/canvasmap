@@ -6383,42 +6383,40 @@ var $author$project$Map$onPointerDownDecoder = function (targetId) {
 };
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Map$viewNodeContents = F2(
-	function (node, canHover) {
-		var cls = canHover ? 'selection_container' : 'selection_container_no_hover';
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$Events$custom,
-					'pointerdown',
-					$author$project$Map$onPointerDownDecoder(node.bF)),
-					$elm$html$Html$Attributes$class(cls)
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('contents_container')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('label')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('hello ' + node.bF)
-								]))
-						]))
-				]));
-	});
+var $author$project$Map$viewNodeContents = function (node) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$Events$custom,
+				'pointerdown',
+				$author$project$Map$onPointerDownDecoder(node.bF)),
+				$elm$html$Html$Attributes$class('selection_container')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('contents_container')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('label')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('hello ' + node.bF)
+							]))
+					]))
+			]));
+};
 var $author$project$Map$viewChildNode = F5(
 	function (drawBeacons, parentPath, mdragState, index, node) {
 		var path = parentPath + (' ' + $elm$core$String$fromInt(index));
@@ -6465,10 +6463,7 @@ var $author$project$Map$viewChildNode = F5(
 								]),
 							_List_fromArray(
 								[
-									A2(
-									$author$project$Map$viewNodeContents,
-									node,
-									_Utils_eq(mdragState, $elm$core$Maybe$Nothing)),
+									$author$project$Map$viewNodeContents(node),
 									A2(
 									$elm$html$Html$div,
 									_List_fromArray(
@@ -6555,10 +6550,7 @@ var $author$project$Map$viewTopNode = F4(
 				]),
 			_List_fromArray(
 				[
-					A2(
-					$author$project$Map$viewNodeContents,
-					node,
-					_Utils_eq(mdragState, $elm$core$Maybe$Nothing)),
+					$author$project$Map$viewNodeContents(node),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
