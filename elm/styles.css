@@ -104,11 +104,11 @@ body {
   max-width: max-content;
   border-radius: 10px;
 
-  transition: box-shadow 200ms, transform 200ms, z-index 200ms;
 }
 
 .selection_container:hover {
   box-shadow: 0px 10px 10px 0px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 200ms, transform 200ms, z-index 200ms;
   z-index: 10;
 }
 
