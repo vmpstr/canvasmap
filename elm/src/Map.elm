@@ -55,7 +55,7 @@ type alias Beacon =
   , location : Vector
   }
 
-type NodeType 
+type NodeType
   = TopLevel
   | Child
 
@@ -69,7 +69,7 @@ type alias Node =
   , childEdgeHeight: Float
   , children : Children
   }
- 
+
 
 type alias Model =
   { nodes : Children
@@ -218,7 +218,7 @@ view model =
             |> Maybe.andThen (getDragNode nodes)
             |> Maybe.Extra.toList)
   in
-  div [ class "map" ] (dragViewList ++ childrenViewList)
+  div [ class "map" ] (childrenViewList ++ dragViewList)
 
 viewDragNode : Node -> Html Msg
 viewDragNode node =
@@ -278,7 +278,7 @@ viewTopNode drawBeacons mdragState index node =
     [ viewNodeContents node
     , div
         [ class "child_holder" ]
-        [ div 
+        [ div
             [ class "child_edge"
             , style "height" (asPx node.childEdgeHeight)
             ] []
@@ -316,7 +316,7 @@ viewChildNode drawBeacons parentPath mdragState index node =
   headBeacons ++
   [ div []
       [ div
-          [ id node.id
+          [ id nodeId
           , classList [("child", True), ("shadow", shadow)]
           ]
           [ viewNodeContents node
@@ -324,7 +324,7 @@ viewChildNode drawBeacons parentPath mdragState index node =
           ]
       , div
           [ class "child_holder" ]
-          [ div 
+          [ div
               [ class "child_edge"
               , style "height" (asPx node.childEdgeHeight)
               ] []
@@ -340,6 +340,7 @@ viewChildNode drawBeacons parentPath mdragState index node =
 viewBeacon : String -> Html Msg
 viewBeacon path =
   div [ class "beacon"
+      --, class "debug"
       , attribute "path" path
       ] []
 
@@ -360,7 +361,7 @@ isSubpath path lead =
         False -- path diverges
 
 
-type TargetBias 
+type TargetBias
   = BiasMid
   | BiasUp
   | BiasDown
@@ -459,7 +460,7 @@ applyChildEdgeHeightChange (Children nodes) { targetId, height } =
 
 applyDragStartData : Maybe DragState -> Children -> OnDragData -> (Maybe DragState, Children)
 applyDragStartData mdragState (Children nodes) { targetId, geometry } =
-  let 
+  let
     mtargetPath = findNode nodes targetId
   in
   case mtargetPath of
@@ -528,7 +529,7 @@ update msg model =
     MsgOnDragBy data ->
       let
         (dragState, nodes, rafAlign) = applyDragByData model.dragState model.nodes data
-        cmd = 
+        cmd =
           if rafAlign then
             portRafAlign ()
           else

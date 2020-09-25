@@ -71,7 +71,13 @@ body {
   background: orange;
 }
 
-.beacon_debug {
+.beacon {
+  margin-left: -1px;
+  margin-bottom: -1px;
+  width: 1px;
+  height: 1px;
+}
+.beacon.debug {
   margin-left: -5px;
   margin-bottom: -5px;
   width: 5px;
@@ -79,12 +85,6 @@ body {
   background: orange;
 }
 
-.beacon {
-  margin-left: -1px;
-  margin-bottom: -1px;
-  width: 1px;
-  height: 1px;
-}
 
 .shadow {
   opacity: 0.4

@@ -6453,7 +6453,7 @@ var $author$project$Map$viewChildNode = F5(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$id(node.bF),
+									$elm$html$Html$Attributes$id(nodeId),
 									$elm$html$Html$Attributes$classList(
 									_List_fromArray(
 										[
@@ -6609,7 +6609,7 @@ var $author$project$Map$view = function (model) {
 			[
 				$elm$html$Html$Attributes$class('map')
 			]),
-		_Utils_ap(dragViewList, childrenViewList));
+		_Utils_ap(childrenViewList, dragViewList));
 };
 var $author$project$Map$main = $elm$browser$Browser$element(
 	{bI: $author$project$Map$init, cb: $author$project$Map$subscriptions, cj: $author$project$Map$update, ck: $author$project$Map$view});
