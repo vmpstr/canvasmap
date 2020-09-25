@@ -71,12 +71,19 @@ body {
   background: orange;
 }
 
-.beacon {
+.beacon_debug {
   margin-left: -5px;
   margin-bottom: -5px;
   width: 5px;
   height: 5px;
   background: orange;
+}
+
+.beacon {
+  margin-left: -1px;
+  margin-bottom: -1px;
+  width: 1px;
+  height: 1px;
 }
 
 .shadow {
@@ -95,6 +102,18 @@ body {
 }
 
 .selection_container {
+  position: relative;
+  display: flex;
+  flex-shrink: 1;
+  box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.5);
+  background-color: rgb(195, 231, 240);
+  min-width: 20px;
+  max-width: max-content;
+  border-radius: 10px;
+
+}
+
+.selection_container_no_hover {
   position: relative;
   display: flex;
   flex-shrink: 1;

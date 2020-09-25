@@ -4234,8 +4234,8 @@ function _Browser_getViewport()
 	return {
 		a7: _Browser_getScene(),
 		be: {
-			b: _Browser_window.pageXOffset,
-			a: _Browser_window.pageYOffset,
+			a: _Browser_window.pageXOffset,
+			b: _Browser_window.pageYOffset,
 			bf: _Browser_doc.documentElement.clientWidth,
 			aJ: _Browser_doc.documentElement.clientHeight
 		}
@@ -4276,8 +4276,8 @@ function _Browser_getViewportOf(id)
 				aJ: node.scrollHeight
 			},
 			be: {
-				b: node.scrollLeft,
-				a: node.scrollTop,
+				a: node.scrollLeft,
+				b: node.scrollTop,
 				bf: node.clientWidth,
 				aJ: node.clientHeight
 			}
@@ -4311,14 +4311,14 @@ function _Browser_getElement(id)
 		return {
 			a7: _Browser_getScene(),
 			be: {
-				b: x,
-				a: y,
+				a: x,
+				b: y,
 				bf: _Browser_doc.documentElement.clientWidth,
 				aJ: _Browser_doc.documentElement.clientHeight
 			},
 			bx: {
-				b: x + rect.left,
-				a: y + rect.top,
+				a: x + rect.left,
+				b: y + rect.top,
 				bf: rect.width,
 				aJ: rect.height
 			}
@@ -5158,36 +5158,36 @@ var $author$project$Map$initModel = {
 							v: _List_Nil,
 							bF: 'e4',
 							O: 1,
-							d: {b: 0, a: 0},
-							t: {b: 200, a: 50}
+							d: {a: 0, b: 0},
+							u: {a: 200, b: 50}
 						}
 						]),
 					bF: 'e3',
 					O: 1,
-					d: {b: 0, a: 0},
-					t: {b: 200, a: 50}
+					d: {a: 0, b: 0},
+					u: {a: 200, b: 50}
 				},
 					{
 					z: 30,
 					v: _List_Nil,
 					bF: 'e5',
 					O: 1,
-					d: {b: 0, a: 0},
-					t: {b: 200, a: 50}
+					d: {a: 0, b: 0},
+					u: {a: 200, b: 50}
 				}
 				]),
 			bF: 'e1',
 			O: 0,
-			d: {b: 10, a: 10},
-			t: {b: 200, a: 50}
+			d: {a: 10, b: 10},
+			u: {a: 200, b: 50}
 		},
 			{
 			z: 30,
 			v: _List_Nil,
 			bF: 'e2',
 			O: 0,
-			d: {b: 300, a: 20},
-			t: {b: 200, a: 50}
+			d: {a: 300, b: 20},
+			u: {a: 200, b: 50}
 		}
 		])
 };
@@ -5213,7 +5213,7 @@ var $author$project$Map$OnDragData = F4(
 var $elm$json$Json$Decode$float = _Json_decodeFloat;
 var $author$project$Map$Geometry = F2(
 	function (target, beacons) {
-		return {av: beacons, l: target};
+		return {av: beacons, n: target};
 	});
 var $author$project$Map$Beacon = F2(
 	function (path, location) {
@@ -5292,7 +5292,7 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 	});
 var $author$project$Map$Vector = F2(
 	function (x, y) {
-		return {b: x, a: y};
+		return {a: x, b: y};
 	});
 var $author$project$Map$vectorDecoder = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
@@ -5361,7 +5361,7 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional = F4(
 	});
 var $author$project$Map$Rect = F2(
 	function (position, size) {
-		return {d: position, t: size};
+		return {d: position, u: size};
 	});
 var $author$project$Map$rectDecoder = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
@@ -5771,17 +5771,17 @@ var $author$project$Map$findClosestBeaconPath = F3(
 			var slack = function () {
 				var _v1 = beacon.P;
 				if ((_v1.$ === 1) && (!_v1.b.$)) {
-					return geometry.l.t.b;
+					return geometry.n.u.a;
 				} else {
 					return 10;
 				}
 			}();
-			return (_Utils_cmp(beacon.H.b, geometry.l.d.b + slack) < 1) && ((_Utils_cmp(beacon.H.b, geometry.l.d.b - geometry.l.t.b) > -1) && ((_Utils_cmp(beacon.H.a, geometry.l.d.a + (2 * geometry.l.t.a)) < 1) && (_Utils_cmp(beacon.H.a, geometry.l.d.a - geometry.l.t.a) > -1)));
+			return (_Utils_cmp(beacon.H.a, geometry.n.d.a + slack) < 1) && ((_Utils_cmp(beacon.H.a, geometry.n.d.a - geometry.n.u.a) > -1) && ((_Utils_cmp(beacon.H.b, (geometry.n.d.b + geometry.n.u.b) + 50) < 1) && (_Utils_cmp(beacon.H.b, geometry.n.d.b - 50) > -1)));
 		};
 		var validPath = function (path) {
 			return !A2($author$project$Map$isSubpath, path, ignorePath);
 		};
-		var tx = geometry.l.d.b;
+		var tx = geometry.n.d.a;
 		var ratio = function () {
 			switch (bias) {
 				case 0:
@@ -5792,7 +5792,7 @@ var $author$project$Map$findClosestBeaconPath = F3(
 					return 0.8;
 			}
 		}();
-		var ty = geometry.l.d.a + (ratio * geometry.l.t.a);
+		var ty = geometry.n.d.b + (ratio * geometry.n.u.b);
 		var pathIfClose = function (distanceBeacon) {
 			return (distanceBeacon.ai <= 200) ? $elm$core$Maybe$Just(distanceBeacon.P) : $elm$core$Maybe$Nothing;
 		};
@@ -5803,8 +5803,8 @@ var $author$project$Map$findClosestBeaconPath = F3(
 			},
 			geometry.av);
 		var computeDistance = function (beacon) {
-			var by = beacon.H.a;
-			var bx = beacon.H.b;
+			var by = beacon.H.b;
+			var bx = beacon.H.a;
 			return $elm$core$Basics$sqrt(((bx - tx) * (bx - tx)) + ((by - ty) * (by - ty)));
 		};
 		var toDistanceBeacon = function (beacon) {
@@ -6037,8 +6037,8 @@ var $author$project$Map$updateNodePosition = F3(
 		var dx = _v0.a;
 		var dy = _v0.b;
 		var addDelta = function (node) {
-			var y = node.d.a + dy;
-			var x = node.d.b + dx;
+			var y = node.d.b + dy;
+			var x = node.d.a + dx;
 			var position = A2($author$project$Map$Vector, x, y);
 			return _Utils_update(
 				node,
@@ -6115,7 +6115,7 @@ var $author$project$Map$applyDragStartData = F3(
 					$author$project$Map$setNodePosition,
 					nodes,
 					path,
-					_Utils_Tuple2(geometry.l.d.b, geometry.l.d.a)));
+					_Utils_Tuple2(geometry.n.d.a, geometry.n.d.b)));
 		} else {
 			return _Utils_Tuple2($elm$core$Maybe$Nothing, nodes);
 		}
@@ -6152,10 +6152,10 @@ var $author$project$Map$portOnPointerDown = _Platform_outgoingPort(
 					$elm$json$Json$Encode$string($.K)),
 					_Utils_Tuple2(
 					'x',
-					$elm$json$Json$Encode$float($.b)),
+					$elm$json$Json$Encode$float($.a)),
 					_Utils_Tuple2(
 					'y',
-					$elm$json$Json$Encode$float($.a))
+					$elm$json$Json$Encode$float($.b))
 				]));
 	});
 var $elm$json$Json$Encode$null = _Json_encodeNull;
@@ -6355,7 +6355,7 @@ var $author$project$Map$MsgOnPointerDown = function (a) {
 };
 var $author$project$Map$OnPointerDownPortData = F4(
 	function (targetId, pointerType, x, y) {
-		return {aY: pointerType, K: targetId, b: x, a: y};
+		return {aY: pointerType, K: targetId, a: x, b: y};
 	});
 var $author$project$Map$toStopPropagationMsg = function (msg) {
 	return {aP: msg, a_: false, a9: true};
@@ -6383,40 +6383,42 @@ var $author$project$Map$onPointerDownDecoder = function (targetId) {
 };
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Map$viewNodeContents = function (node) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$Events$custom,
-				'pointerdown',
-				$author$project$Map$onPointerDownDecoder(node.bF)),
-				$elm$html$Html$Attributes$class('selection_container')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('contents_container')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('label')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('hello ' + node.bF)
-							]))
-					]))
-			]));
-};
+var $author$project$Map$viewNodeContents = F2(
+	function (node, canHover) {
+		var cls = canHover ? 'selection_container' : 'selection_container_no_hover';
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$Events$custom,
+					'pointerdown',
+					$author$project$Map$onPointerDownDecoder(node.bF)),
+					$elm$html$Html$Attributes$class(cls)
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('contents_container')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('label')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('hello ' + node.bF)
+								]))
+						]))
+				]));
+	});
 var $author$project$Map$viewChildNode = F5(
 	function (drawBeacons, parentPath, mdragState, index, node) {
 		var path = parentPath + (' ' + $elm$core$String$fromInt(index));
@@ -6463,7 +6465,10 @@ var $author$project$Map$viewChildNode = F5(
 								]),
 							_List_fromArray(
 								[
-									$author$project$Map$viewNodeContents(node),
+									A2(
+									$author$project$Map$viewNodeContents,
+									node,
+									_Utils_eq(mdragState, $elm$core$Maybe$Nothing)),
 									A2(
 									$elm$html$Html$div,
 									_List_fromArray(
@@ -6542,15 +6547,18 @@ var $author$project$Map$viewTopNode = F4(
 					A2(
 					$elm$html$Html$Attributes$style,
 					'left',
-					$author$project$Map$asPx(node.d.b)),
+					$author$project$Map$asPx(node.d.a)),
 					A2(
 					$elm$html$Html$Attributes$style,
 					'top',
-					$author$project$Map$asPx(node.d.a))
+					$author$project$Map$asPx(node.d.b))
 				]),
 			_List_fromArray(
 				[
-					$author$project$Map$viewNodeContents(node),
+					A2(
+					$author$project$Map$viewNodeContents,
+					node,
+					_Utils_eq(mdragState, $elm$core$Maybe$Nothing)),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(

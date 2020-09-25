@@ -380,8 +380,8 @@ findClosestBeaconPath ignorePath geometry bias =
       in
       beacon.location.x <= geometry.target.position.x + slack &&
       beacon.location.x >= geometry.target.position.x - geometry.target.size.x &&
-      beacon.location.y <= geometry.target.position.y + 2 * geometry.target.size.y &&
-      beacon.location.y >= geometry.target.position.y - geometry.target.size.y
+      beacon.location.y <= geometry.target.position.y + geometry.target.size.y + 50 &&
+      beacon.location.y >= geometry.target.position.y - 50
 
     filteredBeacons =
       List.filter
