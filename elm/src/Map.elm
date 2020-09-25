@@ -151,6 +151,7 @@ onChildEdgeHeightChangedDecoder targetId =
       |> required "detail" (field "height" float))
 
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
+port portRafAlign : () -> Cmd msg
 port portOnDragStart : (Decoder.Value -> msg) -> Sub msg
 port portOnDragBy : (Decoder.Value -> msg) -> Sub msg
 port portOnDragStop : (Decoder.Value -> msg) -> Sub msg
@@ -359,16 +360,42 @@ isSubpath path lead =
         False -- path diverges
 
 
-findClosestBeaconPath : Path -> Geometry -> Maybe Path
-findClosestBeaconPath ignorePath geometry =
+type TargetBias 
+  = BiasMid
+  | BiasUp
+  | BiasDown
+
+findClosestBeaconPath : Path -> Geometry -> TargetBias -> Maybe Path
+findClosestBeaconPath ignorePath geometry bias =
   let
     validPath path =
       not (isSubpath path ignorePath)
 
-    filteredBeacons = List.filter (\beacon -> validPath beacon.path) geometry.beacons
+    validPosition beacon =
+      let
+          slack =
+            case beacon.path of
+              InSubtree _ (AtIndex _) -> geometry.target.size.x
+              _ -> 10
+      in
+      beacon.location.x <= geometry.target.position.x + slack &&
+      beacon.location.x >= geometry.target.position.x - geometry.target.size.x &&
+      beacon.location.y <= geometry.target.position.y + 2 * geometry.target.size.y &&
+      beacon.location.y >= geometry.target.position.y - geometry.target.size.y
+
+    filteredBeacons =
+      List.filter
+        (\beacon -> validPath beacon.path && validPosition beacon)
+        geometry.beacons
+
+    ratio =
+      case bias of
+        BiasMid -> 0.5
+        BiasUp -> 0.2
+        BiasDown -> 0.8
 
     tx = geometry.target.position.x
-    ty = geometry.target.position.y + 0.5 * geometry.target.size.y
+    ty = geometry.target.position.y + ratio * geometry.target.size.y
 
     computeDistance beacon =
       let
@@ -443,7 +470,7 @@ applyDragStartData mdragState (Children nodes) { targetId, geometry } =
     Nothing ->
       (Nothing, Children nodes)
 
-applyDragByData : Maybe DragState -> Children -> OnDragData -> (Maybe DragState, Children)
+applyDragByData : Maybe DragState -> Children -> OnDragData -> (Maybe DragState, Children, Bool)
 applyDragByData mdragState (Children nodes) { targetId, dx, dy, geometry } =
   let
       stateIfMatchesTarget dragState =
@@ -460,7 +487,15 @@ applyDragByData mdragState (Children nodes) { targetId, dx, dy, geometry } =
         |> Maybe.andThen findTargetPath of
     Just targetPath ->
       let
-        mbeaconPath = findClosestBeaconPath targetPath geometry
+        bias =
+          if dy < 0 then
+            BiasUp
+          else if dy > 0 then
+            BiasDown
+          else
+            BiasMid
+
+        mbeaconPath = findClosestBeaconPath targetPath geometry bias
         updatedNodes = updateNodePosition nodes targetPath (dx, dy)
 
         newPath =
@@ -470,9 +505,9 @@ applyDragByData mdragState (Children nodes) { targetId, dx, dy, geometry } =
             Nothing ->
               AtIndex 0
       in
-      (mdragState, Children (moveNode updatedNodes targetPath newPath))
+      (mdragState, Children (moveNode updatedNodes targetPath newPath), targetPath /= newPath)
     Nothing ->
-      (Nothing, Children nodes)
+      (Nothing, Children nodes, False)
 
 nocmd : Model -> (Model, Cmd Msg)
 nocmd model =
@@ -492,9 +527,14 @@ update msg model =
 
     MsgOnDragBy data ->
       let
-        (dragState, nodes) = applyDragByData model.dragState model.nodes data
+        (dragState, nodes, rafAlign) = applyDragByData model.dragState model.nodes data
+        cmd = 
+          if rafAlign then
+            portRafAlign ()
+          else
+            Cmd.none
       in
-      nocmd { model | nodes = nodes, dragState = dragState }
+      ({ model | nodes = nodes, dragState = dragState }, cmd)
 
     MsgOnDragStop ->
       nocmd { model | dragState = Nothing }

@@ -14,6 +14,7 @@ let lastX = 0;
 let lastY = 0;
 let id = "";
 let dragging = false;
+let blockInput = false;
 function onPointerDown(e) {
   document.body.addEventListener("pointermove", onPointerMove);
   document.body.addEventListener("pointerup", onPointerUp);
@@ -24,6 +25,8 @@ function onPointerDown(e) {
 
 function onPointerMove(e) {
   e.preventDefault();
+  if (blockInput)
+    return;
 
   const dx = e.clientX - lastX;
   const dy = e.clientY - lastY;
@@ -88,9 +91,18 @@ function onPointerUp(e) {
   app.ports.portOnDragStop.send();
 }
 
+function onRafAlignRequest() {
+  blockInput = true;
+  requestAnimationFrame(() => {
+    blockInput = false;
+    // setTimeout for processing accumulated input?
+  });
+}
+
 onload = () => {
   app = Elm.Map.init({ node: document.getElementById("map") });
   app.ports.portOnPointerDown.subscribe(onPointerDown);
+  app.ports.portRafAlign.subscribe(onRafAlignRequest);
 };
 </script>
 
