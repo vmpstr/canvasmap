@@ -163,17 +163,17 @@ initModel =
                  , nodeType = TopLevel
                  , position = { x = 10, y = 10 }
                  , size = { x = 200, y = 50 }
-                 , childEdgeHeight = 30
+                 , childEdgeHeight = 0
                  , children = Children [ { id = "e3"
                                          , nodeType = Child
                                          , position = { x = 0, y = 0 }
                                          , size = { x = 200, y = 50 }
-                                         , childEdgeHeight = 30
+                                         , childEdgeHeight = 0
                                          , children = Children [ { id = "e4"
                                                                  , nodeType = Child
                                                                  , position = { x = 0, y = 0 }
                                                                  , size = { x = 200, y = 50 }
-                                                                 , childEdgeHeight = 30
+                                                                 , childEdgeHeight = 0
                                                                  , children = Children []
                                                                  }
                                                                ]
@@ -182,7 +182,7 @@ initModel =
                                          , nodeType = Child
                                          , position = { x = 0, y = 0 }
                                          , size = { x = 200, y = 50 }
-                                         , childEdgeHeight = 30
+                                         , childEdgeHeight = 0
                                          , children = Children []
                                          }
                                        ]
@@ -191,7 +191,7 @@ initModel =
                  , nodeType = TopLevel
                  , position = { x = 300, y = 20 }
                  , size = { x = 200, y = 50 }
-                 , childEdgeHeight = 30
+                 , childEdgeHeight = 0
                  , children = Children []
                  }
                ]
