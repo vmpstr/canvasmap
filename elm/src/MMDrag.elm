@@ -1,10 +1,11 @@
 port module MMDrag exposing (Msg, State, update, subscriptions)
 
-import MMGeometry exposing (..)
-import MMTree exposing (Path(..), pathDecoder, isSubpath)
-import MMNode exposing (Children(..), childList, Node)
 import Json.Decode as Decoder exposing (Decoder, succeed, string, float, list)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
+
+import MMGeometry exposing (..)
+import MMNode exposing (Children(..), childList, Node)
+import MMTree exposing (Path(..), pathDecoder, isSubpath)
 
 {- TODOs
  - Maybe beacons should have Path but really should just reference ids

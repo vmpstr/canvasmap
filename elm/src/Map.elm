@@ -1,17 +1,16 @@
 port module Map exposing (main)
 
-import Debug
 import Browser
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, classList, style, attribute, id)
 import Html.Events exposing (custom, on)
-import Json.Decode as Decoder exposing (Decoder, succeed, int, string, float, list, field)
-import Json.Decode.Pipeline exposing (required, optional, hardcoded)
-import MMTree exposing (Path(..))
+import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field)
+import Json.Decode.Pipeline exposing (required, hardcoded)
 import Maybe.Extra
-import MMGeometry exposing (Vector, Rect)
+
 import MMDrag
 import MMNode exposing (Node, Children(..), childList)
+import MMTree
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -320,5 +319,3 @@ main =
       , update = update
       , subscriptions = subscriptions
       }
-
-
