@@ -11,6 +11,7 @@ module MMTree exposing (..)
  -}
 
 import List.Extra
+import Json.Decode as Decoder exposing (Decoder, succeed, string)
 
 type Path
   = AtIndex Int
@@ -220,4 +221,57 @@ updateNode pack unpack nodes path updater =
             }
       in
       List.Extra.updateAt index recurse nodes
+
+stringToPath : String -> Maybe Path
+stringToPath s =
+  let
+    stringList = String.split " " s
+    intList = List.filterMap String.toInt (String.split " " s)
+
+    maybePrepend index mpath =
+      Just (prependPath index mpath)
+  in
+  if List.length stringList == List.length intList then
+    List.foldr maybePrepend Nothing intList
+  else
+    Nothing
+
+decodePath : String -> Decoder Path
+decodePath s =
+  case stringToPath s of
+    Just path ->
+      succeed path
+    Nothing ->
+      Decoder.fail ("Invalid path: " ++ s)
+
+pathDecoder : Decoder Path
+pathDecoder =
+  string |> Decoder.andThen decodePath
+
+prependPath : Int -> Maybe Path -> Path
+prependPath index maybePath =
+  case maybePath of
+    Just path ->
+      InSubtree index path
+    Nothing ->
+      AtIndex index
+
+nodeAtById : (b -> List { c | children : b, id : a })
+             -> List { c | children : b, id : a }
+             -> a
+             -> Maybe { c | children : b, id : a }
+nodeAtById unpack nodes target =
+  findNode unpack nodes target |> Maybe.andThen (nodeAt unpack nodes)
+
+isSubpath : Path -> Path -> Bool
+isSubpath path lead =
+  case (path, lead) of
+    (AtIndex pi, AtIndex li) ->
+      False -- even if pi == li, it's not a subpath
+    (AtIndex pi, InSubtree li lsub) ->
+      False -- path stops short of the lead
+    (InSubtree pi psub, AtIndex li) ->
+      pi == li -- if path goes into the subtree of lead, it's a subpath
+    (InSubtree pi psub, InSubtree li lsub) ->
+      pi == li && isSubpath psub lsub -- recurse if equal
 
