@@ -10,8 +10,8 @@ module MMTree exposing (..)
  - Test updateNode
  -}
 
-import List.Extra
 import Json.Decode as Decoder exposing (Decoder, succeed, string)
+import List.Extra
 
 type Path
   = AtIndex Int

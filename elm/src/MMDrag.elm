@@ -1,4 +1,4 @@
-port module MMDrag exposing (Msg, State, update, subscriptions)
+port module MMDrag exposing (Msg, State, update, subscriptions, getDragNode)
 
 import Json.Decode as Decoder exposing (Decoder, succeed, string, float, list)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
@@ -51,6 +51,8 @@ updateNode = MMTree.updateNode Children childList
 findNode = MMTree.findNode childList
 
 moveNode = MMTree.moveNode Children childList
+
+nodeAtById = MMTree.nodeAtById childList
 
 toMsgOrNoop : (data -> Msg) -> Result err data -> Msg
 toMsgOrNoop toMsg result =
@@ -263,3 +265,9 @@ subscriptions () =
   , onDragBySubscription
   , onDragStopSubscription
   ] |> Sub.batch
+
+getDragNode : List Node -> Maybe State -> Maybe Node
+getDragNode nodes mdragState =
+  mdragState |> Maybe.andThen
+    (\state -> nodeAtById nodes state.dragId)
+

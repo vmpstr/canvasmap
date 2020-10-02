@@ -43,8 +43,6 @@ updateNode = MMTree.updateNode Children childList
 
 nodeAt = MMTree.nodeAt childList
 
-nodeAtById = MMTree.nodeAtById childList
-
 -- Helpers
 asPx : Float -> String
 asPx n =
@@ -131,10 +129,6 @@ initModel =
   , dragState = Nothing
   }
 
-getDragNode : List Node -> MMDrag.State -> Maybe Node
-getDragNode nodes dragState =
-  nodeAtById nodes dragState.dragId
-
 view : Model -> Html Msg
 view model =
   let
@@ -143,8 +137,7 @@ view model =
       childrenViewList = List.indexedMap (viewTopNode drawBeacons model.dragState) nodes
       dragViewList =
         List.map viewDragNode
-          (model.dragState
-            |> Maybe.andThen (getDragNode nodes)
+          (MMDrag.getDragNode nodes model.dragState
             |> Maybe.Extra.toList)
   in
   div [ class "map" ] (childrenViewList ++ dragViewList)
