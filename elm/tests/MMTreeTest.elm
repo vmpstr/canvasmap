@@ -1,10 +1,9 @@
-module MMTreeTest exposing (..)
+module MMTreeTest exposing (suite)
 
 import MMTree exposing (Path(..))
 
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
-import Test exposing (..)
+import Expect
+import Test exposing (Test, describe, test)
 
 -- Data
 
@@ -32,24 +31,30 @@ smallTree =
          }
        ]
 
+smallTreeNodes : List Node
 smallTreeNodes = unpack smallTree
 
 -- Testing function
 
+findNode : List Node -> String -> Maybe Path
 findNode = MMTree.findNode unpack
 
+removeNode : List Node -> Path -> List Node
 removeNode = MMTree.removeNode pack unpack
 
+takeNode : List Node -> Path -> (Maybe Node, List Node)
 takeNode = MMTree.takeNode pack unpack
 
+nodeAt : List Node -> Path -> Maybe Node
 nodeAt = MMTree.nodeAt unpack
 
+addNode : List Node -> Path -> Node -> List Node
 addNode = MMTree.addNode pack unpack
 
+moveNode : List Node -> Path -> Path -> List Node
 moveNode = MMTree.moveNode pack unpack
 
-isValidPath = MMTree.isValidPath unpack
-
+isValidInsertionPath : List Node -> Path -> Bool
 isValidInsertionPath = MMTree.isValidInsertionPath unpack
 
 -- Helpers
@@ -60,13 +65,13 @@ nodesToString nodes =
     (first :: allbutone) ->
       let
           sub =
-            if first.children == (pack []) then
+            if first.children == pack [] then
               ""
             else
               "(" ++ nodesToString (unpack first.children) ++ ")"
       in
       case allbutone of
-        (second :: rest) ->
+        (_ :: _) ->
           first.id ++ sub ++ " " ++ nodesToString allbutone
         [] ->
           first.id ++ sub
@@ -496,28 +501,6 @@ suite =
                 Expect.equal
                   (nodesToString nodes)
                   "123(234) 345"
-        ]
-    , describe "isValidPath"
-        [ test "123" <|
-            \_ ->
-                Expect.true "123"
-                  (isValidPath smallTreeNodes (AtIndex 0))
-        , test "234" <|
-            \_ ->
-                Expect.true "234"
-                  (isValidPath smallTreeNodes (InSubtree 0 (AtIndex 0)))
-        , test "345" <|
-            \_ ->
-                Expect.true "345"
-                  (isValidPath smallTreeNodes (AtIndex 1))
-        , test "non-existent child" <|
-            \_ ->
-                Expect.false "child"
-                  (isValidPath smallTreeNodes (InSubtree 0 (AtIndex 1)))
-        , test "non-existent sibling" <|
-            \_ ->
-                Expect.false "sibling"
-                  (isValidPath smallTreeNodes (AtIndex 2))
         ]
     , describe "isValidInsertionPath"
         [ test "before 123" <|

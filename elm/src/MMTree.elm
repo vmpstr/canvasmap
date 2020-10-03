@@ -2,11 +2,16 @@ module MMTree exposing
   (findNode
   , updateNode
   , nodeAt
-  , Path(..), adjustPathForMove, isValidInsertionPath
+  , Path(..)
+  , adjustPathForMove
+  , isValidInsertionPath
   , pathDecoder
   , isSubpath
   , moveNode
   , nodeAtById
+  , removeNode
+  , takeNode
+  , addNode
   )
 
 {- TODOs

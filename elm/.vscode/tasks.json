@@ -7,7 +7,6 @@
             "label": "make",
             "type": "shell",
             "command": "elm make src/Map.elm --output=map.js",
-            "problemMatcher": [],
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -17,7 +16,6 @@
             "label": "make debug",
             "type": "shell",
             "command": "elm make src/Map.elm --output=map.js --debug",
-            "problemMatcher": [],
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -27,7 +25,6 @@
             "label": "make optimize",
             "type": "shell",
             "command": "elm make src/Map.elm --output=map.js --optimize",
-            "problemMatcher": [],
             "group": {
                 "kind": "build",
                 "isDefault": true
