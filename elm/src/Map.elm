@@ -11,7 +11,7 @@ import Maybe.Extra
 import MMDrag
 import MMNode exposing (Node, Children(..), childList)
 import MMTree
-import MMMode
+import UserAction
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -37,7 +37,7 @@ type alias Model =
   }
 
 type alias State =
-  { mode : MMMode.Mode
+  { action : UserAction.Action
   , drag : Maybe MMDrag.State
   }
 
@@ -132,7 +132,7 @@ initModel =
                  }
                ]
   , state = 
-      { mode = MMMode.Idle
+      { action = UserAction.Idle
       , drag = Nothing
       }
   }
@@ -141,7 +141,7 @@ view : Model -> Html Msg
 view model =
   let
       nodes = childList model.nodes
-      drawBeacons = model.state.mode == MMMode.Dragging
+      drawBeacons = model.state.action == UserAction.Dragging
       childrenViewList = List.indexedMap (viewTopNode drawBeacons model.state.drag) nodes
       dragViewList =
         List.map viewDragNode
@@ -299,9 +299,9 @@ update msg model =
           oldState = model.state
           state = 
             if dragState == Nothing then
-              { oldState | mode = MMMode.Idle, drag = Nothing }
+              { oldState | action = UserAction.Idle, drag = Nothing }
             else
-              { oldState | mode = MMMode.Dragging, drag = dragState }
+              { oldState | action = UserAction.Dragging, drag = dragState }
 
       in
       ({ model | state = state, nodes = nodes}, Cmd.map MsgDrag cmd)

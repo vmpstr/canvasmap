@@ -1,12 +1,11 @@
-module MMMode exposing (Mode(..), canPreempt)
+module UserAction exposing (Action(..), canPreempt)
 
-type Mode
+type Action
   = Idle
   | Dragging
   | Editing
 
-
-canPreempt : Mode -> Mode -> Bool
+canPreempt : Action -> Action -> Bool
 canPreempt new old =
   case (new, old) of
     (_, Idle) -> True
