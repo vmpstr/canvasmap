@@ -11,6 +11,7 @@ import Maybe.Extra
 import MMDrag
 import MMNode exposing (Node, Children(..), childList)
 import MMTree
+import MMMode
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -33,7 +34,12 @@ type Msg
 
 type alias Model =
   { nodes : Children
-  , dragState : Maybe MMDrag.State
+  , state : State
+  }
+
+type alias State =
+  { mode : MMMode.Mode
+  , drag : Maybe MMDrag.State
   }
 
 -- MMTree customization
@@ -126,18 +132,21 @@ initModel =
                  , children = Children []
                  }
                ]
-  , dragState = Nothing
+  , state = 
+      { mode = MMMode.Idle
+      , drag = Nothing
+      }
   }
 
 view : Model -> Html Msg
 view model =
   let
       nodes = childList model.nodes
-      drawBeacons = model.dragState /= Nothing
-      childrenViewList = List.indexedMap (viewTopNode drawBeacons model.dragState) nodes
+      drawBeacons = model.state.mode == MMMode.Dragging
+      childrenViewList = List.indexedMap (viewTopNode drawBeacons model.state.drag) nodes
       dragViewList =
         List.map viewDragNode
-          (MMDrag.getDragNode nodes model.dragState
+          (MMDrag.getDragNode nodes model.state.drag
             |> Maybe.Extra.toList)
   in
   div [ class "map" ] (childrenViewList ++ dragViewList)
@@ -287,9 +296,16 @@ update msg model =
 
     MsgDrag dragMsg ->
       let
-          (dragState, nodes, cmd) = MMDrag.update dragMsg model.dragState model.nodes
+          (dragState, nodes, cmd) = MMDrag.update dragMsg model.state.drag model.nodes
+          oldState = model.state
+          state = 
+            if dragState == Nothing then
+              { oldState | mode = MMMode.Idle, drag = Nothing }
+            else
+              { oldState | mode = MMMode.Dragging, drag = dragState }
+
       in
-      ({ model | dragState = dragState, nodes = nodes}, Cmd.map MsgDrag cmd)
+      ({ model | state = state, nodes = nodes}, Cmd.map MsgDrag cmd)
 
     MsgOnChildEdgeHeightChanged data ->
       ({ model | nodes = applyChildEdgeHeightChange model.nodes data }, Cmd.none)
