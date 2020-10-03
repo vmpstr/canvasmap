@@ -262,11 +262,11 @@ nodeAtById unpack nodes target =
 isSubpath : Path -> Path -> Bool
 isSubpath path lead =
   case (path, lead) of
-    (AtIndex pi, AtIndex li) ->
+    (AtIndex _, AtIndex _) ->
       False -- even if pi == li, it's not a subpath
-    (AtIndex pi, InSubtree li lsub) ->
+    (AtIndex _, InSubtree _ _) ->
       False -- path stops short of the lead
-    (InSubtree pi psub, AtIndex li) ->
+    (InSubtree pi _, AtIndex li) ->
       pi == li -- if path goes into the subtree of lead, it's a subpath
     (InSubtree pi psub, InSubtree li lsub) ->
       pi == li && isSubpath psub lsub -- recurse if equal

@@ -27,8 +27,7 @@ import MMMode
  -}
 
 type Msg
-  = MsgNoop
-  | MsgDrag MMDrag.Msg
+  = MsgDrag MMDrag.Msg
   | MsgOnPointerDown OnPointerDownPortData
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
 
@@ -310,14 +309,11 @@ update msg model =
     MsgOnChildEdgeHeightChanged data ->
       ({ model | nodes = applyChildEdgeHeightChange model.nodes data }, Cmd.none)
 
-    _ ->
-      (model, Cmd.none)
-
 init : () -> (Model, Cmd Msg)
 init () = (initModel, Cmd.none)
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
   Sub.map MsgDrag (MMDrag.subscriptions ())
 
 main : Program () Model Msg
