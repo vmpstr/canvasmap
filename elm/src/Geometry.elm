@@ -1,4 +1,4 @@
-module MMGeometry exposing (Vector, Rect, rectDecoder, vectorDecoder)
+module Geometry exposing (Vector, Rect, rectDecoder, vectorDecoder)
 
 import Json.Decode exposing (Decoder, succeed, float)
 import Json.Decode.Pipeline exposing (required)

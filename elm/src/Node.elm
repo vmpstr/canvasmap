@@ -1,6 +1,6 @@
-module MMNode exposing (Children(..), Node, childList)
+module Node exposing (Children(..), Node, childList)
 
-import MMGeometry exposing (Vector)
+import Geometry exposing (Vector)
 
 type Children = Children (List Node)
 

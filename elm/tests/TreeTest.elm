@@ -1,6 +1,6 @@
-module MMTreeTest exposing (suite)
+module TreeTest exposing (suite)
 
-import MMTree exposing (Path(..))
+import Tree exposing (Path(..))
 
 import Expect
 import Test exposing (Test, describe, test)
@@ -9,27 +9,28 @@ import Test exposing (Test, describe, test)
 
 type alias Node =
   { id : String
-  , children : Tree
+  , children : Children
   }
 
-type Tree = Tree (List Node)
+type Children = Children (List Node)
 
-unpack : Tree -> List Node
-unpack (Tree nodes) =
+unpack : Children -> List Node
+unpack (Children nodes) =
   nodes
 
-pack : List Node -> Tree
-pack = Tree
+pack : List Node -> Children
+pack = Children
 
-smallTree : Tree
+smallTree : Children
 smallTree =
-  Tree [ { id = "123"
-         , children = Tree [ { id = "234" , children = Tree [] } ]
-         }
-       , { id = "345"
-         , children = Tree []
-         }
-       ]
+  Children
+    [ { id = "123"
+      , children = Children [ { id = "234" , children = Children [] } ]
+      }
+    , { id = "345"
+      , children = Children []
+      }
+    ]
 
 smallTreeNodes : List Node
 smallTreeNodes = unpack smallTree
@@ -37,25 +38,25 @@ smallTreeNodes = unpack smallTree
 -- Testing function
 
 findNode : List Node -> String -> Maybe Path
-findNode = MMTree.findNode unpack
+findNode = Tree.findNode unpack
 
 removeNode : List Node -> Path -> List Node
-removeNode = MMTree.removeNode pack unpack
+removeNode = Tree.removeNode pack unpack
 
 takeNode : List Node -> Path -> (Maybe Node, List Node)
-takeNode = MMTree.takeNode pack unpack
+takeNode = Tree.takeNode pack unpack
 
 nodeAt : List Node -> Path -> Maybe Node
-nodeAt = MMTree.nodeAt unpack
+nodeAt = Tree.nodeAt unpack
 
 addNode : List Node -> Path -> Node -> List Node
-addNode = MMTree.addNode pack unpack
+addNode = Tree.addNode pack unpack
 
 moveNode : List Node -> Path -> Path -> List Node
-moveNode = MMTree.moveNode pack unpack
+moveNode = Tree.moveNode pack unpack
 
 isValidInsertionPath : List Node -> Path -> Bool
-isValidInsertionPath = MMTree.isValidInsertionPath unpack
+isValidInsertionPath = Tree.isValidInsertionPath unpack
 
 -- Helpers
 
@@ -90,7 +91,7 @@ nodeIdOrNull maybeNode =
 
 suite : Test
 suite =
-  describe "MMTree module"
+  describe "Tree module"
     [ describe "findNode"
         [ test "found at index 0" <|
             \_ ->
@@ -230,7 +231,7 @@ suite =
                     nodes = addNode
                               smallTreeNodes
                               (InSubtree 0 (InSubtree 0 (AtIndex 0)))
-                              { id = "7", children = Tree [] }
+                              { id = "7", children = Children [] }
                 in
                 Expect.equal
                   (nodesToString nodes)
@@ -241,7 +242,7 @@ suite =
                     nodes = addNode
                               smallTreeNodes
                               (InSubtree 0 (AtIndex 0))
-                              { id = "7", children = Tree [] }
+                              { id = "7", children = Children [] }
                 in
                 Expect.equal
                   (nodesToString nodes)
@@ -252,7 +253,7 @@ suite =
                     nodes = addNode
                               smallTreeNodes
                               (InSubtree 0 (AtIndex 1))
-                              { id = "7", children = Tree [] }
+                              { id = "7", children = Children [] }
                 in
                 Expect.equal
                   (nodesToString nodes)
@@ -263,7 +264,7 @@ suite =
                     nodes = addNode
                               smallTreeNodes
                               (AtIndex 1)
-                              { id = "7", children = Tree [] }
+                              { id = "7", children = Children [] }
                 in
                 Expect.equal
                   (nodesToString nodes)
@@ -274,7 +275,7 @@ suite =
                     nodes = addNode
                               smallTreeNodes
                               (AtIndex 2)
-                              { id = "7", children = Tree [] }
+                              { id = "7", children = Children [] }
                 in
                 Expect.equal
                   (nodesToString nodes)
@@ -285,7 +286,7 @@ suite =
                     nodes = addNode
                               smallTreeNodes
                               (AtIndex 3)
-                              { id = "7", children = Tree [] }
+                              { id = "7", children = Children [] }
                 in
                 Expect.equal
                   (nodesToString nodes)

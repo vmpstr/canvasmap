@@ -1,16 +1,16 @@
-port module MMDrag exposing (Msg, State, update, subscriptions, getDragNode)
+port module DragControl exposing (Msg, State, update, subscriptions, getDragNode)
 
 import Json.Decode as Decoder exposing (Decoder, succeed, string, float, list)
 import Json.Decode.Pipeline exposing (required, optional)
 
-import MMGeometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
-import MMNode exposing (Children(..), childList, Node)
-import MMTree exposing (Path(..), pathDecoder, isSubpath)
+import Geometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
+import Node exposing (Children(..), childList, Node)
+import Tree exposing (Path(..), pathDecoder, isSubpath)
 
 {- TODOs
  - Maybe beacons should have Path but really should just reference ids
    "before X", "childOf X", etc which means this module doesn't have to
-   depend on MMTree
+   depend on Tree
  -}
 
 -- Exposed
@@ -47,16 +47,16 @@ port portOnDragBy : (Decoder.Value -> msg) -> Sub msg
 port portOnDragStop : (Decoder.Value -> msg) -> Sub msg
 
 updateNode : List Node -> Path -> (Node -> Node) -> List Node
-updateNode = MMTree.updateNode Children childList
+updateNode = Tree.updateNode Children childList
 
 findNode : List Node -> String -> Maybe Path
-findNode = MMTree.findNode childList
+findNode = Tree.findNode childList
 
 moveNode : List Node -> Path -> Path -> List Node
-moveNode = MMTree.moveNode Children childList
+moveNode = Tree.moveNode Children childList
 
 nodeAtById : List Node -> String -> Maybe Node
-nodeAtById = MMTree.nodeAtById childList
+nodeAtById = Tree.nodeAtById childList
 
 toMsgOrNoop : (data -> Msg) -> Result err data -> Msg
 toMsgOrNoop toMsg result =

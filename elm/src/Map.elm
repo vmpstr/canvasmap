@@ -8,16 +8,16 @@ import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field)
 import Json.Decode.Pipeline exposing (required, hardcoded)
 import Maybe.Extra
 
-import MMDrag
-import MMNode exposing (Node, Children(..), childList)
-import MMTree
+import DragControl
+import Node exposing (Node, Children(..), childList)
+import Tree
 import UserAction
 
 {- TODOs
  - I think it's overkill to have Vector and not array
  - Refactor a whole lot of this into separate decoders module
  - Test everything
- - Move path functionality into something like MMTree.Path
+ - Move path functionality into something like Tree.Path
  - maybe write some comments or documentation
  - the beacon finding anchor should depend on where the drag is moving:
     moving down: maybe bot left corner, moving up: maybe top left corner
@@ -27,7 +27,7 @@ import UserAction
  -}
 
 type Msg
-  = MsgDrag MMDrag.Msg
+  = MsgDrag DragControl.Msg
   | MsgOnPointerDown OnPointerDownPortData
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
 
@@ -38,15 +38,15 @@ type alias Model =
 
 type alias State =
   { action : UserAction.Action
-  , drag : Maybe MMDrag.State
+  , drag : Maybe DragControl.State
   }
 
--- MMTree customization
-findNode : List Node -> String -> Maybe MMTree.Path
-findNode = MMTree.findNode childList
+-- Tree customization
+findNode : List Node -> String -> Maybe Tree.Path
+findNode = Tree.findNode childList
 
-updateNode : List Node -> MMTree.Path -> (Node -> Node) -> List Node
-updateNode = MMTree.updateNode Children childList
+updateNode : List Node -> Tree.Path -> (Node -> Node) -> List Node
+updateNode = Tree.updateNode Children childList
 
 -- Helpers
 asPx : Float -> String
@@ -145,7 +145,7 @@ view model =
       childrenViewList = List.indexedMap (viewTopNode drawBeacons model.state.drag) nodes
       dragViewList =
         List.map viewDragNode
-          (MMDrag.getDragNode nodes model.state.drag
+          (DragControl.getDragNode nodes model.state.drag
             |> Maybe.Extra.toList)
   in
   div [ class "map" ] (childrenViewList ++ dragViewList)
@@ -154,7 +154,7 @@ viewDragNode : Node -> Html Msg
 viewDragNode node =
   viewTopNode False Nothing -1 node
 
-getViewParams : Bool -> Maybe MMDrag.State -> Node -> (String, Bool, Bool)
+getViewParams : Bool -> Maybe DragControl.State -> Node -> (String, Bool, Bool)
 getViewParams drawBeacons mdragState node =
   -- returning id, shadow, drawChildBeacons
   case mdragState of
@@ -180,7 +180,7 @@ viewNodeContents node =
         ]
     ]
 
-viewTopNode : Bool -> Maybe MMDrag.State -> Int -> Node -> Html Msg
+viewTopNode : Bool -> Maybe DragControl.State -> Int -> Node -> Html Msg
 viewTopNode drawBeacons mdragState index node =
   let
     path = String.fromInt index
@@ -220,7 +220,7 @@ viewTopNode drawBeacons mdragState index node =
         ]
     ]
 
-viewChildNode : Bool -> String -> Maybe MMDrag.State -> Int -> Node -> List (Html Msg)
+viewChildNode : Bool -> String -> Maybe DragControl.State -> Int -> Node -> List (Html Msg)
 viewChildNode drawBeacons parentPath mdragState index node =
   let
     path = parentPath ++ " " ++ String.fromInt index
@@ -295,7 +295,7 @@ update msg model =
 
     MsgDrag dragMsg ->
       let
-          (dragState, nodes, cmd) = MMDrag.update dragMsg model.state.drag model.nodes
+          (dragState, nodes, cmd) = DragControl.update dragMsg model.state.drag model.nodes
           oldState = model.state
           state = 
             if dragState == Nothing then
@@ -314,7 +314,7 @@ init () = (initModel, Cmd.none)
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-  Sub.map MsgDrag (MMDrag.subscriptions ())
+  Sub.map MsgDrag (DragControl.subscriptions ())
 
 main : Program () Model Msg
 main =

@@ -1,4 +1,4 @@
-module MMTree exposing
+module Tree exposing
   (findNode
   , updateNode
   , nodeAt
