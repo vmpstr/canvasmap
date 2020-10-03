@@ -1,9 +1,13 @@
 module MMGeometry exposing (Vector, Rect, rectDecoder, vectorDecoder)
 
-import Json.Decode as Decoder exposing (Decoder, succeed, float)
-import Json.Decode.Pipeline exposing (required, optional, hardcoded)
+import Json.Decode exposing (Decoder, succeed, float)
+import Json.Decode.Pipeline exposing (required)
 
-type alias Vector = { x : Float, y : Float }
+type alias Vector =
+  { x : Float
+  , y : Float
+  }
+
 type alias Rect =
   { position : Vector
   , size : Vector

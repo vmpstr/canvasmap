@@ -1,9 +1,9 @@
 port module MMDrag exposing (Msg, State, update, subscriptions, getDragNode)
 
 import Json.Decode as Decoder exposing (Decoder, succeed, string, float, list)
-import Json.Decode.Pipeline exposing (required, optional, hardcoded)
+import Json.Decode.Pipeline exposing (required, optional)
 
-import MMGeometry exposing (..)
+import MMGeometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
 import MMNode exposing (Children(..), childList, Node)
 import MMTree exposing (Path(..), pathDecoder, isSubpath)
 
@@ -46,12 +46,16 @@ port portOnDragStart : (Decoder.Value -> msg) -> Sub msg
 port portOnDragBy : (Decoder.Value -> msg) -> Sub msg
 port portOnDragStop : (Decoder.Value -> msg) -> Sub msg
 
+updateNode : List Node -> Path -> (Node -> Node) -> List Node
 updateNode = MMTree.updateNode Children childList
 
+findNode : List Node -> String -> Maybe Path
 findNode = MMTree.findNode childList
 
+moveNode : List Node -> Path -> Path -> List Node
 moveNode = MMTree.moveNode Children childList
 
+nodeAtById : List Node -> String -> Maybe Node
 nodeAtById = MMTree.nodeAtById childList
 
 toMsgOrNoop : (data -> Msg) -> Result err data -> Msg
@@ -148,7 +152,7 @@ setNodePosition nodes path (x, y) =
   updateNode nodes path setPosition
 
 applyDragStartData : Maybe State -> Children -> OnDragData -> (Maybe State, Children)
-applyDragStartData mdragState (Children nodes) { targetId, geometry } =
+applyDragStartData _ (Children nodes) { targetId, geometry } =
   let
     mtargetPath = findNode nodes targetId
   in
@@ -229,11 +233,11 @@ update msg mdragState nodes =
 
 onDragStartSubscription : Sub Msg
 onDragStartSubscription =
-  portOnDragStart (Decoder.decodeValue onDragDecoder >> (toMsgOrNoop MsgOnDragStart))
+  portOnDragStart (Decoder.decodeValue onDragDecoder >> toMsgOrNoop MsgOnDragStart)
 
 onDragBySubscription : Sub Msg
 onDragBySubscription =
-  portOnDragBy (Decoder.decodeValue onDragDecoder >> (toMsgOrNoop MsgOnDragBy))
+  portOnDragBy (Decoder.decodeValue onDragDecoder >> toMsgOrNoop MsgOnDragBy)
 
 onDragStopSubscription : Sub Msg
 onDragStopSubscription =

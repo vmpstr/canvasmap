@@ -42,11 +42,11 @@ type alias State =
   }
 
 -- MMTree customization
+findNode : List Node -> String -> Maybe MMTree.Path
 findNode = MMTree.findNode childList
 
+updateNode : List Node -> MMTree.Path -> (Node -> Node) -> List Node
 updateNode = MMTree.updateNode Children childList
-
-nodeAt = MMTree.nodeAt childList
 
 -- Helpers
 asPx : Float -> String
