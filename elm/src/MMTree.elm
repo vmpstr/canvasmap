@@ -31,11 +31,7 @@ findNode unpack nodes target =
         if node.id == target then
           Just (AtIndex index)
         else
-          case findNode unpack (unpack node.children) target of
-            Just result ->
-              Just (InSubtree index result)
-            Nothing ->
-              Nothing
+          Maybe.map (InSubtree index) (findNode unpack (unpack node.children) target)
   in
   List.head results
 
@@ -145,7 +141,7 @@ isValidPath unpack nodes path =
         tail = List.drop index nodes
       in
       case tail of
-        (first :: rest) ->
+        (first :: _) ->
           isValidPath unpack (unpack first.children) subpath
         _ ->
           False
@@ -163,7 +159,7 @@ isValidInsertionPath unpack nodes path =
         tail = List.drop index nodes
       in
       case tail of
-        (first :: rest) ->
+        (first :: _) ->
           isValidInsertionPath unpack (unpack first.children) subpath
         _ ->
           False
@@ -187,7 +183,7 @@ adjustPathForMove removed path =
         Just (InSubtree (pi - 1) psub)
       else
         Just (InSubtree pi psub)
-    (InSubtree ri rsub, AtIndex pi) ->
+    (InSubtree _ _, AtIndex _) ->
       Just path
     (InSubtree ri rsub, InSubtree pi psub) ->
       if ri == pi then
