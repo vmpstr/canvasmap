@@ -288,14 +288,7 @@ update msg model =
 
     MsgDrag dragMsg ->
       let
-          (dragState, nodes, cmd) = DragControl.update dragMsg model.state.drag model.nodes
-          oldState = model.state
-          state = 
-            if dragState == Nothing then
-              { oldState | action = UserAction.Idle, drag = Nothing }
-            else
-              { oldState | action = UserAction.Dragging, drag = dragState }
-
+          (state, nodes, cmd) = DragControl.update dragMsg (model.state, model.nodes)
       in
       ({ model | state = state, nodes = nodes}, Cmd.map MsgDrag cmd)
 

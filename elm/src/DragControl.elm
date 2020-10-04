@@ -7,6 +7,8 @@ import Geometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
 import Node exposing (Children(..), Node, Id, idDecoder)
 import Tree exposing (Path(..), pathDecoder, isSubpath)
 import TreeSpec
+import UserAction
+import Utilities exposing (maybeJust, maybeCmd)
 
 {- TODOs
  - Maybe beacons should have Path but really should just reference ids
@@ -116,6 +118,16 @@ findClosestBeaconPath ignorePath geometry bias =
   in
   List.head sorted |> Maybe.andThen pathIfClose
 
+
+getBeaconBias : Float -> TargetBias
+getBeaconBias dy =
+  if dy < 0 then
+    BiasUp
+  else if dy > 0 then
+    BiasDown
+  else
+    BiasMid
+
 updateNodePosition : List Node -> Path -> (Float, Float) -> List Node
 updateNodePosition nodes path (dx, dy) =
   let
@@ -129,96 +141,99 @@ updateNodePosition nodes path (dx, dy) =
   in
   TreeSpec.updateNode nodes path addDelta
 
-setNodePosition : List Node -> Path -> (Float, Float) -> List Node
-setNodePosition nodes path (x, y) =
-  let
-      setPosition node =
-        let
-            position = Vector x y
-        in
-        { node | position = position }
-  in
-  TreeSpec.updateNode nodes path setPosition
+type alias AppState a =
+  { a
+  | action : UserAction.Action
+  , drag : Maybe State
+  }
 
-applyDragStartData : Maybe State -> Children -> OnDragData -> (Maybe State, Children)
-applyDragStartData _ (Children nodes) { targetId, geometry } =
-  let
-    mtargetPath = TreeSpec.findNode nodes targetId
-  in
-  case mtargetPath of
+stopDrag : AppState a -> AppState a
+stopDrag appState =
+  { appState | action = UserAction.Idle, drag = Nothing }
+
+setNodePosition : List Node -> Id -> Vector -> (Bool, List Node)
+setNodePosition nodes id position =
+  case TreeSpec.findNode nodes id of
     Just path ->
-      ( Just { dragId = targetId }
-      , Children (setNodePosition nodes path (geometry.target.position.x, geometry.target.position.y))
-      )
-    Nothing ->
-      (Nothing, Children nodes)
-
-applyDragByData : Maybe State -> Children -> OnDragData -> (Maybe State, Children, Bool)
-applyDragByData mdragState (Children nodes) { targetId, dx, dy, geometry } =
-  let
-      stateIfMatchesTarget dragState =
-        if dragState.dragId == targetId then
-          Just dragState
-        else
-          Nothing
-
-      findTargetPath dragState =
-        TreeSpec.findNode nodes dragState.dragId
-  in
-  case mdragState
-        |> Maybe.andThen stateIfMatchesTarget
-        |> Maybe.andThen findTargetPath of
-    Just targetPath ->
       let
-        bias =
-          if dy < 0 then
-            BiasUp
-          else if dy > 0 then
-            BiasDown
-          else
-            BiasMid
-
-        mbeaconPath = findClosestBeaconPath targetPath geometry bias
-        updatedNodes = updateNodePosition nodes targetPath (dx, dy)
-
-        newPath =
-          case mbeaconPath of
-            Just beaconPath ->
-              beaconPath
-            Nothing ->
-              AtIndex 0
+        updater node = { node | position = position }
       in
-      (mdragState, Children (TreeSpec.moveNode updatedNodes targetPath newPath), targetPath /= newPath)
+      (True, TreeSpec.updateNode nodes path updater)
     Nothing ->
-      (Nothing, Children nodes, False)
+      (False, nodes)
+
+applyDragStartData : AppState a -> Children -> OnDragData -> (AppState a, Children, Cmd Msg)
+applyDragStartData
+      ({ action } as appState)
+      ((Children nodes) as children)
+      { targetId, geometry } =
+  if not (UserAction.canPreempt UserAction.Dragging action) then
+    (appState, children, Cmd.none)
+  else
+    let
+      (success, newNodes) = setNodePosition nodes targetId geometry.target.position
+      newAction = if success then UserAction.Dragging else action
+      newDrag = maybeJust success { dragId = targetId }
+    in
+    ({ appState | action = newAction, drag = newDrag }, Children newNodes, Cmd.none)
+
+
+applyDragByData : AppState a -> Children -> OnDragData -> (AppState a, Children, Cmd Msg)
+applyDragByData
+      ({ action, drag } as appState)
+      ((Children nodes) as children)
+      { targetId, dx, dy, geometry } =
+  if action /= UserAction.Dragging then
+    (appState, children, Cmd.none)
+  else
+    let
+        stateIfMatchesTarget state =
+          maybeJust (state.dragId == targetId) state 
+
+        findTargetPath state =
+          TreeSpec.findNode nodes state.dragId
+    in
+    case drag
+          |> Maybe.andThen stateIfMatchesTarget
+          |> Maybe.andThen findTargetPath of
+      Just targetPath ->
+        let
+          updatedNodes = updateNodePosition nodes targetPath (dx, dy)
+
+          bias = getBeaconBias dy
+          mbeaconPath = findClosestBeaconPath targetPath geometry bias
+          newPath = Maybe.withDefault (AtIndex 0) mbeaconPath
+          cmd = maybeCmd (targetPath /= newPath) portRafAlign
+
+          newNodes = TreeSpec.moveNode updatedNodes targetPath newPath
+        in
+        (appState, Children newNodes, cmd)
+      Nothing ->
+        (stopDrag appState, children, Cmd.none)
+
+applyDragStop : AppState a -> Children -> (AppState a, Children, Cmd Msg)
+applyDragStop ({ action } as appState) children =
+  if action == UserAction.Dragging then
+    (stopDrag appState, children, Cmd.none)
+  else
+    (appState, children, Cmd.none)
 
 port portRafAlign : () -> Cmd msg
 
-update : Msg -> Maybe State -> Children -> (Maybe State, Children, Cmd Msg)
-update msg mdragState nodes =
+update : Msg -> (AppState a, Children) -> (AppState a, Children, Cmd Msg)
+update msg (appState, nodes) =
   case msg of
     MsgOnDragStart data ->
-      let
-        (dragState, newNodes) = applyDragStartData mdragState nodes data
-      in
-      (dragState, newNodes, Cmd.none)
+      applyDragStartData appState nodes data
 
     MsgOnDragBy data ->
-      let
-        (dragState, newNodes, rafAlign) = applyDragByData mdragState nodes data
-        cmd =
-          if rafAlign then
-            portRafAlign ()
-          else
-            Cmd.none
-      in
-      (dragState, newNodes, cmd)
+      applyDragByData appState nodes data
 
     MsgOnDragStop ->
-      (Nothing, nodes, Cmd.none)
+      applyDragStop appState nodes
 
     MsgNoop ->
-      (mdragState, nodes, Cmd.none)
+      (appState, nodes, Cmd.none)
 
 onDragStartSubscription : Sub Msg
 onDragStartSubscription =
