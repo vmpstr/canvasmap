@@ -23,6 +23,7 @@ type alias Node =
   , children : Children
   }
 
+attributePrefix : String
 attributePrefix = "n"
 
 childList : Children -> List Node

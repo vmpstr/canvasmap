@@ -176,7 +176,7 @@ viewNodeContents node =
         [ class "contents_container" ]
         [ div
             [ class "label" ]
-            [ text ("hello " ++ (idToAttribute node.id)) ]
+            [ text ("hello " ++ idToAttribute node.id) ]
         ]
     ]
 
