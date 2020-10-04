@@ -6,6 +6,7 @@ import Json.Decode.Pipeline exposing (required, optional)
 import Geometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
 import Node exposing (Children(..), childList, Node, Id, idDecoder)
 import Tree exposing (Path(..), pathDecoder, isSubpath)
+import TreeSpec
 
 {- TODOs
  - Maybe beacons should have Path but really should just reference ids
@@ -45,18 +46,6 @@ type alias Beacon =
 port portOnDragStart : (Decoder.Value -> msg) -> Sub msg
 port portOnDragBy : (Decoder.Value -> msg) -> Sub msg
 port portOnDragStop : (Decoder.Value -> msg) -> Sub msg
-
-updateNode : List Node -> Path -> (Node -> Node) -> List Node
-updateNode = Tree.updateNode Children childList
-
-findNode : List Node -> Id -> Maybe Path
-findNode = Tree.findNode childList
-
-moveNode : List Node -> Path -> Path -> List Node
-moveNode = Tree.moveNode Children childList
-
-nodeAtById : List Node -> Id -> Maybe Node
-nodeAtById = Tree.nodeAtById childList
 
 toMsgOrNoop : (data -> Msg) -> Result err data -> Msg
 toMsgOrNoop toMsg result =
@@ -138,7 +127,7 @@ updateNodePosition nodes path (dx, dy) =
         in
         { node | position = position }
   in
-  updateNode nodes path addDelta
+  TreeSpec.updateNode nodes path addDelta
 
 setNodePosition : List Node -> Path -> (Float, Float) -> List Node
 setNodePosition nodes path (x, y) =
@@ -149,12 +138,12 @@ setNodePosition nodes path (x, y) =
         in
         { node | position = position }
   in
-  updateNode nodes path setPosition
+  TreeSpec.updateNode nodes path setPosition
 
 applyDragStartData : Maybe State -> Children -> OnDragData -> (Maybe State, Children)
 applyDragStartData _ (Children nodes) { targetId, geometry } =
   let
-    mtargetPath = findNode nodes targetId
+    mtargetPath = TreeSpec.findNode nodes targetId
   in
   case mtargetPath of
     Just path ->
@@ -174,7 +163,7 @@ applyDragByData mdragState (Children nodes) { targetId, dx, dy, geometry } =
           Nothing
 
       findTargetPath dragState =
-        findNode nodes dragState.dragId
+        TreeSpec.findNode nodes dragState.dragId
   in
   case mdragState
         |> Maybe.andThen stateIfMatchesTarget
@@ -199,7 +188,7 @@ applyDragByData mdragState (Children nodes) { targetId, dx, dy, geometry } =
             Nothing ->
               AtIndex 0
       in
-      (mdragState, Children (moveNode updatedNodes targetPath newPath), targetPath /= newPath)
+      (mdragState, Children (TreeSpec.moveNode updatedNodes targetPath newPath), targetPath /= newPath)
     Nothing ->
       (Nothing, Children nodes, False)
 
@@ -273,5 +262,5 @@ subscriptions () =
 getDragNode : List Node -> Maybe State -> Maybe Node
 getDragNode nodes mdragState =
   mdragState |> Maybe.andThen
-    (\state -> nodeAtById nodes state.dragId)
+    (\state -> TreeSpec.nodeAtById nodes state.dragId)
 

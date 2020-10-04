@@ -12,6 +12,7 @@ import DragControl
 import Node exposing (Node, Children(..), childList, idToAttribute, idToShadowAttribute, Id)
 import Tree
 import UserAction
+import TreeSpec
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -40,13 +41,6 @@ type alias State =
   { action : UserAction.Action
   , drag : Maybe DragControl.State
   }
-
--- Tree customization
-findNode : List Node -> Id -> Maybe Tree.Path
-findNode = Tree.findNode childList
-
-updateNode : List Node -> Tree.Path -> (Node -> Node) -> List Node
-updateNode = Tree.updateNode Children childList
 
 -- Helpers
 asPx : Float -> String
@@ -277,12 +271,12 @@ viewBeacon path =
 applyChildEdgeHeightChange : Children -> OnChildEdgeHeightChangedData -> Children
 applyChildEdgeHeightChange (Children nodes) { targetId, height } =
   let
-      mpath = findNode nodes targetId
+      mpath = TreeSpec.findNode nodes targetId
       updater node = { node | childEdgeHeight = height }
   in
   case mpath of
     Just path ->
-      Children (updateNode nodes path updater)
+      Children (TreeSpec.updateNode nodes path updater)
     Nothing ->
       Children nodes
 
