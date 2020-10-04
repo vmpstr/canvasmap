@@ -127,7 +127,7 @@ updateNodePosition nodes path (dx, dy) =
       addDelta node =
         let
             position =
-              Vector (node.position.x + dx) (node.position.x + dy)
+              Vector (node.position.x + dx) (node.position.y + dy)
         in
         { node | position = position }
   in
