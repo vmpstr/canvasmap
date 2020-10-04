@@ -9,7 +9,7 @@ import Json.Decode.Pipeline exposing (required, hardcoded)
 import Maybe.Extra
 
 import DragControl
-import Node exposing (Node, Children(..), childList)
+import Node exposing (Node, Children(..), childList, idToAttribute, idToShadowAttribute, Id)
 import Tree
 import UserAction
 
@@ -42,7 +42,7 @@ type alias State =
   }
 
 -- Tree customization
-findNode : List Node -> String -> Maybe Tree.Path
+findNode : List Node -> Id -> Maybe Tree.Path
 findNode = Tree.findNode childList
 
 updateNode : List Node -> Tree.Path -> (Node -> Node) -> List Node
@@ -61,7 +61,7 @@ type alias OnPointerDownPortData =
   }
 
 type alias OnChildEdgeHeightChangedData =
-  { targetId : String
+  { targetId : Id
   , height: Float
   }
 
@@ -79,16 +79,16 @@ andStopPropagation msg =
   }
 
 -- Functionality
-onPointerDownDecoder : String -> Decoder MsgWithEventOptions
+onPointerDownDecoder : Id -> Decoder MsgWithEventOptions
 onPointerDownDecoder targetId =
   Decoder.map (MsgOnPointerDown >> andStopPropagation)
     (succeed OnPointerDownPortData
-      |> hardcoded targetId
+      |> hardcoded (idToAttribute targetId)
       |> required "pointerType" string
       |> required "clientX" float
       |> required "clientY" float)
 
-onChildEdgeHeightChangedDecoder : String -> Decoder Msg
+onChildEdgeHeightChangedDecoder : Id -> Decoder Msg
 onChildEdgeHeightChangedDecoder targetId =
   Decoder.map MsgOnChildEdgeHeightChanged
     (succeed OnChildEdgeHeightChangedData
@@ -100,15 +100,15 @@ port portOnPointerDown : OnPointerDownPortData -> Cmd msg
 initModel : Model
 initModel =
   { nodes =
-      Children [ { id = "e1"
+      Children [ { id = 1
                  , position = { x = 10, y = 10 }
                  , size = { x = 200, y = 50 }
                  , childEdgeHeight = 0
-                 , children = Children [ { id = "e3"
+                 , children = Children [ { id = 3
                                          , position = { x = 0, y = 0 }
                                          , size = { x = 200, y = 50 }
                                          , childEdgeHeight = 0
-                                         , children = Children [ { id = "e4"
+                                         , children = Children [ { id = 4
                                                                  , position = { x = 0, y = 0 }
                                                                  , size = { x = 200, y = 50 }
                                                                  , childEdgeHeight = 0
@@ -116,7 +116,7 @@ initModel =
                                                                  }
                                                                ]
                                          },
-                                         { id = "e5"
+                                         { id = 5
                                          , position = { x = 0, y = 0 }
                                          , size = { x = 200, y = 50 }
                                          , childEdgeHeight = 0
@@ -124,7 +124,7 @@ initModel =
                                          }
                                        ]
                  }
-               , { id = "e2"
+               , { id = 2
                  , position = { x = 300, y = 20 }
                  , size = { x = 200, y = 50 }
                  , childEdgeHeight = 0
@@ -160,11 +160,11 @@ getViewParams drawBeacons mdragState node =
   case mdragState of
     Just dragState ->
       if dragState.dragId == node.id then
-        ("shadow-" ++ node.id, True, False)
+        (idToShadowAttribute node.id, True, False)
       else
-        (node.id, False, drawBeacons)
+        (idToAttribute node.id, False, drawBeacons)
     Nothing ->
-      (node.id, False, drawBeacons)
+      (idToAttribute node.id, False, drawBeacons)
 
 viewNodeContents : Node -> Html Msg
 viewNodeContents node =
@@ -176,7 +176,7 @@ viewNodeContents node =
         [ class "contents_container" ]
         [ div
             [ class "label" ]
-            [ text ("hello " ++ node.id) ]
+            [ text ("hello " ++ (idToAttribute node.id)) ]
         ]
     ]
 

@@ -1,10 +1,10 @@
 port module DragControl exposing (Msg, State, update, subscriptions, getDragNode)
 
-import Json.Decode as Decoder exposing (Decoder, succeed, string, float, list)
+import Json.Decode as Decoder exposing (Decoder, succeed, float, list)
 import Json.Decode.Pipeline exposing (required, optional)
 
 import Geometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
-import Node exposing (Children(..), childList, Node)
+import Node exposing (Children(..), childList, Node, Id, idDecoder)
 import Tree exposing (Path(..), pathDecoder, isSubpath)
 
 {- TODOs
@@ -21,12 +21,12 @@ type Msg
   | MsgOnDragStop
 
 type alias State =
-  { dragId : String
+  { dragId : Id
   }
 
 -- Internal
 type alias OnDragData =
-  { targetId : String
+  { targetId : Id
   , dx : Float
   , dy : Float
   , geometry : Geometry
@@ -49,13 +49,13 @@ port portOnDragStop : (Decoder.Value -> msg) -> Sub msg
 updateNode : List Node -> Path -> (Node -> Node) -> List Node
 updateNode = Tree.updateNode Children childList
 
-findNode : List Node -> String -> Maybe Path
+findNode : List Node -> Id -> Maybe Path
 findNode = Tree.findNode childList
 
 moveNode : List Node -> Path -> Path -> List Node
 moveNode = Tree.moveNode Children childList
 
-nodeAtById : List Node -> String -> Maybe Node
+nodeAtById : List Node -> Id -> Maybe Node
 nodeAtById = Tree.nodeAtById childList
 
 toMsgOrNoop : (data -> Msg) -> Result err data -> Msg
@@ -258,7 +258,7 @@ geometryDecoder =
 onDragDecoder : Decoder OnDragData
 onDragDecoder =
   succeed OnDragData
-    |> required "targetId" string
+    |> required "targetId" idDecoder
     |> optional "dx" float 0
     |> optional "dy" float 0
     |> required "geometry" geometryDecoder
