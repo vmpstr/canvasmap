@@ -269,11 +269,8 @@ viewBeacon path =
 
 applyChildEdgeHeightChange : Children -> OnChildEdgeHeightChangedData -> Children
 applyChildEdgeHeightChange (Children nodes) { targetId, height } =
-  let
-      mpath = TreeSpec.findNode nodes targetId
-      updater node = { node | childEdgeHeight = height }
-  in
-  case mpath of
+  let updater node = { node | childEdgeHeight = height } in
+  case TreeSpec.findNode nodes targetId of
     Just path ->
       Children (TreeSpec.updateNode nodes path updater)
     Nothing ->

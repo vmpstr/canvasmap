@@ -95,10 +95,7 @@ findClosestBeaconPath ignorePath geometry bias =
     ty = geometry.target.position.y + ratio * geometry.target.size.y
 
     computeDistance beacon =
-      let
-          bx = beacon.location.x
-          by = beacon.location.y
-      in
+      let (bx, by) = (beacon.location.x, beacon.location.y) in
       sqrt ((bx - tx) * (bx - tx) + (by - ty) * (by - ty))
 
     toDistanceBeacon beacon =
@@ -111,13 +108,9 @@ findClosestBeaconPath ignorePath geometry bias =
     sorted = List.sortBy .distance distanceBeacons
 
     pathIfClose distanceBeacon =
-      if distanceBeacon.distance <= 200 then
-        Just distanceBeacon.path
-      else
-        Nothing
+      maybeJust (distanceBeacon.distance <= 200) distanceBeacon.path
   in
   List.head sorted |> Maybe.andThen pathIfClose
-
 
 getBeaconBias : Float -> TargetBias
 getBeaconBias dy =
@@ -133,9 +126,8 @@ updateNodePosition nodes path (dx, dy) =
   let
       addDelta node =
         let
-            x = node.position.x + dx
-            y = node.position.y + dy
-            position = Vector x y
+            position =
+              Vector (node.position.x + dx) (node.position.x + dy)
         in
         { node | position = position }
   in
@@ -155,9 +147,7 @@ setNodePosition : List Node -> Id -> Vector -> (Bool, List Node)
 setNodePosition nodes id position =
   case TreeSpec.findNode nodes id of
     Just path ->
-      let
-        updater node = { node | position = position }
-      in
+      let updater node = { node | position = position } in
       (True, TreeSpec.updateNode nodes path updater)
     Nothing ->
       (False, nodes)
@@ -225,13 +215,10 @@ update msg (appState, nodes) =
   case msg of
     MsgOnDragStart data ->
       applyDragStartData appState nodes data
-
     MsgOnDragBy data ->
       applyDragByData appState nodes data
-
     MsgOnDragStop ->
       applyDragStop appState nodes
-
     MsgNoop ->
       (appState, nodes, Cmd.none)
 
@@ -278,4 +265,3 @@ getDragNode : List Node -> Maybe State -> Maybe Node
 getDragNode nodes mdragState =
   mdragState |> Maybe.andThen
     (\state -> TreeSpec.nodeAtById nodes state.dragId)
-
