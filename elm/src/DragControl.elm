@@ -4,7 +4,7 @@ import Json.Decode as Decoder exposing (Decoder, succeed, float, list)
 import Json.Decode.Pipeline exposing (required, optional)
 
 import Geometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
-import Node exposing (Children(..), childList, Node, Id, idDecoder)
+import Node exposing (Children(..), Node, Id, idDecoder)
 import Tree exposing (Path(..), pathDecoder, isSubpath)
 import TreeSpec
 

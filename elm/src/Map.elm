@@ -10,7 +10,6 @@ import Maybe.Extra
 
 import DragControl
 import Node exposing (Node, Children(..), childList, idToAttribute, idToShadowAttribute, Id)
-import Tree
 import UserAction
 import TreeSpec
 
