@@ -1,4 +1,4 @@
-port module DragControl exposing (Msg, State, update, subscriptions, getDragNode)
+port module DragControl exposing (Msg, State, update, subscriptions, getDragNode, adjustView)
 
 import Json.Decode as Decoder exposing (Decoder, succeed, float, list)
 import Json.Decode.Pipeline exposing (required, optional)
@@ -8,7 +8,9 @@ import Node exposing (Children(..), Node, Id, idDecoder)
 import Tree exposing (Path(..), pathDecoder, isSubpath)
 import TreeSpec
 import UserAction
-import Utilities exposing (maybeJust, maybeCmd)
+import Utilities exposing (maybeJust, maybeCmd, toMsgOrNoop)
+import MapView exposing (ViewState)
+
 
 {- TODOs
  - Maybe beacons should have Path but really should just reference ids
@@ -27,7 +29,45 @@ type alias State =
   { dragId : Id
   }
 
+update : Msg -> (AppState a, Children) -> (AppState a, Children, Cmd Msg)
+update msg (appState, nodes) =
+  case msg of
+    MsgOnDragStart data ->
+      applyDragStartData appState nodes data
+    MsgOnDragBy data ->
+      applyDragByData appState nodes data
+    MsgOnDragStop ->
+      applyDragStop appState nodes
+    MsgNoop ->
+      (appState, nodes, Cmd.none)
+
+subscriptions: () -> Sub Msg
+subscriptions () =
+  [ onDragStartSubscription
+  , onDragBySubscription
+  , onDragStopSubscription
+  ] |> Sub.batch
+
+getDragNode : AppState a -> List Node -> Maybe Node
+getDragNode { drag } nodes =
+  drag |> Maybe.andThen
+    (\state -> TreeSpec.nodeAtById nodes state.dragId)
+
+adjustView : AppState a -> ViewState -> ViewState
+adjustView { action, drag } view =
+  let
+    viewBeacons = action == UserAction.Dragging
+    dragId = Maybe.map .dragId drag
+  in
+  { view | viewBeacons = viewBeacons, dragId = dragId }
+
 -- Internal
+type alias AppState a =
+  { a
+  | action : UserAction.Action
+  , drag : Maybe State
+  }
+
 type alias OnDragData =
   { targetId : Id
   , dx : Float
@@ -45,17 +85,11 @@ type alias Beacon =
   , location : Vector
   }
 
+-- Ports
 port portOnDragStart : (Decoder.Value -> msg) -> Sub msg
 port portOnDragBy : (Decoder.Value -> msg) -> Sub msg
 port portOnDragStop : (Decoder.Value -> msg) -> Sub msg
-
-toMsgOrNoop : (data -> Msg) -> Result err data -> Msg
-toMsgOrNoop toMsg result =
-  case result of
-      Ok data ->
-        toMsg data
-      Err _ ->
-        MsgNoop
+port portRafAlign : () -> Cmd msg
 
 type TargetBias
   = BiasMid
@@ -133,12 +167,6 @@ updateNodePosition nodes path (dx, dy) =
   in
   TreeSpec.updateNode nodes path addDelta
 
-type alias AppState a =
-  { a
-  | action : UserAction.Action
-  , drag : Maybe State
-  }
-
 stopDrag : AppState a -> AppState a
 stopDrag appState =
   { appState | action = UserAction.Idle, drag = Nothing }
@@ -208,27 +236,15 @@ applyDragStop ({ action } as appState) children =
   else
     (appState, children, Cmd.none)
 
-port portRafAlign : () -> Cmd msg
-
-update : Msg -> (AppState a, Children) -> (AppState a, Children, Cmd Msg)
-update msg (appState, nodes) =
-  case msg of
-    MsgOnDragStart data ->
-      applyDragStartData appState nodes data
-    MsgOnDragBy data ->
-      applyDragByData appState nodes data
-    MsgOnDragStop ->
-      applyDragStop appState nodes
-    MsgNoop ->
-      (appState, nodes, Cmd.none)
-
 onDragStartSubscription : Sub Msg
 onDragStartSubscription =
-  portOnDragStart (Decoder.decodeValue onDragDecoder >> toMsgOrNoop MsgOnDragStart)
+  portOnDragStart
+    (Decoder.decodeValue onDragDecoder >> toMsgOrNoop MsgOnDragStart MsgNoop)
 
 onDragBySubscription : Sub Msg
 onDragBySubscription =
-  portOnDragBy (Decoder.decodeValue onDragDecoder >> toMsgOrNoop MsgOnDragBy)
+  portOnDragBy
+    (Decoder.decodeValue onDragDecoder >> toMsgOrNoop MsgOnDragBy MsgNoop)
 
 onDragStopSubscription : Sub Msg
 onDragStopSubscription =
@@ -254,14 +270,3 @@ onDragDecoder =
     |> optional "dy" float 0
     |> required "geometry" geometryDecoder
 
-subscriptions: () -> Sub Msg
-subscriptions () =
-  [ onDragStartSubscription
-  , onDragBySubscription
-  , onDragStopSubscription
-  ] |> Sub.batch
-
-getDragNode : List Node -> Maybe State -> Maybe Node
-getDragNode nodes mdragState =
-  mdragState |> Maybe.andThen
-    (\state -> TreeSpec.nodeAtById nodes state.dragId)

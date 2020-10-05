@@ -12,6 +12,8 @@ import DragControl
 import Node exposing (Node, Children(..), childList, idToAttribute, idToShadowAttribute, Id)
 import UserAction
 import TreeSpec
+import MapView exposing (ViewState)
+import Utilities
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -134,30 +136,26 @@ view : Model -> Html Msg
 view model =
   let
       nodes = childList model.nodes
-      drawBeacons = model.state.action == UserAction.Dragging
-      childrenViewList = List.indexedMap (viewTopNode drawBeacons model.state.drag) nodes
+      viewState = getViewState model.state
+      childrenViewList = List.indexedMap (viewTopNode viewState) nodes
       dragViewList =
         List.map viewDragNode
-          (DragControl.getDragNode nodes model.state.drag
+          (DragControl.getDragNode model.state nodes
             |> Maybe.Extra.toList)
   in
   div [ class "map" ] (childrenViewList ++ dragViewList)
 
 viewDragNode : Node -> Html Msg
 viewDragNode node =
-  viewTopNode False Nothing -1 node
+  viewTopNode { dragId = Nothing, viewBeacons = False } -1 node
 
-getViewParams : Bool -> Maybe DragControl.State -> Node -> (String, Bool, Bool)
-getViewParams drawBeacons mdragState node =
+getViewParams : Bool -> Maybe Id -> Node -> (String, Bool, Bool)
+getViewParams drawBeacons mdragId node =
   -- returning id, shadow, drawChildBeacons
-  case mdragState of
-    Just dragState ->
-      if dragState.dragId == node.id then
-        (idToShadowAttribute node.id, True, False)
-      else
-        (idToAttribute node.id, False, drawBeacons)
-    Nothing ->
-      (idToAttribute node.id, False, drawBeacons)
+  if mdragId == Just node.id then
+    (idToShadowAttribute node.id, True, False)
+  else
+    (idToAttribute node.id, False, drawBeacons)
 
 viewNodeContents : Node -> Html Msg
 viewNodeContents node =
@@ -173,11 +171,11 @@ viewNodeContents node =
         ]
     ]
 
-viewTopNode : Bool -> Maybe DragControl.State -> Int -> Node -> Html Msg
-viewTopNode drawBeacons mdragState index node =
+viewTopNode : ViewState -> Int -> Node -> Html Msg
+viewTopNode ({ viewBeacons, dragId } as viewState) index node =
   let
     path = String.fromInt index
-    (nodeId, shadow, drawChildBeacons) = getViewParams drawBeacons mdragState node
+    (nodeId, shadow, drawChildBeacons) = getViewParams viewBeacons dragId node
     onTop = index < 0
 
     tailBeacons =
@@ -188,7 +186,7 @@ viewTopNode drawBeacons mdragState index node =
 
     childNodes =
       childList node.children
-        |> List.indexedMap (viewChildNode drawChildBeacons path mdragState)
+        |> List.indexedMap (viewChildNode drawChildBeacons path dragId)
         |> List.concat
   in
   div
@@ -213,11 +211,11 @@ viewTopNode drawBeacons mdragState index node =
         ]
     ]
 
-viewChildNode : Bool -> String -> Maybe DragControl.State -> Int -> Node -> List (Html Msg)
-viewChildNode drawBeacons parentPath mdragState index node =
+viewChildNode : Bool -> String -> Maybe Id -> Int -> Node -> List (Html Msg)
+viewChildNode drawBeacons parentPath mdragId index node =
   let
     path = parentPath ++ " " ++ String.fromInt index
-    (nodeId, shadow, drawChildBeacons) = getViewParams drawBeacons mdragState node
+    (nodeId, shadow, drawChildBeacons) = getViewParams drawBeacons mdragId node
 
     headBeacons =
       if drawBeacons then
@@ -233,7 +231,7 @@ viewChildNode drawBeacons parentPath mdragState index node =
 
     childNodes =
        childList node.children
-         |> List.indexedMap (viewChildNode drawChildBeacons path mdragState)
+         |> List.indexedMap (viewChildNode drawChildBeacons path mdragId)
          |> List.concat
   in
   headBeacons ++
@@ -298,6 +296,15 @@ init () = (initModel, Cmd.none)
 subscriptions : Model -> Sub Msg
 subscriptions _ =
   Sub.map MsgDrag (DragControl.subscriptions ())
+
+viewAdjusters : State -> List (ViewState -> ViewState)
+viewAdjusters state =
+  [ DragControl.adjustView state
+  ]
+
+getViewState : State -> ViewState
+getViewState state =
+  Utilities.listApply MapView.defaultViewState (viewAdjusters state)
 
 main : Program () Model Msg
 main =
