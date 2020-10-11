@@ -1,4 +1,10 @@
-module Utilities exposing (maybeJust, maybeCmd, toMsgOrNoop, listApply)
+module Utilities exposing
+  ( maybeJust
+  , maybeCmd
+  , toMsgOrNoop
+  , listApply
+  , maybeArray
+  )
 
 maybeJust : Bool -> a -> Maybe a
 maybeJust condition data =
@@ -29,3 +35,10 @@ listApply start list =
       listApply (first start) rest
     [] ->
       start
+
+maybeArray : Bool -> (() -> a) -> List a
+maybeArray condition generator =
+  if condition then
+    [generator ()]
+  else
+    []

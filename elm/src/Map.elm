@@ -136,7 +136,7 @@ view : Model -> Html Msg
 view model =
   let
       nodes = childList model.nodes
-      viewState = getViewState model.state
+      viewState = getInitialViewState model.state
       childrenViewList = List.indexedMap (viewTopNode viewState) nodes
       dragViewList =
         List.map viewDragNode
@@ -147,15 +147,7 @@ view model =
 
 viewDragNode : Node -> Html Msg
 viewDragNode node =
-  viewTopNode { dragId = Nothing, viewBeacons = False } -1 node
-
-getViewParams : Bool -> Maybe Id -> Node -> (String, Bool, Bool)
-getViewParams drawBeacons mdragId node =
-  -- returning id, shadow, drawChildBeacons
-  if mdragId == Just node.id then
-    (idToShadowAttribute node.id, True, False)
-  else
-    (idToAttribute node.id, False, drawBeacons)
+  viewTopNode DragControl.dragNodeViewState -1 node
 
 viewNodeContents : Node -> Html Msg
 viewNodeContents node =
@@ -172,27 +164,23 @@ viewNodeContents node =
     ]
 
 viewTopNode : ViewState -> Int -> Node -> Html Msg
-viewTopNode ({ viewBeacons, dragId } as viewState) index node =
+viewTopNode parentState index node =
   let
-    path = String.fromInt index
-    (nodeId, shadow, drawChildBeacons) = getViewParams viewBeacons dragId node
+    localState = adjustViewStateForNode index node parentState
     onTop = index < 0
-
     tailBeacons =
-      if drawChildBeacons then
-        [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))]
-      else
-        []
-
+      Utilities.maybeArray
+        localState.viewBeacons
+        (\() -> viewBeacon localState.tailBeaconPath)
     childNodes =
       childList node.children
-        |> List.indexedMap (viewChildNode drawChildBeacons path dragId)
+        |> List.indexedMap (viewChildNode localState)
         |> List.concat
   in
   div
-    [ id nodeId
+    [ id localState.htmlNodeId
       , class "top_child"
-      , classList [("shadow", shadow), ("on_top", onTop)]
+      , classList [("shadow", localState.shadow), ("on_top", onTop)]
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
     ]
@@ -211,34 +199,28 @@ viewTopNode ({ viewBeacons, dragId } as viewState) index node =
         ]
     ]
 
-viewChildNode : Bool -> String -> Maybe Id -> Int -> Node -> List (Html Msg)
-viewChildNode drawBeacons parentPath mdragId index node =
+viewChildNode : ViewState -> Int -> Node -> List (Html Msg)
+viewChildNode parentState index node =
   let
-    path = parentPath ++ " " ++ String.fromInt index
-    (nodeId, shadow, drawChildBeacons) = getViewParams drawBeacons mdragId node
-
+    localState = adjustViewStateForNode index node parentState
     headBeacons =
-      if drawBeacons then
-        [viewBeacon path]
-      else
-        []
-
+      Utilities.maybeArray
+        parentState.viewBeacons
+        (\() -> viewBeacon localState.headBeaconPath)
     tailBeacons =
-      if drawChildBeacons then
-        [viewBeacon (path ++ " " ++ (List.length (childList node.children) |> String.fromInt))]
-      else
-        []
-
+      Utilities.maybeArray
+        localState.viewBeacons
+        (\() -> viewBeacon localState.tailBeaconPath)
     childNodes =
        childList node.children
-         |> List.indexedMap (viewChildNode drawChildBeacons path mdragId)
+         |> List.indexedMap (viewChildNode localState)
          |> List.concat
   in
   headBeacons ++
   [ div []
       [ div
-          [ id nodeId
-          , classList [("child", True), ("shadow", shadow)]
+          [ id localState.htmlNodeId
+          , classList [("child", True), ("shadow", localState.shadow)]
           ]
           [ viewNodeContents node
           , div [ class "parent_edge" ] []
@@ -297,14 +279,29 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
   Sub.map MsgDrag (DragControl.subscriptions ())
 
-viewAdjusters : State -> List (ViewState -> ViewState)
-viewAdjusters state =
-  [ DragControl.adjustView state
+initialViewStateAdjusters : State -> List (ViewState -> ViewState)
+initialViewStateAdjusters state =
+  [ DragControl.adjustInitialViewState state
   ]
 
-getViewState : State -> ViewState
-getViewState state =
-  Utilities.listApply MapView.defaultViewState (viewAdjusters state)
+viewStateAdjustersForNode : Int -> Node -> List (ViewState -> ViewState)
+viewStateAdjustersForNode index node =
+  [ DragControl.adjustViewStateForNode index node
+  ]
+
+getInitialViewState : State -> ViewState
+getInitialViewState state =
+  Utilities.listApply
+    MapView.defaultViewState
+    (initialViewStateAdjusters state)
+
+adjustViewStateForNode : Int -> Node -> ViewState -> ViewState
+adjustViewStateForNode index node viewState =
+  Utilities.listApply
+    viewState
+    (viewStateAdjustersForNode index node)
+
+
 
 main : Program () Model Msg
 main =

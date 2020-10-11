@@ -1,10 +1,19 @@
-port module DragControl exposing (Msg, State, update, subscriptions, getDragNode, adjustView)
+port module DragControl exposing
+  ( Msg
+  , State
+  , update
+  , subscriptions
+  , getDragNode
+  , adjustInitialViewState
+  , adjustViewStateForNode
+  , dragNodeViewState
+  )
 
 import Json.Decode as Decoder exposing (Decoder, succeed, float, list)
 import Json.Decode.Pipeline exposing (required, optional)
 
 import Geometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
-import Node exposing (Children(..), Node, Id, idDecoder)
+import Node exposing (Children(..), Node, Id, idDecoder, idToShadowAttribute, idToAttribute, childList)
 import Tree exposing (Path(..), pathDecoder, isSubpath)
 import TreeSpec
 import UserAction
@@ -53,13 +62,40 @@ getDragNode { drag } nodes =
   drag |> Maybe.andThen
     (\state -> TreeSpec.nodeAtById nodes state.dragId)
 
-adjustView : AppState a -> ViewState -> ViewState
-adjustView { action, drag } view =
+dragNodeViewState : ViewState
+dragNodeViewState = MapView.defaultViewState
+
+adjustInitialViewState : AppState a -> ViewState -> ViewState
+adjustInitialViewState { action, drag } view =
   let
     viewBeacons = action == UserAction.Dragging
     dragId = Maybe.map .dragId drag
   in
-  { view | viewBeacons = viewBeacons, dragId = dragId }
+  { view
+  | viewBeacons = viewBeacons
+  , dragId = dragId
+  }
+
+adjustViewStateForNode : Int -> Node -> ViewState -> ViewState
+adjustViewStateForNode index node state =
+  let
+    viewBeacons = state.viewBeacons && state.dragId /= Just node.id
+    headBeaconPath = String.trimLeft (state.headBeaconPath ++ " " ++ String.fromInt index)
+    tailBeaconPath = headBeaconPath ++ " " ++ String.fromInt (List.length (childList node.children))
+    shadow = state.dragId == Just node.id
+    htmlNodeId =
+      if shadow then
+        idToShadowAttribute node.id
+      else
+        idToAttribute node.id
+  in
+  { state
+  | viewBeacons = viewBeacons
+  , headBeaconPath = headBeaconPath
+  , tailBeaconPath = tailBeaconPath
+  , shadow = shadow
+  , htmlNodeId = htmlNodeId
+  }
 
 -- Internal
 type alias AppState a =
