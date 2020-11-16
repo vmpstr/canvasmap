@@ -14,6 +14,7 @@ import UserAction
 import TreeSpec
 import MapView exposing (ViewState)
 import Utilities
+import Html.Events exposing (onDoubleClick)
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -32,6 +33,7 @@ type Msg
   = MsgDrag DragControl.Msg
   | MsgOnPointerDown OnPointerDownPortData
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
+  | MsgEditLabel Id
 
 type alias Model =
   { nodes : Children
@@ -91,6 +93,7 @@ onChildEdgeHeightChangedDecoder targetId =
       |> required "detail" (field "height" float))
 
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
+port portEditLabel : Id -> Cmd msg
 
 initModel : Model
 initModel =
@@ -157,16 +160,20 @@ viewNodeContents node =
     ]
     [ div
         [ class "contents_container" ]
-        [ div
-            [ class "label" ]
-            [ text ("hello " ++ idToAttribute node.id) ]
+        [ Html.node "node-label"
+            [ onDoubleClick  (MsgEditLabel node.id)
+            ,  attribute "label" ("hello " ++ idToAttribute node.id)
+            ]
+            []
         ]
     ]
 
 viewTopNode : ViewState -> Int -> Node -> Html Msg
 viewTopNode parentState index node =
   let
+    localState : ViewState
     localState = adjustViewStateForNode index node parentState
+
     onTop = index < 0
     tailBeacons =
       Utilities.maybeArray
@@ -272,8 +279,18 @@ update msg model =
     MsgOnChildEdgeHeightChanged data ->
       ({ model | nodes = applyChildEdgeHeightChange model.nodes data }, Cmd.none)
 
+    MsgEditLabel nodeId ->
+      let
+          state = applyEditLabelState model.state
+      in
+      ({ model | state = state }, portEditLabel nodeId)
+
 init : () -> (Model, Cmd Msg)
 init () = (initModel, Cmd.none)
+
+applyEditLabelState : State -> State
+applyEditLabelState state =
+  { state | action = UserAction.Editing, drag = Nothing }
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
