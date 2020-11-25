@@ -18,4 +18,15 @@ window.customElements.define('node-label', class extends HTMLElement {
   updateLabel() {
     this.label_.innerText = this.getAttribute("label");
   }
+
+  setLabel(label) {
+    const e = new CustomEvent(
+      "labelchanged",
+      {
+        bubbles: false,
+        detail: { label: label }
+      });
+    console.log(e);
+    this.dispatchEvent(e);
+  }
 });

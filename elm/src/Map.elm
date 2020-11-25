@@ -15,6 +15,7 @@ import TreeSpec
 import MapView exposing (ViewState)
 import Utilities
 import Html.Events exposing (onDoubleClick)
+import Html exposing (label)
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -33,6 +34,7 @@ type Msg
   = MsgDrag DragControl.Msg
   | MsgOnPointerDown OnPointerDownPortData
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
+  | MsgOnLabelChanged OnLabelChangedData
   | MsgEditLabel Id
 
 type alias Model =
@@ -40,9 +42,11 @@ type alias Model =
   , state : State
   }
 
+-- action should just include the state
 type alias State =
   { action : UserAction.Action
   , drag : Maybe DragControl.State
+  , editing : Maybe Id
   }
 
 -- Helpers
@@ -55,6 +59,11 @@ type alias OnPointerDownPortData =
   , pointerType : String
   , x : Float
   , y : Float
+  }
+
+type alias OnLabelChangedData =
+  { targetId : Id
+  , label : String
   }
 
 type alias OnChildEdgeHeightChangedData =
@@ -76,6 +85,13 @@ andStopPropagation msg =
   }
 
 -- Functionality
+onLabelChangedDecoder : Id -> Decoder Msg
+onLabelChangedDecoder targetId =
+  Decoder.map MsgOnLabelChanged
+    (succeed OnLabelChangedData
+      |> hardcoded targetId
+      |> required "detail" (field "label" string))
+
 onPointerDownDecoder : Id -> Decoder MsgWithEventOptions
 onPointerDownDecoder targetId =
   Decoder.map (MsgOnPointerDown >> andStopPropagation)
@@ -99,14 +115,17 @@ initModel : Model
 initModel =
   { nodes =
       Children [ { id = 1
+                 , label = "label1"
                  , position = { x = 10, y = 10 }
                  , size = { x = 200, y = 50 }
                  , childEdgeHeight = 0
                  , children = Children [ { id = 3
+                                         , label = "label3"
                                          , position = { x = 0, y = 0 }
                                          , size = { x = 200, y = 50 }
                                          , childEdgeHeight = 0
                                          , children = Children [ { id = 4
+                                                                 , label = "label4"
                                                                  , position = { x = 0, y = 0 }
                                                                  , size = { x = 200, y = 50 }
                                                                  , childEdgeHeight = 0
@@ -115,6 +134,7 @@ initModel =
                                                                ]
                                          },
                                          { id = 5
+                                         , label = "label5"
                                          , position = { x = 0, y = 0 }
                                          , size = { x = 200, y = 50 }
                                          , childEdgeHeight = 0
@@ -123,6 +143,7 @@ initModel =
                                        ]
                  }
                , { id = 2
+                 , label = "label2"
                  , position = { x = 300, y = 20 }
                  , size = { x = 200, y = 50 }
                  , childEdgeHeight = 0
@@ -132,6 +153,7 @@ initModel =
   , state = 
       { action = UserAction.Idle
       , drag = Nothing
+      , editing = Nothing
       }
   }
 
@@ -162,7 +184,8 @@ viewNodeContents node =
         [ class "contents_container" ]
         [ Html.node "node-label"
             [ onDoubleClick  (MsgEditLabel node.id)
-            ,  attribute "label" ("hello " ++ idToAttribute node.id)
+            , on "labelchanged" (onLabelChangedDecoder node.id)
+            ,  attribute "label" node.label
             ]
             []
         ]
@@ -281,16 +304,32 @@ update msg model =
 
     MsgEditLabel nodeId ->
       let
-          state = applyEditLabelState model.state
+          state = applyEditLabelState model.state nodeId
       in
       ({ model | state = state }, portEditLabel nodeId)
+
+    MsgOnLabelChanged data ->
+      let
+          nodes = applyLabelChange model.nodes data.targetId data.label
+      in
+      ({ model | nodes = nodes }, Cmd.none)
+
 
 init : () -> (Model, Cmd Msg)
 init () = (initModel, Cmd.none)
 
-applyEditLabelState : State -> State
-applyEditLabelState state =
-  { state | action = UserAction.Editing, drag = Nothing }
+applyLabelChange : Children -> Id -> String -> Children
+applyLabelChange (Children nodes) targetId label =
+  let updater node = { node | label = label } in
+  case TreeSpec.findNode nodes targetId of
+    Just path ->
+      Children (TreeSpec.updateNode nodes path updater)
+    Nothing ->
+      Children nodes
+
+applyEditLabelState : State -> Id -> State
+applyEditLabelState state id =
+  { state | action = UserAction.Editing, drag = Nothing, editing = Just id }
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =

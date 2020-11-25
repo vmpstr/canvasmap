@@ -17,6 +17,7 @@ type alias Id = Int
 
 type alias Node =
   { id : Id
+  , label : String
   , position : Vector
   , size : Vector
   , childEdgeHeight: Float
