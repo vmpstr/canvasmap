@@ -12,6 +12,6 @@ canPreempt new old =
     (Idle, _) -> False
     (Dragging, Dragging) -> True
     (Editing, Editing) -> True
-    (Dragging, Editing) -> True
+    (Dragging, Editing) -> False
     (Editing, Dragging) -> False
 

@@ -109,7 +109,7 @@ onChildEdgeHeightChangedDecoder targetId =
       |> required "detail" (field "height" float))
 
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
-port portEditLabel : Id -> Cmd msg
+port portEditLabel : { targetId : String } -> Cmd msg
 
 initModel : Model
 initModel =
@@ -174,18 +174,26 @@ viewDragNode : Node -> Html Msg
 viewDragNode node =
   viewTopNode DragControl.dragNodeViewState -1 node
 
-viewNodeContents : Node -> Html Msg
-viewNodeContents node =
+viewNodeContents : Node -> Bool -> Html Msg
+viewNodeContents node needPointerDown =
+  let
+    attributes =
+      if needPointerDown then
+        [ custom "pointerdown" (onPointerDownDecoder node.id)
+        , class "selection_container"
+        ]
+      else
+        [ class "selection_container" ]
+  in
   div
-    [ custom "pointerdown" (onPointerDownDecoder node.id)
-    , class "selection_container"
-    ]
+    attributes
     [ div
-        [ class "contents_container" ]
+        [ class "contents_container"
+        , onDoubleClick  (MsgEditLabel node.id)
+        ]
         [ Html.node "node-label"
-            [ onDoubleClick  (MsgEditLabel node.id)
-            , on "labelchanged" (onLabelChangedDecoder node.id)
-            ,  attribute "label" node.label
+            [ on "labelchanged" (onLabelChangedDecoder node.id)
+            , attribute "label" node.label
             ]
             []
         ]
@@ -195,7 +203,7 @@ viewTopNode : ViewState -> Int -> Node -> Html Msg
 viewTopNode parentState index node =
   let
     localState : ViewState
-    localState = adjustViewStateForNode index node parentState
+    localState = getViewStateForNode index node parentState
 
     onTop = index < 0
     tailBeacons =
@@ -214,7 +222,7 @@ viewTopNode parentState index node =
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
     ]
-    [ viewNodeContents node
+    [ viewNodeContents node (localState.editId == Nothing)
     , div
         [ class "child_holder" ]
         [ div
@@ -232,7 +240,7 @@ viewTopNode parentState index node =
 viewChildNode : ViewState -> Int -> Node -> List (Html Msg)
 viewChildNode parentState index node =
   let
-    localState = adjustViewStateForNode index node parentState
+    localState = getViewStateForNode index node parentState
     headBeacons =
       Utilities.maybeArray
         parentState.viewBeacons
@@ -252,7 +260,7 @@ viewChildNode parentState index node =
           [ id localState.htmlNodeId
           , classList [("child", True), ("shadow", localState.shadow)]
           ]
-          [ viewNodeContents node
+          [ viewNodeContents node (localState.editId == Nothing)
           , div [ class "parent_edge" ] []
           ]
       , div
@@ -306,13 +314,14 @@ update msg model =
       let
           state = applyEditLabelState model.state nodeId
       in
-      ({ model | state = state }, portEditLabel nodeId)
+      ({ model | state = state }, portEditLabel { targetId = idToAttribute nodeId })
 
     MsgOnLabelChanged data ->
       let
           nodes = applyLabelChange model.nodes data.targetId data.label
+          state = endEditLabelState model.state
       in
-      ({ model | nodes = nodes }, Cmd.none)
+      ({ model | nodes = nodes, state = state }, Cmd.none)
 
 
 init : () -> (Model, Cmd Msg)
@@ -327,6 +336,10 @@ applyLabelChange (Children nodes) targetId label =
     Nothing ->
       Children nodes
 
+endEditLabelState : State -> State
+endEditLabelState state =
+  { state | action = UserAction.Idle, drag = Nothing, editing = Nothing }
+
 applyEditLabelState : State -> Id -> State
 applyEditLabelState state id =
   { state | action = UserAction.Editing, drag = Nothing, editing = Just id }
@@ -338,11 +351,13 @@ subscriptions _ =
 initialViewStateAdjusters : State -> List (ViewState -> ViewState)
 initialViewStateAdjusters state =
   [ DragControl.adjustInitialViewState state
+  , adjustInitialViewState state
   ]
 
 viewStateAdjustersForNode : Int -> Node -> List (ViewState -> ViewState)
 viewStateAdjustersForNode index node =
   [ DragControl.adjustViewStateForNode index node
+  , adjustViewStateForNode index node
   ]
 
 getInitialViewState : State -> ViewState
@@ -351,11 +366,18 @@ getInitialViewState state =
     MapView.defaultViewState
     (initialViewStateAdjusters state)
 
-adjustViewStateForNode : Int -> Node -> ViewState -> ViewState
-adjustViewStateForNode index node viewState =
+getViewStateForNode : Int -> Node -> ViewState -> ViewState
+getViewStateForNode index node viewState =
   Utilities.listApply
     viewState
     (viewStateAdjustersForNode index node)
+
+adjustInitialViewState : State -> ViewState -> ViewState
+adjustInitialViewState state viewState =
+  { viewState | editId = state.editing }
+
+adjustViewStateForNode : Int -> Node -> ViewState -> ViewState
+adjustViewStateForNode _ _ viewState = viewState
 
 
 
