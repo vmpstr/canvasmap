@@ -12,6 +12,7 @@
 
 <script src="map.js"></script>
 <script src="child-area.js"></script>
+<script src="node-label.js"></script>
 <script>
 let app = undefined;
 
@@ -104,10 +105,15 @@ function onRafAlignRequest() {
   });
 }
 
+function onEditLabel(e) {
+  document.getElementById(e.targetId).querySelector("node-label").edit();
+}
+
 onload = () => {
   app = Elm.Map.init({ node: document.getElementById("map") });
   app.ports.portOnPointerDown.subscribe(onPointerDown);
   app.ports.portRafAlign.subscribe(onRafAlignRequest);
+  app.ports.portEditLabel.subscribe(onEditLabel);
 };
 </script>
 
