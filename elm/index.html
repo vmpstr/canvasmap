@@ -109,11 +109,31 @@ function onEditLabel(e) {
   document.getElementById(e.targetId).querySelector("node-label").edit();
 }
 
+const kStateVersion = "1"
+function saveState(nodes) {
+  localStorage.setItem("mm-version", kStateVersion);
+  localStorage.setItem("mm-nodes", JSON.stringify(nodes));
+}
+
+function loadState() {
+  const version = localStorage.getItem("mm-version");
+  if (!version || version !== kStateVersion) {
+    app.ports.portOnLoadState.send([]);
+    return;
+  }
+  const nodes = JSON.parse(localStorage.getItem("mm-nodes"));
+  console.log("sending");
+  console.log(nodes)
+  app.ports.portOnLoadState.send(nodes);
+}
+
 onload = () => {
   app = Elm.Map.init({ node: document.getElementById("map") });
   app.ports.portOnPointerDown.subscribe(onPointerDown);
   app.ports.portRafAlign.subscribe(onRafAlignRequest);
   app.ports.portEditLabel.subscribe(onEditLabel);
+  app.ports.portSaveState.subscribe(saveState);
+  app.ports.portLoadState.subscribe(loadState);
 };
 </script>
 

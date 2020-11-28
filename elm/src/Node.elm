@@ -50,6 +50,7 @@ decodeId str =
   else
     fail ("Invalid id " ++ str)
 
+-- rename this to idAttributeDecoder
 idDecoder : Decoder Id
 idDecoder =
   string |> Decoder.andThen decodeId

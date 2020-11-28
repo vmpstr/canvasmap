@@ -6,6 +6,7 @@ import Html.Attributes exposing (class, classList, style, attribute, id)
 import Html.Events exposing (custom, on)
 import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field)
 import Json.Decode.Pipeline exposing (required, hardcoded)
+import Json.Encode as Encode
 import Maybe.Extra
 
 import DragControl
@@ -16,6 +17,8 @@ import MapView exposing (ViewState)
 import Utilities
 import Html.Events exposing (onDoubleClick)
 import Html exposing (label)
+import Geometry
+import Utilities exposing (toMsgOrNoop)
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -32,10 +35,12 @@ import Html exposing (label)
 
 type Msg
   = MsgDrag DragControl.Msg
+  | MsgNoop
   | MsgOnPointerDown OnPointerDownPortData
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
   | MsgOnLabelChanged OnLabelChangedData
   | MsgEditLabel Id
+  | MsgSetNodes Children
 
 type alias Model =
   { nodes : Children
@@ -110,6 +115,8 @@ onChildEdgeHeightChangedDecoder targetId =
 
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
 port portEditLabel : { targetId : String } -> Cmd msg
+port portSaveState : Encode.Value -> Cmd msg
+port portLoadState : () -> Cmd msg
 
 initModel : Model
 initModel =
@@ -294,6 +301,58 @@ applyChildEdgeHeightChange (Children nodes) { targetId, height } =
     Nothing ->
       Children nodes
 
+updateAndSave : Msg -> Model -> (Model, Cmd Msg)
+updateAndSave msg model =
+  let
+    (newModel, cmd) = update msg model
+    saveCmd =
+      if model.state.action == newModel.state.action then
+        Cmd.none
+      else
+        encodeNodes model.nodes |> portSaveState
+  in
+  (newModel, [cmd, saveCmd] |> Cmd.batch)
+
+
+encodeVector : Geometry.Vector -> Encode.Value
+encodeVector v =
+  Encode.object
+    [ ("x", Encode.float v.x )
+    , ("y", Encode.float v.y )
+    ]
+
+encodeId : Id -> Encode.Value
+encodeId id =
+  Encode.int id
+
+encodeNode : Node -> Encode.Value
+encodeNode node =
+  Encode.object
+    [ ("id", encodeId node.id)
+    , ("label", Encode.string node.label)
+    , ("position", encodeVector node.position)
+    , ("size", encodeVector node.size)
+    , ("children", encodeNodes node.children)
+    ]
+
+encodeNodes : Children -> Encode.Value
+encodeNodes (Children nodes) =
+  Encode.list encodeNode nodes
+
+nodeDecoder : Decoder Node
+nodeDecoder =
+  succeed Node
+    |> required "id" Decoder.int
+    |> required "label" Decoder.string
+    |> required "position" Geometry.vectorDecoder
+    |> required "size" Geometry.vectorDecoder
+    |> hardcoded 0.0
+    |> required "children" (Decoder.lazy (\() -> nodesDecoder))
+
+nodesDecoder : Decoder Children
+nodesDecoder =
+  Decoder.map Children (Decoder.list nodeDecoder)
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -323,9 +382,16 @@ update msg model =
       in
       ({ model | nodes = nodes, state = state }, Cmd.none)
 
+    MsgNoop ->
+      (model, Cmd.none)
+
+    -- TODO: have a loading state so that we don't do anything before this.
+    MsgSetNodes children ->
+      ({ model | nodes = children }, Cmd.none)
+
 
 init : () -> (Model, Cmd Msg)
-init () = (initModel, Cmd.none)
+init () = (initModel, portLoadState ())
 
 applyLabelChange : Children -> Id -> String -> Children
 applyLabelChange (Children nodes) targetId label =
@@ -344,9 +410,18 @@ applyEditLabelState : State -> Id -> State
 applyEditLabelState state id =
   { state | action = UserAction.Editing, drag = Nothing, editing = Just id }
 
+port portOnLoadState : (Decoder.Value -> msg) -> Sub msg
+
+onLoadStateSubscription : Sub Msg
+onLoadStateSubscription =
+  portOnLoadState
+    (Decoder.decodeValue nodesDecoder >> toMsgOrNoop MsgSetNodes MsgNoop)
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-  Sub.map MsgDrag (DragControl.subscriptions ())
+  [ Sub.map MsgDrag (DragControl.subscriptions ())
+  , onLoadStateSubscription
+  ] |> Sub.batch
 
 initialViewStateAdjusters : State -> List (ViewState -> ViewState)
 initialViewStateAdjusters state =
@@ -386,6 +461,6 @@ main =
     Browser.element
       { init = init
       , view = view
-      , update = update
+      , update = updateAndSave
       , subscriptions = subscriptions
       }
