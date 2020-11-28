@@ -106,7 +106,26 @@ function onRafAlignRequest() {
 }
 
 function onEditLabel(e) {
-  document.getElementById(e.targetId).querySelector("node-label").edit();
+  // raf since we could be just attaching the node.
+  requestAnimationFrame(() => {
+    document.getElementById(e.targetId).querySelector("node-label").edit();
+  });
+}
+
+const kStateVersion = "2"
+function saveState(nodes) {
+  localStorage.setItem("mm-version", kStateVersion);
+  localStorage.setItem("mm-nodes", JSON.stringify(nodes));
+}
+
+function loadState() {
+  const version = localStorage.getItem("mm-version");
+  if (!version || version !== kStateVersion) {
+    app.ports.portOnLoadState.send([]);
+    return;
+  }
+  const nodes = JSON.parse(localStorage.getItem("mm-nodes"));
+  app.ports.portOnLoadState.send(nodes);
 }
 
 onload = () => {
@@ -114,6 +133,8 @@ onload = () => {
   app.ports.portOnPointerDown.subscribe(onPointerDown);
   app.ports.portRafAlign.subscribe(onRafAlignRequest);
   app.ports.portEditLabel.subscribe(onEditLabel);
+  app.ports.portSaveState.subscribe(saveState);
+  app.ports.portLoadState.subscribe(loadState);
 };
 </script>
 
