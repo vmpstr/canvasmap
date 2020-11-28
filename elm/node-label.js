@@ -31,7 +31,6 @@ window.customElements.define('node-label', class extends HTMLElement {
         bubbles: false,
         detail: { label: label }
       });
-    console.log(e);
     this.dispatchEvent(e);
   }
 

@@ -106,7 +106,10 @@ function onRafAlignRequest() {
 }
 
 function onEditLabel(e) {
-  document.getElementById(e.targetId).querySelector("node-label").edit();
+  // raf since we could be just attaching the node.
+  requestAnimationFrame(() => {
+    document.getElementById(e.targetId).querySelector("node-label").edit();
+  });
 }
 
 const kStateVersion = "2"
@@ -122,8 +125,6 @@ function loadState() {
     return;
   }
   const nodes = JSON.parse(localStorage.getItem("mm-nodes"));
-  console.log("sending");
-  console.log(nodes)
   app.ports.portOnLoadState.send(nodes);
 }
 

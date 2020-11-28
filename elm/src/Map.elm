@@ -409,7 +409,7 @@ update msg model =
       ({ model | nodes = children }, Cmd.none)
 
     MsgNewNode node ->
-      ({ model | nodes = appendChild model.nodes node }, Cmd.none)
+      update (MsgEditLabel node.id) { model | nodes = appendChild model.nodes node }
 
 
 appendChild : Children -> Node -> Children
