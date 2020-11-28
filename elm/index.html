@@ -109,7 +109,7 @@ function onEditLabel(e) {
   document.getElementById(e.targetId).querySelector("node-label").edit();
 }
 
-const kStateVersion = "1"
+const kStateVersion = "2"
 function saveState(nodes) {
   localStorage.setItem("mm-version", kStateVersion);
   localStorage.setItem("mm-nodes", JSON.stringify(nodes));

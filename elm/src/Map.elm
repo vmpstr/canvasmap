@@ -41,6 +41,7 @@ type Msg
   | MsgOnLabelChanged OnLabelChangedData
   | MsgEditLabel Id
   | MsgSetNodes Children
+  | MsgNewNode Node
 
 type alias Model =
   { nodes : Children
@@ -97,6 +98,56 @@ onLabelChangedDecoder targetId =
       |> hardcoded targetId
       |> required "detail" (field "label" string))
 
+onEditLabelClickDecoder : Id -> Decoder MsgWithEventOptions
+onEditLabelClickDecoder targetId =
+  Decoder.map (MsgEditLabel >> andStopPropagation)
+    (succeed targetId)
+
+type alias FlatNode =
+  { id : Int
+  , label : String
+  , x : Float
+  , y : Float
+  , width : Float
+  , height : Float
+  , childEdgeHeight : Float
+  , children : Children
+  }
+
+flatNodeToNode : FlatNode -> Node
+flatNodeToNode f =
+  { id = f.id
+  , label = f.label
+  , position = Geometry.Vector f.x f.y
+  , size = Geometry.Vector f.width f.height
+  , childEdgeHeight = f.childEdgeHeight
+  , children = f.children
+  }
+
+findMaxId : Children -> Int
+findMaxId (Children nodes) =
+  Maybe.withDefault
+    0
+    (List.maximum
+      ( (List.map .id nodes)
+        ++ (List.map (\node -> findMaxId node.children) nodes)
+      )
+    )
+
+onAddNewNodeClickDecoder : Children -> Decoder MsgWithEventOptions
+onAddNewNodeClickDecoder children =
+  Decoder.map (MsgNewNode >> andStopPropagation)
+    (Decoder.map flatNodeToNode
+      (succeed FlatNode
+        |> hardcoded ((findMaxId children) + 1)
+        |> hardcoded "new item"
+        |> required "clientX" float
+        |> required "clientY" float
+        |> hardcoded 0.0
+        |> hardcoded 0.0
+        |> hardcoded 0.0
+        |> hardcoded (Children [])))
+    
 onPointerDownDecoder : Id -> Decoder MsgWithEventOptions
 onPointerDownDecoder targetId =
   Decoder.map (MsgOnPointerDown >> andStopPropagation)
@@ -175,7 +226,11 @@ view model =
           (DragControl.getDragNode model.state nodes
             |> Maybe.Extra.toList)
   in
-  div [ class "map" ] (childrenViewList ++ dragViewList)
+  div
+    [ class "map"
+    , custom "dblclick" (onAddNewNodeClickDecoder model.nodes)
+    ]
+    (childrenViewList ++ dragViewList)
 
 viewDragNode : Node -> Html Msg
 viewDragNode node =
@@ -196,7 +251,7 @@ viewNodeContents node needPointerDown =
     attributes
     [ div
         [ class "contents_container"
-        , onDoubleClick  (MsgEditLabel node.id)
+        , custom "dblclick" (onEditLabelClickDecoder node.id)
         ]
         [ Html.node "node-label"
             [ on "labelchanged" (onLabelChangedDecoder node.id)
@@ -389,6 +444,13 @@ update msg model =
     MsgSetNodes children ->
       ({ model | nodes = children }, Cmd.none)
 
+    MsgNewNode node ->
+      ({ model | nodes = appendChild model.nodes node }, Cmd.none)
+
+
+appendChild : Children -> Node -> Children
+appendChild (Children nodes) node =
+  Children (node :: nodes)
 
 init : () -> (Model, Cmd Msg)
 init () = (initModel, portLoadState ())
