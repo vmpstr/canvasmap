@@ -42,6 +42,7 @@ type Msg
   | MsgEditLabel Id
   | MsgSetNodes Children
   | MsgNewNode Node
+  | MsgSelectNode (Maybe Id)
 
 type alias Model =
   { nodes : Children
@@ -53,6 +54,7 @@ type alias State =
   { action : UserAction.Action
   , drag : Maybe DragControl.State
   , editing : Maybe Id
+  , selected : Maybe Id
   }
 
 -- Helpers
@@ -98,6 +100,11 @@ onLabelChangedDecoder targetId =
       |> hardcoded targetId
       |> required "detail" (field "label" string))
 
+onSelectClickDecoder : Maybe Id -> Decoder MsgWithEventOptions
+onSelectClickDecoder targetId =
+  Decoder.map (MsgSelectNode >> andStopPropagation)
+    (succeed targetId)
+
 onEditLabelClickDecoder : Id -> Decoder MsgWithEventOptions
 onEditLabelClickDecoder targetId =
   Decoder.map (MsgEditLabel >> andStopPropagation)
@@ -114,11 +121,17 @@ type alias FlatNode =
   , children : Children
   }
 
+newNodeOffset : Geometry.Vector
+newNodeOffset =
+  { x = -40.0
+  , y = -20.0
+  }
+
 flatNodeToNode : FlatNode -> Node
 flatNodeToNode f =
   { id = f.id
   , label = f.label
-  , position = Geometry.Vector f.x f.y
+  , position = Geometry.add (Geometry.Vector f.x f.y) newNodeOffset
   , size = Geometry.Vector f.width f.height
   , childEdgeHeight = f.childEdgeHeight
   , children = f.children
@@ -176,6 +189,7 @@ initModel =
       { action = UserAction.Idle
       , drag = Nothing
       , editing = Nothing
+      , selected = Nothing
       }
   }
 
@@ -193,6 +207,7 @@ view model =
   div
     [ class "map"
     , custom "dblclick" (onAddNewNodeClickDecoder model.nodes)
+    , custom "click" (onSelectClickDecoder Nothing)
     ]
     (childrenViewList ++ dragViewList)
 
@@ -200,21 +215,26 @@ viewDragNode : Node -> Html Msg
 viewDragNode node =
   viewTopNode DragControl.dragNodeViewState -1 node
 
-viewNodeContents : Node -> Bool -> Html Msg
-viewNodeContents node needPointerDown =
+viewNodeContents : Node -> ViewState -> Html Msg
+viewNodeContents node viewState =
   let
     attributes =
-      if needPointerDown then
-        [ custom "pointerdown" (onPointerDownDecoder node.id)
-        , class "selection_container"
-        ]
-      else
-        [ class "selection_container" ]
+      ( if viewState.editId == Nothing then
+          [ custom "pointerdown" (onPointerDownDecoder node.id) ]
+        else
+          []
+      ) ++
+      [ classList
+          [ ( "selection_container", True)
+          , ( "selected", viewState.selected == Just node.id)
+          ]
+      ]
   in
   div
     attributes
     [ div
         [ class "contents_container"
+        , custom "click" (onSelectClickDecoder (Just node.id))
         , custom "dblclick" (onEditLabelClickDecoder node.id)
         ]
         [ Html.node "node-label"
@@ -248,7 +268,7 @@ viewTopNode parentState index node =
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
     ]
-    [ viewNodeContents node (localState.editId == Nothing)
+    [ viewNodeContents node localState
     , div
         [ class "child_holder" ]
         [ div
@@ -286,7 +306,7 @@ viewChildNode parentState index node =
           [ id localState.htmlNodeId
           , classList [("child", True), ("shadow", localState.shadow)]
           ]
-          [ viewNodeContents node (localState.editId == Nothing)
+          [ viewNodeContents node localState
           , div [ class "parent_edge" ] []
           ]
       , div
@@ -411,6 +431,16 @@ update msg model =
     MsgNewNode node ->
       update (MsgEditLabel node.id) { model | nodes = appendChild model.nodes node }
 
+    MsgSelectNode id ->
+      let
+        state = selectNode model.state id
+      in
+      ({ model | state = state }, Cmd.none)
+
+
+selectNode : State -> Maybe Id -> State
+selectNode state id =
+  { state | selected = id }
 
 appendChild : Children -> Node -> Children
 appendChild (Children nodes) node =
@@ -475,7 +505,10 @@ getViewStateForNode index node viewState =
 
 adjustInitialViewState : State -> ViewState -> ViewState
 adjustInitialViewState state viewState =
-  { viewState | editId = state.editing }
+  { viewState
+    | editId = state.editing
+    , selected = state.selected
+  }
 
 adjustViewStateForNode : Int -> Node -> ViewState -> ViewState
 adjustViewStateForNode _ _ viewState = viewState

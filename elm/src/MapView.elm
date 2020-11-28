@@ -10,6 +10,7 @@ type alias ViewState =
   , tailBeaconPath : String
   , shadow : Bool
   , htmlNodeId : String
+  , selected : Maybe Id
   }
 
 defaultViewState : ViewState
@@ -21,4 +22,5 @@ defaultViewState =
   , tailBeaconPath = ""
   , shadow = False
   , htmlNodeId = ""
+  , selected = Nothing
   }

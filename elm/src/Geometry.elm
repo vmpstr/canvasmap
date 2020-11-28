@@ -1,4 +1,4 @@
-module Geometry exposing (Vector, Rect, rectDecoder, vectorDecoder)
+module Geometry exposing (Vector, Rect, rectDecoder, vectorDecoder, add)
 
 import Json.Decode exposing (Decoder, succeed, float)
 import Json.Decode.Pipeline exposing (required)
@@ -25,3 +25,8 @@ rectDecoder =
     |> required "position" vectorDecoder
     |> required "size" vectorDecoder
 
+add : Vector -> Vector -> Vector
+add a b =
+  { x = a.x + b.x
+  , y = a.y + b.y
+  }
