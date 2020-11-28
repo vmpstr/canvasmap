@@ -171,43 +171,7 @@ port portLoadState : () -> Cmd msg
 
 initModel : Model
 initModel =
-  { nodes =
-      Children [ { id = 1
-                 , label = "label1"
-                 , position = { x = 10, y = 10 }
-                 , size = { x = 200, y = 50 }
-                 , childEdgeHeight = 0
-                 , children = Children [ { id = 3
-                                         , label = "label3"
-                                         , position = { x = 0, y = 0 }
-                                         , size = { x = 200, y = 50 }
-                                         , childEdgeHeight = 0
-                                         , children = Children [ { id = 4
-                                                                 , label = "label4"
-                                                                 , position = { x = 0, y = 0 }
-                                                                 , size = { x = 200, y = 50 }
-                                                                 , childEdgeHeight = 0
-                                                                 , children = Children []
-                                                                 }
-                                                               ]
-                                         },
-                                         { id = 5
-                                         , label = "label5"
-                                         , position = { x = 0, y = 0 }
-                                         , size = { x = 200, y = 50 }
-                                         , childEdgeHeight = 0
-                                         , children = Children []
-                                         }
-                                       ]
-                 }
-               , { id = 2
-                 , label = "label2"
-                 , position = { x = 300, y = 20 }
-                 , size = { x = 200, y = 50 }
-                 , childEdgeHeight = 0
-                 , children = Children []
-                 }
-               ]
+  { nodes = Children []
   , state = 
       { action = UserAction.Idle
       , drag = Nothing
