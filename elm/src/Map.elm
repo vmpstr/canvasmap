@@ -25,13 +25,10 @@ import Browser.Events exposing (onKeyDown)
  - I think it's overkill to have Vector and not array
  - Refactor a whole lot of this into separate decoders module
  - Test everything
- - Move path functionality into something like Tree.Path
  - maybe write some comments or documentation
  - the beacon finding anchor should depend on where the drag is moving:
     moving down: maybe bot left corner, moving up: maybe top left corner
- - beacon finding should filter to ignore beacons to the right so that
-    nodes don't attach as children so much
- - need custom hover to avoid glitchy render?
+ - selection gets removed after drag is finished
  -}
 
 type Msg
