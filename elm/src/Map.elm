@@ -496,27 +496,19 @@ handleMapKeyDown key model =
   -- TODO: support Editing as well, but need to stop editing
   -- This seems to work already. How?
   else if key == "Tab" && model.state.action == UserAction.Idle then
-    case model.state.selected of
-      Just id ->
-        let mpath = pathToFirstChildOfId model.nodes id in
-        case mpath of
-          Just path ->
-            update (MsgNewNode path (newNode model.nodes)) model
-          Nothing ->
-            update MsgNoop model
-      Nothing -> 
+    case model.state.selected
+          |> Maybe.andThen (pathToFirstChildOfId model.nodes) of
+      Just path ->
+        update (MsgNewNode path (newNode model.nodes)) model
+      Nothing ->
         update MsgNoop model
   else if key == "Enter" && model.state.action == UserAction.Idle then
-    case model.state.selected of
-      Just id ->
-        let mpath = pathToNextSiblingOfId model.nodes id in
-        case mpath of
-          Just path ->
-            update (MsgNewNode path (newNode model.nodes)) model
-          Nothing ->
-            update MsgNoop model
+    case model.state.selected
+          |> Maybe.andThen (pathToNextSiblingOfId model.nodes) of
+      Just path ->
+        update (MsgNewNode path (newNode model.nodes)) model
       Nothing ->
-        update MsgNoop model    
+        update MsgNoop model
   else
     update MsgNoop model
 
