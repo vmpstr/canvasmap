@@ -12,6 +12,7 @@ module Tree exposing
   , removeNode
   , takeNode
   , addNode
+  , appendPath
   )
 
 {- TODOs
@@ -245,6 +246,18 @@ prependPath index maybePath =
   case maybePath of
     Just path ->
       InSubtree index path
+    Nothing ->
+      AtIndex index
+
+appendPath : Int -> Maybe Path -> Path
+appendPath index maybePath =
+  case maybePath of
+    Just path ->
+      case path of
+        AtIndex base ->
+          InSubtree base (AtIndex index)
+        InSubtree subindex subpath ->
+          InSubtree subindex (appendPath index (Just subpath))
     Nothing ->
       AtIndex index
 

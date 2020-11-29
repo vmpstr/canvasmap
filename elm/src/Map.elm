@@ -19,7 +19,7 @@ import Html.Events exposing (onDoubleClick)
 import Html exposing (label)
 import Geometry
 import Utilities exposing (toMsgOrNoop)
-import Browser.Events exposing (onKeyDown)
+import Tree
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -39,10 +39,13 @@ type Msg
   | MsgOnLabelChanged OnLabelChangedData
   | MsgEditLabel Id
   | MsgSetNodes Children
-  | MsgNewNode Node
+  | MsgNewNode Tree.Path Node
   | MsgSelectNode (Maybe Id)
   | MsgDeleteNode Id
-  | MsgMapKeyDown String
+  | MsgMapKeyDown Key
+
+type alias Key =
+  { code : String }
 
 type alias Model =
   { nodes : Children
@@ -100,9 +103,10 @@ onLabelChangedDecoder targetId =
       |> hardcoded targetId
       |> required "detail" (field "label" string))
 
-onMapKeyDownDecoder : Decoder Msg
-onMapKeyDownDecoder =
-  Decoder.map MsgMapKeyDown (field "code" string)
+keyDecoder : Decoder Key
+keyDecoder =
+  succeed Key
+    |> required "code" string
 
 onSelectClickDecoder : Maybe Id -> Decoder MsgWithEventOptions
 onSelectClickDecoder targetId =
@@ -151,9 +155,19 @@ findMaxId (Children nodes) =
       )
     )
 
+newNode : Children -> Node
+newNode children =
+  { id = (findMaxId children) + 1
+  , label = "new item"
+  , position = Geometry.Vector 0 0
+  , size = Geometry.Vector 0 0
+  , childEdgeHeight = 0
+  , children = Children []
+  }
+
 onAddNewNodeClickDecoder : Children -> Decoder MsgWithEventOptions
 onAddNewNodeClickDecoder children =
-  Decoder.map (MsgNewNode >> andStopPropagation)
+  Decoder.map (MsgNewNode (Tree.AtIndex 0) >> andStopPropagation)
     (Decoder.map flatNodeToNode
       (succeed FlatNode
         |> hardcoded ((findMaxId children) + 1)
@@ -438,8 +452,16 @@ update msg model =
     MsgSetNodes children ->
       ({ model | nodes = children }, Cmd.none)
 
-    MsgNewNode node ->
-      update (MsgEditLabel node.id) { model | nodes = appendChild model.nodes node }
+    MsgNewNode path node ->
+      let 
+        state = selectNode model.state (Just node.id)
+      in
+      update
+        (MsgEditLabel node.id)
+        { model
+          | nodes = insertChild model.nodes path node
+          , state = state
+        }
 
     MsgSelectNode id ->
       let
@@ -448,10 +470,17 @@ update msg model =
       ({ model | state = state }, Cmd.none)
 
     MsgDeleteNode id ->
-      ({ model | nodes = removeChild model.nodes id }, Cmd.none)
+      let
+        state =
+          if model.state.selected == Just id then
+            selectNode model.state Nothing
+          else
+            model.state
+      in
+      ({ model | nodes = removeChild model.nodes id, state = state }, Cmd.none)
 
     MsgMapKeyDown key ->
-      handleMapKeyDown key model
+      handleMapKeyDown key.code model
 
 
 handleMapKeyDown : String -> Model -> (Model, Cmd Msg)
@@ -459,20 +488,41 @@ handleMapKeyDown key model =
   if key == "Backspace" || key == "Delete" then
     case model.state.selected of
        Just id ->
+        -- We need to use updateAndSave here so that we intercept MsgDeleteNode
+        -- and save state.
         updateAndSave (MsgDeleteNode id) model
        Nothing ->
-        updateAndSave MsgNoop model
+        update MsgNoop model
+  -- TODO: support Editing as well, but need to stop editing
+  else if key == "Tab" && model.state.action == UserAction.Idle then
+    case model.state.selected of
+      Just id ->
+        let mpath = pathToFirstChildOfId model.nodes id in
+        case mpath of
+          Just path ->
+            update (MsgNewNode path (newNode model.nodes)) model
+          Nothing ->
+            update MsgNoop model
+      Nothing -> 
+        update MsgNoop model
   else
-    updateAndSave MsgNoop model
+    update MsgNoop model
 
+pathToFirstChildOfId : Children -> Id -> Maybe Tree.Path
+pathToFirstChildOfId (Children nodes) id =
+  case TreeSpec.findNode nodes id of
+    Just path ->
+      Just (Tree.appendPath 0 (Just path))
+    Nothing ->
+      Nothing
 
 selectNode : State -> Maybe Id -> State
 selectNode state id =
   { state | selected = id }
 
-appendChild : Children -> Node -> Children
-appendChild (Children nodes) node =
-  Children (node :: nodes)
+insertChild : Children -> Tree.Path -> Node -> Children
+insertChild (Children nodes) path node =
+  Children (TreeSpec.addNode nodes path node)
 
 removeChild : Children -> Id -> Children
 removeChild (Children nodes) id =
@@ -513,9 +563,12 @@ onLoadStateSubscription =
   portOnLoadState
     (Decoder.decodeValue nodesDecoder >> toMsgOrNoop MsgSetNodes MsgNoop)
 
+port portOnKeyDown : (Decoder.Value -> msg) -> Sub msg
+
 onKeyDownSubscription : Sub Msg
 onKeyDownSubscription =
-  Browser.Events.onKeyDown onMapKeyDownDecoder
+  portOnKeyDown
+    (Decoder.decodeValue keyDecoder >> toMsgOrNoop MsgMapKeyDown MsgNoop)
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
