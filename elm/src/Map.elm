@@ -19,6 +19,7 @@ import Html.Events exposing (onDoubleClick)
 import Html exposing (label)
 import Geometry
 import Utilities exposing (toMsgOrNoop)
+import Browser.Events exposing (onKeyDown)
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -43,6 +44,8 @@ type Msg
   | MsgSetNodes Children
   | MsgNewNode Node
   | MsgSelectNode (Maybe Id)
+  | MsgDeleteNode Id
+  | MsgMapKeyDown String
 
 type alias Model =
   { nodes : Children
@@ -99,6 +102,10 @@ onLabelChangedDecoder targetId =
     (succeed OnLabelChangedData
       |> hardcoded targetId
       |> required "detail" (field "label" string))
+
+onMapKeyDownDecoder : Decoder Msg
+onMapKeyDownDecoder =
+  Decoder.map MsgMapKeyDown (field "code" string)
 
 onSelectClickDecoder : Maybe Id -> Decoder MsgWithEventOptions
 onSelectClickDecoder targetId =
@@ -344,11 +351,17 @@ updateAndSave : Msg -> Model -> (Model, Cmd Msg)
 updateAndSave msg model =
   let
     (newModel, cmd) = update msg model
+    isDelete =
+      case msg of
+        MsgDeleteNode _ -> True
+        _ -> False
+
     saveCmd =
-      if model.state.action == newModel.state.action then
+      -- TODO: Make this more elegant somehow (remove not isdelete?)
+      if (not isDelete) && model.state.action == newModel.state.action then
         Cmd.none
       else
-        encodeNodes model.nodes |> portSaveState
+        encodeNodes newModel.nodes |> portSaveState
   in
   (newModel, [cmd, saveCmd] |> Cmd.batch)
 
@@ -437,6 +450,24 @@ update msg model =
       in
       ({ model | state = state }, Cmd.none)
 
+    MsgDeleteNode id ->
+      ({ model | nodes = removeChild model.nodes id }, Cmd.none)
+
+    MsgMapKeyDown key ->
+      handleMapKeyDown key model
+
+
+handleMapKeyDown : String -> Model -> (Model, Cmd Msg)
+handleMapKeyDown key model =
+  if key == "Backspace" || key == "Delete" then
+    case model.state.selected of
+       Just id ->
+        updateAndSave (MsgDeleteNode id) model
+       Nothing ->
+        updateAndSave MsgNoop model
+  else
+    updateAndSave MsgNoop model
+
 
 selectNode : State -> Maybe Id -> State
 selectNode state id =
@@ -445,6 +476,18 @@ selectNode state id =
 appendChild : Children -> Node -> Children
 appendChild (Children nodes) node =
   Children (node :: nodes)
+
+removeChild : Children -> Id -> Children
+removeChild (Children nodes) id =
+  let
+    mpath = TreeSpec.findNode nodes id
+  in
+  case mpath of
+    Just path ->
+      Children (TreeSpec.removeNode nodes path)
+    Nothing ->
+      Children nodes
+
 
 init : () -> (Model, Cmd Msg)
 init () = (initModel, portLoadState ())
@@ -473,10 +516,15 @@ onLoadStateSubscription =
   portOnLoadState
     (Decoder.decodeValue nodesDecoder >> toMsgOrNoop MsgSetNodes MsgNoop)
 
+onKeyDownSubscription : Sub Msg
+onKeyDownSubscription =
+  Browser.Events.onKeyDown onMapKeyDownDecoder
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
   [ Sub.map MsgDrag (DragControl.subscriptions ())
   , onLoadStateSubscription
+  , onKeyDownSubscription
   ] |> Sub.batch
 
 initialViewStateAdjusters : State -> List (ViewState -> ViewState)

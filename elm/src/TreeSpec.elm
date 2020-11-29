@@ -1,4 +1,4 @@
-module TreeSpec exposing (findNode, moveNode, nodeAtById, updateNode)
+module TreeSpec exposing (findNode, moveNode, nodeAtById, updateNode, removeNode)
 
 import Tree
 import Node exposing (Node, Id, childList, Children(..))
@@ -14,3 +14,6 @@ nodeAtById = Tree.nodeAtById childList
 
 updateNode : List Node -> Tree.Path -> (Node -> Node) -> List Node
 updateNode = Tree.updateNode Children childList
+
+removeNode : List Node -> Tree.Path -> List Node
+removeNode = Tree.removeNode Children childList
