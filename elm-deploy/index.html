@@ -135,6 +135,12 @@ onload = () => {
   app.ports.portEditLabel.subscribe(onEditLabel);
   app.ports.portSaveState.subscribe(saveState);
   app.ports.portLoadState.subscribe(loadState);
+  document.addEventListener("keydown", (e) => {
+    // TODO: Maybe filter based on what is handled?
+    e.preventDefault();
+
+    app.ports.portOnKeyDown.send({ code: e.code });
+  })
 };
 </script>
 

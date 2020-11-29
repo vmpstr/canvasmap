@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.at.T === region.aJ.T)
+	if (region.at.T === region.aK.T)
 	{
 		return 'on line ' + region.at.T;
 	}
-	return 'on lines ' + region.at.T + ' through ' + region.aJ.T;
+	return 'on lines ' + region.at.T + ' through ' + region.aK.T;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.bO,
-		impl.cs,
-		impl.cj,
+		impl.bP,
+		impl.ct,
+		impl.ck,
 		function() { return function() {} }
 	);
 });
@@ -2704,9 +2704,9 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		aU: func(record.aU),
-		be: record.be,
-		a3: record.a3
+		aV: func(record.aV),
+		bf: record.bf,
+		a4: record.a4
 	}
 });
 
@@ -2974,11 +2974,11 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.aU;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.be;
+		var message = !tag ? value : tag < 3 ? value.a : value.aV;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.bf;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.a3) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.a4) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3928,11 +3928,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.bO,
-		impl.cs,
-		impl.cj,
+		impl.bP,
+		impl.ct,
+		impl.ck,
 		function(sendToApp, initialModel) {
-			var view = impl.ct;
+			var view = impl.cu;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3964,12 +3964,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.bO,
-		impl.cs,
-		impl.cj,
+		impl.bP,
+		impl.ct,
+		impl.ck,
 		function(sendToApp, initialModel) {
 			var divertHrefToApp = impl.as && impl.as(sendToApp)
-			var view = impl.ct;
+			var view = impl.cu;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3977,12 +3977,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.bp);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.bq);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.cq) && (_VirtualDom_doc.title = title = doc.cq);
+				(title !== doc.cr) && (_VirtualDom_doc.title = title = doc.cr);
 			});
 		}
 	);
@@ -4038,8 +4038,8 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.b6;
-	var onUrlRequest = impl.b7;
+	var onUrlChange = impl.b7;
+	var onUrlRequest = impl.b8;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
@@ -4059,9 +4059,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.a6 === next.a6
-							&& curr.aP === next.aP
-							&& curr.a2.a === next.a2.a
+							&& curr.a7 === next.a7
+							&& curr.aQ === next.aQ
+							&& curr.a3.a === next.a3.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4069,13 +4069,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		bO: function(flags)
+		bP: function(flags)
 		{
-			return A3(impl.bO, flags, _Browser_getUrl(), key);
+			return A3(impl.bP, flags, _Browser_getUrl(), key);
 		},
+		cu: impl.cu,
 		ct: impl.ct,
-		cs: impl.cs,
-		cj: impl.cj
+		ck: impl.ck
 	});
 }
 
@@ -4141,17 +4141,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { bK: 'hidden', bs: 'visibilitychange' }
+		? { bL: 'hidden', bt: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { bK: 'mozHidden', bs: 'mozvisibilitychange' }
+		? { bL: 'mozHidden', bt: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { bK: 'msHidden', bs: 'msvisibilitychange' }
+		? { bL: 'msHidden', bt: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { bK: 'webkitHidden', bs: 'webkitvisibilitychange' }
-		: { bK: 'hidden', bs: 'visibilitychange' };
+		? { bL: 'webkitHidden', bt: 'webkitvisibilitychange' }
+		: { bL: 'hidden', bt: 'visibilitychange' };
 }
 
 
@@ -4232,11 +4232,11 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		bc: _Browser_getScene(),
-		bj: {
-			y: _Browser_window.pageXOffset,
-			z: _Browser_window.pageYOffset,
-			bk: _Browser_doc.documentElement.clientWidth,
+		bd: _Browser_getScene(),
+		bk: {
+			A: _Browser_window.pageXOffset,
+			B: _Browser_window.pageYOffset,
+			bl: _Browser_doc.documentElement.clientWidth,
 			aa: _Browser_doc.documentElement.clientHeight
 		}
 	};
@@ -4247,7 +4247,7 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		bk: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		bl: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
 		aa: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
@@ -4271,14 +4271,14 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			bc: {
-				bk: node.scrollWidth,
+			bd: {
+				bl: node.scrollWidth,
 				aa: node.scrollHeight
 			},
-			bj: {
-				y: node.scrollLeft,
-				z: node.scrollTop,
-				bk: node.clientWidth,
+			bk: {
+				A: node.scrollLeft,
+				B: node.scrollTop,
+				bl: node.clientWidth,
 				aa: node.clientHeight
 			}
 		};
@@ -4309,17 +4309,17 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			bc: _Browser_getScene(),
-			bj: {
-				y: x,
-				z: y,
-				bk: _Browser_doc.documentElement.clientWidth,
+			bd: _Browser_getScene(),
+			bk: {
+				A: x,
+				B: y,
+				bl: _Browser_doc.documentElement.clientWidth,
 				aa: _Browser_doc.documentElement.clientHeight
 			},
-			bD: {
-				y: x + rect.left,
-				z: y + rect.top,
-				bk: rect.width,
+			bE: {
+				A: x + rect.left,
+				B: y + rect.top,
+				bl: rect.width,
 				aa: rect.height
 			}
 		};
@@ -4761,25 +4761,25 @@ var $elm$core$Array$treeFromBuilder = F2(
 	});
 var $elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.b) {
+		if (!builder.c) {
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.c),
+				$elm$core$Elm$JsArray$length(builder.e),
 				$elm$core$Array$shiftStep,
 				$elm$core$Elm$JsArray$empty,
-				builder.c);
+				builder.e);
 		} else {
-			var treeLen = builder.b * $elm$core$Array$branchFactor;
+			var treeLen = builder.c * $elm$core$Array$branchFactor;
 			var depth = $elm$core$Basics$floor(
 				A2($elm$core$Basics$logBase, $elm$core$Array$branchFactor, treeLen - 1));
-			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.d) : builder.d;
-			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.b);
+			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.f) : builder.f;
+			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.c);
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.c) + treeLen,
+				$elm$core$Elm$JsArray$length(builder.e) + treeLen,
 				A2($elm$core$Basics$max, 5, depth * $elm$core$Array$shiftStep),
 				tree,
-				builder.c);
+				builder.e);
 		}
 	});
 var $elm$core$Basics$idiv = _Basics_idiv;
@@ -4792,7 +4792,7 @@ var $elm$core$Array$initializeHelp = F5(
 				return A2(
 					$elm$core$Array$builderToArray,
 					false,
-					{d: nodeList, b: (len / $elm$core$Array$branchFactor) | 0, c: tail});
+					{f: nodeList, c: (len / $elm$core$Array$branchFactor) | 0, e: tail});
 			} else {
 				var leaf = $elm$core$Array$Leaf(
 					A3($elm$core$Elm$JsArray$initialize, $elm$core$Array$branchFactor, fromIndex, fn));
@@ -4859,7 +4859,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {aL: fragment, aP: host, N: path, a2: port_, a6: protocol, a7: query};
+		return {aM: fragment, aQ: host, N: path, a3: port_, a7: protocol, a8: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5141,8 +5141,8 @@ var $elm$browser$Browser$element = _Browser_element;
 var $author$project$Node$Children = $elm$core$Basics$identity;
 var $author$project$UserAction$Idle = 0;
 var $author$project$Map$initModel = {
-	f: _List_Nil,
-	i: {K: 0, R: $elm$core$Maybe$Nothing, S: $elm$core$Maybe$Nothing, I: $elm$core$Maybe$Nothing}
+	d: _List_Nil,
+	a: {L: 0, R: $elm$core$Maybe$Nothing, S: $elm$core$Maybe$Nothing, y: $elm$core$Maybe$Nothing}
 };
 var $elm$json$Json$Encode$null = _Json_encodeNull;
 var $author$project$Map$portLoadState = _Platform_outgoingPort(
@@ -5160,432 +5160,57 @@ var $author$project$Map$MsgDrag = function (a) {
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$map = _Platform_map;
-var $elm$browser$Browser$Events$Document = 0;
-var $elm$browser$Browser$Events$MySub = F3(
-	function (a, b, c) {
-		return {$: 0, a: a, b: b, c: c};
-	});
-var $elm$browser$Browser$Events$State = F2(
-	function (subs, pids) {
-		return {a0: pids, bh: subs};
-	});
-var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
-var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $elm$browser$Browser$Events$init = $elm$core$Task$succeed(
-	A2($elm$browser$Browser$Events$State, _List_Nil, $elm$core$Dict$empty));
-var $elm$browser$Browser$Events$nodeToKey = function (node) {
-	if (!node) {
-		return 'd_';
-	} else {
-		return 'w_';
-	}
-};
-var $elm$browser$Browser$Events$addKey = function (sub) {
-	var node = sub.a;
-	var name = sub.b;
-	return _Utils_Tuple2(
-		_Utils_ap(
-			$elm$browser$Browser$Events$nodeToKey(node),
-			name),
-		sub);
-};
-var $elm$core$Dict$Black = 1;
-var $elm$core$Dict$RBNode_elm_builtin = F5(
-	function (a, b, c, d, e) {
-		return {$: -1, a: a, b: b, c: c, d: d, e: e};
-	});
-var $elm$core$Dict$Red = 0;
-var $elm$core$Dict$balance = F5(
-	function (color, key, value, left, right) {
-		if ((right.$ === -1) && (!right.a)) {
-			var _v1 = right.a;
-			var rK = right.b;
-			var rV = right.c;
-			var rLeft = right.d;
-			var rRight = right.e;
-			if ((left.$ === -1) && (!left.a)) {
-				var _v3 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var lLeft = left.d;
-				var lRight = left.e;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					0,
-					key,
-					value,
-					A5($elm$core$Dict$RBNode_elm_builtin, 1, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, 1, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					color,
-					rK,
-					rV,
-					A5($elm$core$Dict$RBNode_elm_builtin, 0, key, value, left, rLeft),
-					rRight);
-			}
-		} else {
-			if ((((left.$ === -1) && (!left.a)) && (left.d.$ === -1)) && (!left.d.a)) {
-				var _v5 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var _v6 = left.d;
-				var _v7 = _v6.a;
-				var llK = _v6.b;
-				var llV = _v6.c;
-				var llLeft = _v6.d;
-				var llRight = _v6.e;
-				var lRight = left.e;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					0,
-					lK,
-					lV,
-					A5($elm$core$Dict$RBNode_elm_builtin, 1, llK, llV, llLeft, llRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, 1, key, value, lRight, right));
-			} else {
-				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
-			}
-		}
-	});
-var $elm$core$Basics$compare = _Utils_compare;
-var $elm$core$Dict$insertHelp = F3(
-	function (key, value, dict) {
-		if (dict.$ === -2) {
-			return A5($elm$core$Dict$RBNode_elm_builtin, 0, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
-		} else {
-			var nColor = dict.a;
-			var nKey = dict.b;
-			var nValue = dict.c;
-			var nLeft = dict.d;
-			var nRight = dict.e;
-			var _v1 = A2($elm$core$Basics$compare, key, nKey);
-			switch (_v1) {
-				case 0:
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						A3($elm$core$Dict$insertHelp, key, value, nLeft),
-						nRight);
-				case 1:
-					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
-				default:
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						nLeft,
-						A3($elm$core$Dict$insertHelp, key, value, nRight));
-			}
-		}
-	});
-var $elm$core$Dict$insert = F3(
-	function (key, value, dict) {
-		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
-		if ((_v0.$ === -1) && (!_v0.a)) {
-			var _v1 = _v0.a;
-			var k = _v0.b;
-			var v = _v0.c;
-			var l = _v0.d;
-			var r = _v0.e;
-			return A5($elm$core$Dict$RBNode_elm_builtin, 1, k, v, l, r);
-		} else {
-			var x = _v0;
-			return x;
-		}
-	});
-var $elm$core$Dict$fromList = function (assocs) {
-	return A3(
-		$elm$core$List$foldl,
-		F2(
-			function (_v0, dict) {
-				var key = _v0.a;
-				var value = _v0.b;
-				return A3($elm$core$Dict$insert, key, value, dict);
-			}),
-		$elm$core$Dict$empty,
-		assocs);
-};
-var $elm$core$Process$kill = _Scheduler_kill;
-var $elm$core$Dict$foldl = F3(
-	function (func, acc, dict) {
-		foldl:
-		while (true) {
-			if (dict.$ === -2) {
-				return acc;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var $temp$func = func,
-					$temp$acc = A3(
-					func,
-					key,
-					value,
-					A3($elm$core$Dict$foldl, func, acc, left)),
-					$temp$dict = right;
-				func = $temp$func;
-				acc = $temp$acc;
-				dict = $temp$dict;
-				continue foldl;
-			}
-		}
-	});
-var $elm$core$Dict$merge = F6(
-	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
-		var stepState = F3(
-			function (rKey, rValue, _v0) {
-				stepState:
-				while (true) {
-					var list = _v0.a;
-					var result = _v0.b;
-					if (!list.b) {
-						return _Utils_Tuple2(
-							list,
-							A3(rightStep, rKey, rValue, result));
-					} else {
-						var _v2 = list.a;
-						var lKey = _v2.a;
-						var lValue = _v2.b;
-						var rest = list.b;
-						if (_Utils_cmp(lKey, rKey) < 0) {
-							var $temp$rKey = rKey,
-								$temp$rValue = rValue,
-								$temp$_v0 = _Utils_Tuple2(
-								rest,
-								A3(leftStep, lKey, lValue, result));
-							rKey = $temp$rKey;
-							rValue = $temp$rValue;
-							_v0 = $temp$_v0;
-							continue stepState;
-						} else {
-							if (_Utils_cmp(lKey, rKey) > 0) {
-								return _Utils_Tuple2(
-									list,
-									A3(rightStep, rKey, rValue, result));
-							} else {
-								return _Utils_Tuple2(
-									rest,
-									A4(bothStep, lKey, lValue, rValue, result));
-							}
-						}
-					}
-				}
-			});
-		var _v3 = A3(
-			$elm$core$Dict$foldl,
-			stepState,
-			_Utils_Tuple2(
-				$elm$core$Dict$toList(leftDict),
-				initialResult),
-			rightDict);
-		var leftovers = _v3.a;
-		var intermediateResult = _v3.b;
-		return A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v4, result) {
-					var k = _v4.a;
-					var v = _v4.b;
-					return A3(leftStep, k, v, result);
-				}),
-			intermediateResult,
-			leftovers);
-	});
-var $elm$browser$Browser$Events$Event = F2(
-	function (key, event) {
-		return {aK: event, aQ: key};
-	});
-var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
-var $elm$browser$Browser$Events$spawn = F3(
-	function (router, key, _v0) {
-		var node = _v0.a;
-		var name = _v0.b;
-		var actualNode = function () {
-			if (!node) {
-				return _Browser_doc;
-			} else {
-				return _Browser_window;
-			}
-		}();
-		return A2(
-			$elm$core$Task$map,
-			function (value) {
-				return _Utils_Tuple2(key, value);
-			},
-			A3(
-				_Browser_on,
-				actualNode,
-				name,
-				function (event) {
-					return A2(
-						$elm$core$Platform$sendToSelf,
-						router,
-						A2($elm$browser$Browser$Events$Event, key, event));
-				}));
-	});
-var $elm$core$Dict$union = F2(
-	function (t1, t2) {
-		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
-	});
-var $elm$browser$Browser$Events$onEffects = F3(
-	function (router, subs, state) {
-		var stepRight = F3(
-			function (key, sub, _v6) {
-				var deads = _v6.a;
-				var lives = _v6.b;
-				var news = _v6.c;
-				return _Utils_Tuple3(
-					deads,
-					lives,
-					A2(
-						$elm$core$List$cons,
-						A3($elm$browser$Browser$Events$spawn, router, key, sub),
-						news));
-			});
-		var stepLeft = F3(
-			function (_v4, pid, _v5) {
-				var deads = _v5.a;
-				var lives = _v5.b;
-				var news = _v5.c;
-				return _Utils_Tuple3(
-					A2($elm$core$List$cons, pid, deads),
-					lives,
-					news);
-			});
-		var stepBoth = F4(
-			function (key, pid, _v2, _v3) {
-				var deads = _v3.a;
-				var lives = _v3.b;
-				var news = _v3.c;
-				return _Utils_Tuple3(
-					deads,
-					A3($elm$core$Dict$insert, key, pid, lives),
-					news);
-			});
-		var newSubs = A2($elm$core$List$map, $elm$browser$Browser$Events$addKey, subs);
-		var _v0 = A6(
-			$elm$core$Dict$merge,
-			stepLeft,
-			stepBoth,
-			stepRight,
-			state.a0,
-			$elm$core$Dict$fromList(newSubs),
-			_Utils_Tuple3(_List_Nil, $elm$core$Dict$empty, _List_Nil));
-		var deadPids = _v0.a;
-		var livePids = _v0.b;
-		var makeNewPids = _v0.c;
-		return A2(
-			$elm$core$Task$andThen,
-			function (pids) {
-				return $elm$core$Task$succeed(
-					A2(
-						$elm$browser$Browser$Events$State,
-						newSubs,
-						A2(
-							$elm$core$Dict$union,
-							livePids,
-							$elm$core$Dict$fromList(pids))));
-			},
-			A2(
-				$elm$core$Task$andThen,
-				function (_v1) {
-					return $elm$core$Task$sequence(makeNewPids);
-				},
-				$elm$core$Task$sequence(
-					A2($elm$core$List$map, $elm$core$Process$kill, deadPids))));
-	});
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (!_v0.$) {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
-	});
-var $elm$browser$Browser$Events$onSelfMsg = F3(
-	function (router, _v0, state) {
-		var key = _v0.aQ;
-		var event = _v0.aK;
-		var toMessage = function (_v2) {
-			var subKey = _v2.a;
-			var _v3 = _v2.b;
-			var node = _v3.a;
-			var name = _v3.b;
-			var decoder = _v3.c;
-			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : $elm$core$Maybe$Nothing;
-		};
-		var messages = A2($elm$core$List$filterMap, toMessage, state.bh);
-		return A2(
-			$elm$core$Task$andThen,
-			function (_v1) {
-				return $elm$core$Task$succeed(state);
-			},
-			$elm$core$Task$sequence(
-				A2(
-					$elm$core$List$map,
-					$elm$core$Platform$sendToApp(router),
-					messages)));
-	});
-var $elm$browser$Browser$Events$subMap = F2(
-	function (func, _v0) {
-		var node = _v0.a;
-		var name = _v0.b;
-		var decoder = _v0.c;
-		return A3(
-			$elm$browser$Browser$Events$MySub,
-			node,
-			name,
-			A2($elm$json$Json$Decode$map, func, decoder));
-	});
-_Platform_effectManagers['Browser.Events'] = _Platform_createManager($elm$browser$Browser$Events$init, $elm$browser$Browser$Events$onEffects, $elm$browser$Browser$Events$onSelfMsg, 0, $elm$browser$Browser$Events$subMap);
-var $elm$browser$Browser$Events$subscription = _Platform_leaf('Browser.Events');
-var $elm$browser$Browser$Events$on = F3(
-	function (node, name, decoder) {
-		return $elm$browser$Browser$Events$subscription(
-			A3($elm$browser$Browser$Events$MySub, node, name, decoder));
-	});
-var $elm$browser$Browser$Events$onKeyDown = A2($elm$browser$Browser$Events$on, 0, 'keydown');
 var $author$project$Map$MsgMapKeyDown = function (a) {
 	return {$: 10, a: a};
 };
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$Map$onMapKeyDownDecoder = A2(
-	$elm$json$Json$Decode$map,
-	$author$project$Map$MsgMapKeyDown,
-	A2($elm$json$Json$Decode$field, 'code', $elm$json$Json$Decode$string));
-var $author$project$Map$onKeyDownSubscription = $elm$browser$Browser$Events$onKeyDown($author$project$Map$onMapKeyDownDecoder);
 var $author$project$Map$MsgNoop = {$: 1};
-var $author$project$Map$MsgSetNodes = function (a) {
-	return {$: 6, a: a};
-};
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
 			f(x));
 	});
 var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $author$project$Map$Key = function (code) {
+	return {aD: code};
+};
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
+	function (key, valDecoder, decoder) {
+		return A2(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A2($elm$json$Json$Decode$field, key, valDecoder),
+			decoder);
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Map$keyDecoder = A3(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'code',
+	$elm$json$Json$Decode$string,
+	$elm$json$Json$Decode$succeed($author$project$Map$Key));
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$Map$portOnKeyDown = _Platform_incomingPort('portOnKeyDown', $elm$json$Json$Decode$value);
+var $author$project$Utilities$toMsgOrNoop = F3(
+	function (toMsg, noop, result) {
+		if (!result.$) {
+			var data = result.a;
+			return toMsg(data);
+		} else {
+			return noop;
+		}
+	});
+var $author$project$Map$onKeyDownSubscription = $author$project$Map$portOnKeyDown(
+	A2(
+		$elm$core$Basics$composeR,
+		$elm$json$Json$Decode$decodeValue($author$project$Map$keyDecoder),
+		A2($author$project$Utilities$toMsgOrNoop, $author$project$Map$MsgMapKeyDown, $author$project$Map$MsgNoop)));
+var $author$project$Map$MsgSetNodes = function (a) {
+	return {$: 6, a: a};
+};
 var $author$project$Node$Node = F6(
 	function (id, label, position, size, childEdgeHeight, children) {
-		return {L: childEdgeHeight, bu: children, ab: id, B: label, s: position, aj: size};
+		return {F: childEdgeHeight, bv: children, ab: id, w: label, s: position, aj: size};
 	});
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$hardcoded = A2($elm$core$Basics$composeR, $elm$json$Json$Decode$succeed, $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom);
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$andThen = _Json_andThen;
@@ -5596,16 +5221,9 @@ var $elm$json$Json$Decode$lazy = function (thunk) {
 		$elm$json$Json$Decode$succeed(0));
 };
 var $elm$json$Json$Decode$list = _Json_decodeList;
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
-	function (key, valDecoder, decoder) {
-		return A2(
-			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
-			A2($elm$json$Json$Decode$field, key, valDecoder),
-			decoder);
-	});
 var $author$project$Geometry$Vector = F2(
 	function (x, y) {
-		return {y: x, z: y};
+		return {A: x, B: y};
 	});
 var $elm$json$Json$Decode$float = _Json_decodeFloat;
 var $author$project$Geometry$vectorDecoder = A3(
@@ -5661,17 +5279,7 @@ var $author$project$Map$nodeDecoder = $author$project$Map$cyclic$nodeDecoder();
 $author$project$Map$cyclic$nodeDecoder = function () {
 	return $author$project$Map$nodeDecoder;
 };
-var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $author$project$Map$portOnLoadState = _Platform_incomingPort('portOnLoadState', $elm$json$Json$Decode$value);
-var $author$project$Utilities$toMsgOrNoop = F3(
-	function (toMsg, noop, result) {
-		if (!result.$) {
-			var data = result.a;
-			return toMsg(data);
-		} else {
-			return noop;
-		}
-	});
 var $author$project$Map$onLoadStateSubscription = $author$project$Map$portOnLoadState(
 	A2(
 		$elm$core$Basics$composeR,
@@ -5683,7 +5291,7 @@ var $author$project$DragControl$MsgOnDragBy = function (a) {
 };
 var $author$project$DragControl$OnDragData = F4(
 	function (targetId, dx, dy, geometry) {
-		return {aG: dx, aH: dy, an: geometry, av: targetId};
+		return {aH: dx, aI: dy, an: geometry, av: targetId};
 	});
 var $author$project$DragControl$Geometry = F2(
 	function (target, beacons) {
@@ -5691,9 +5299,27 @@ var $author$project$DragControl$Geometry = F2(
 	});
 var $author$project$DragControl$Beacon = F2(
 	function (path, location) {
-		return {F: location, N: path};
+		return {H: location, N: path};
 	});
 var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (!_v0.$) {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
 var $author$project$Tree$AtIndex = function (a) {
 	return {$: 0, a: a};
 };
@@ -5894,10 +5520,9 @@ var $author$project$Map$MsgDeleteNode = function (a) {
 var $author$project$Map$MsgEditLabel = function (a) {
 	return {$: 5, a: a};
 };
-var $author$project$Map$appendChild = F2(
-	function (_v0, node) {
-		var nodes = _v0;
-		return A2($elm$core$List$cons, node, nodes);
+var $author$project$Map$MsgNewNode = F2(
+	function (a, b) {
+		return {$: 7, a: a, b: b};
 	});
 var $author$project$Node$childList = function (_v0) {
 	var nodes = _v0;
@@ -5938,7 +5563,7 @@ var $author$project$Tree$findNode = F3(
 				A3(
 					$author$project$Tree$findNode,
 					unpack,
-					unpack(node.bu),
+					unpack(node.bv),
 					target));
 		};
 		var indexed = A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, nodes);
@@ -6126,12 +5751,12 @@ var $author$project$Tree$updateNode = F5(
 				return _Utils_update(
 					node,
 					{
-						bu: pack(
+						bv: pack(
 							A5(
 								$author$project$Tree$updateNode,
 								pack,
 								unpack,
-								unpack(node.bu),
+								unpack(node.bv),
 								subpath,
 								updater))
 					});
@@ -6148,7 +5773,7 @@ var $author$project$Map$applyChildEdgeHeightChange = F2(
 		var updater = function (node) {
 			return _Utils_update(
 				node,
-				{L: height});
+				{F: height});
 		};
 		var _v2 = A2($author$project$TreeSpec$findNode, nodes, targetId);
 		if (!_v2.$) {
@@ -6164,7 +5789,7 @@ var $author$project$Map$applyEditLabelState = F2(
 		return _Utils_update(
 			state,
 			{
-				K: 2,
+				L: 2,
 				R: $elm$core$Maybe$Nothing,
 				S: $elm$core$Maybe$Just(id)
 			});
@@ -6175,7 +5800,7 @@ var $author$project$Map$applyLabelChange = F3(
 		var updater = function (node) {
 			return _Utils_update(
 				node,
-				{B: label});
+				{w: label});
 		};
 		var _v1 = A2($author$project$TreeSpec$findNode, nodes, targetId);
 		if (!_v1.$) {
@@ -6210,10 +5835,10 @@ var $author$project$Map$encodeVector = function (v) {
 			[
 				_Utils_Tuple2(
 				'x',
-				$elm$json$Json$Encode$float(v.y)),
+				$elm$json$Json$Encode$float(v.A)),
 				_Utils_Tuple2(
 				'y',
-				$elm$json$Json$Encode$float(v.z))
+				$elm$json$Json$Encode$float(v.B))
 			]));
 };
 var $elm$json$Json$Encode$list = F2(
@@ -6235,7 +5860,7 @@ var $author$project$Map$encodeNode = function (node) {
 				$author$project$Map$encodeId(node.ab)),
 				_Utils_Tuple2(
 				'label',
-				$elm$json$Json$Encode$string(node.B)),
+				$elm$json$Json$Encode$string(node.w)),
 				_Utils_Tuple2(
 				'position',
 				$author$project$Map$encodeVector(node.s)),
@@ -6244,7 +5869,7 @@ var $author$project$Map$encodeNode = function (node) {
 				$author$project$Map$encodeVector(node.aj)),
 				_Utils_Tuple2(
 				'children',
-				$author$project$Map$encodeNodes(node.bu))
+				$author$project$Map$encodeNodes(node.bv))
 			]));
 };
 var $author$project$Map$encodeNodes = function (_v0) {
@@ -6254,16 +5879,146 @@ var $author$project$Map$encodeNodes = function (_v0) {
 var $author$project$Map$endEditLabelState = function (state) {
 	return _Utils_update(
 		state,
-		{K: 0, R: $elm$core$Maybe$Nothing, S: $elm$core$Maybe$Nothing});
+		{L: 0, R: $elm$core$Maybe$Nothing, S: $elm$core$Maybe$Nothing});
 };
 var $author$project$Node$idToAttribute = function (id) {
 	return _Utils_ap(
 		$author$project$Node$attributePrefix,
 		$elm$core$String$fromInt(id));
 };
+var $author$project$Tree$addNode = F5(
+	function (pack, unpack, nodes, path, newNode) {
+		if (path.$ === 1) {
+			var index = path.a;
+			var subpath = path.b;
+			var recurse = function (node) {
+				return _Utils_update(
+					node,
+					{
+						bv: pack(
+							A5(
+								$author$project$Tree$addNode,
+								pack,
+								unpack,
+								unpack(node.bv),
+								subpath,
+								newNode))
+					});
+			};
+			return A3($elm_community$list_extra$List$Extra$updateAt, index, recurse, nodes);
+		} else {
+			var index = path.a;
+			if (_Utils_cmp(
+				$elm$core$List$length(nodes),
+				index) < 0) {
+				return nodes;
+			} else {
+				var tail = A2($elm$core$List$drop, index, nodes);
+				var head = A2($elm$core$List$take, index, nodes);
+				return _Utils_ap(
+					head,
+					A2($elm$core$List$cons, newNode, tail));
+			}
+		}
+	});
+var $author$project$TreeSpec$addNode = A2($author$project$Tree$addNode, $elm$core$Basics$identity, $author$project$Node$childList);
+var $author$project$Map$insertChild = F3(
+	function (_v0, path, node) {
+		var nodes = _v0;
+		return A3($author$project$TreeSpec$addNode, nodes, path, node);
+	});
 var $elm$core$Platform$Cmd$map = _Platform_map;
+var $elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Map$findMaxId = function (_v0) {
+	var nodes = _v0;
+	return A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		$elm$core$List$maximum(
+			_Utils_ap(
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.ab;
+					},
+					nodes),
+				A2(
+					$elm$core$List$map,
+					function (node) {
+						return $author$project$Map$findMaxId(node.bv);
+					},
+					nodes))));
+};
+var $author$project$Map$newNode = function (children) {
+	return {
+		F: 0,
+		bv: _List_Nil,
+		ab: $author$project$Map$findMaxId(children) + 1,
+		w: 'new item',
+		s: A2($author$project$Geometry$Vector, 0, 0),
+		aj: A2($author$project$Geometry$Vector, 0, 0)
+	};
+};
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Basics$not = _Basics_not;
+var $author$project$Tree$appendPath = F2(
+	function (index, maybePath) {
+		if (!maybePath.$) {
+			var path = maybePath.a;
+			if (!path.$) {
+				var base = path.a;
+				return A2(
+					$author$project$Tree$InSubtree,
+					base,
+					$author$project$Tree$AtIndex(index));
+			} else {
+				var subindex = path.a;
+				var subpath = path.b;
+				return A2(
+					$author$project$Tree$InSubtree,
+					subindex,
+					A2(
+						$author$project$Tree$appendPath,
+						index,
+						$elm$core$Maybe$Just(subpath)));
+			}
+		} else {
+			return $author$project$Tree$AtIndex(index);
+		}
+	});
+var $author$project$Map$pathToFirstChildOfId = F2(
+	function (_v0, id) {
+		var nodes = _v0;
+		var _v1 = A2($author$project$TreeSpec$findNode, nodes, id);
+		if (!_v1.$) {
+			var path = _v1.a;
+			return $elm$core$Maybe$Just(
+				A2(
+					$author$project$Tree$appendPath,
+					0,
+					$elm$core$Maybe$Just(path)));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
 var $author$project$Map$portEditLabel = _Platform_outgoingPort(
 	'portEditLabel',
 	function ($) {
@@ -6283,16 +6038,16 @@ var $author$project$Map$portOnPointerDown = _Platform_outgoingPort(
 				[
 					_Utils_Tuple2(
 					'pointerType',
-					$elm$json$Json$Encode$string($.a1)),
+					$elm$json$Json$Encode$string($.a2)),
 					_Utils_Tuple2(
 					'targetId',
 					$elm$json$Json$Encode$string($.av)),
 					_Utils_Tuple2(
 					'x',
-					$elm$json$Json$Encode$float($.y)),
+					$elm$json$Json$Encode$float($.A)),
 					_Utils_Tuple2(
 					'y',
-					$elm$json$Json$Encode$float($.z))
+					$elm$json$Json$Encode$float($.B))
 				]));
 	});
 var $author$project$Map$portSaveState = _Platform_outgoingPort('portSaveState', $elm$core$Basics$identity);
@@ -6324,12 +6079,12 @@ var $author$project$Tree$removeNode = F4(
 				return _Utils_update(
 					node,
 					{
-						bu: pack(
+						bv: pack(
 							A4(
 								$author$project$Tree$removeNode,
 								pack,
 								unpack,
-								unpack(node.bu),
+								unpack(node.bv),
 								subpath))
 					});
 			};
@@ -6352,7 +6107,7 @@ var $author$project$Map$selectNode = F2(
 	function (state, id) {
 		return _Utils_update(
 			state,
-			{I: id});
+			{y: id});
 	});
 var $author$project$UserAction$Dragging = 1;
 var $elm$core$Maybe$andThen = F2(
@@ -6415,17 +6170,17 @@ var $author$project$DragControl$findClosestBeaconPath = F3(
 			var slack = function () {
 				var _v2 = beacon.N;
 				if ((_v2.$ === 1) && (!_v2.b.$)) {
-					return geometry.q.aj.y;
+					return geometry.q.aj.A;
 				} else {
 					return 10;
 				}
 			}();
-			return (_Utils_cmp(beacon.F.y, geometry.q.s.y + slack) < 1) && ((_Utils_cmp(beacon.F.y, geometry.q.s.y - geometry.q.aj.y) > -1) && ((_Utils_cmp(beacon.F.z, (geometry.q.s.z + geometry.q.aj.z) + 50) < 1) && (_Utils_cmp(beacon.F.z, geometry.q.s.z - 50) > -1)));
+			return (_Utils_cmp(beacon.H.A, geometry.q.s.A + slack) < 1) && ((_Utils_cmp(beacon.H.A, geometry.q.s.A - geometry.q.aj.A) > -1) && ((_Utils_cmp(beacon.H.B, (geometry.q.s.B + geometry.q.aj.B) + 50) < 1) && (_Utils_cmp(beacon.H.B, geometry.q.s.B - 50) > -1)));
 		};
 		var validPath = function (path) {
 			return !A2($author$project$Tree$isSubpath, path, ignorePath);
 		};
-		var tx = geometry.q.s.y;
+		var tx = geometry.q.s.A;
 		var ratio = function () {
 			switch (bias) {
 				case 0:
@@ -6436,7 +6191,7 @@ var $author$project$DragControl$findClosestBeaconPath = F3(
 					return 0.8;
 			}
 		}();
-		var ty = geometry.q.s.z + (ratio * geometry.q.aj.z);
+		var ty = geometry.q.s.B + (ratio * geometry.q.aj.B);
 		var pathIfClose = function (distanceBeacon) {
 			return A2($author$project$Utilities$maybeJust, distanceBeacon.al <= 200, distanceBeacon.N);
 		};
@@ -6447,7 +6202,7 @@ var $author$project$DragControl$findClosestBeaconPath = F3(
 			},
 			geometry.aA);
 		var computeDistance = function (beacon) {
-			var _v0 = _Utils_Tuple2(beacon.F.y, beacon.F.z);
+			var _v0 = _Utils_Tuple2(beacon.H.A, beacon.H.B);
 			var bx = _v0.a;
 			var by = _v0.b;
 			return $elm$core$Basics$sqrt(((bx - tx) * (bx - tx)) + ((by - ty) * (by - ty)));
@@ -6479,41 +6234,6 @@ var $author$project$DragControl$getBeaconBias = function (dy) {
 var $author$project$Utilities$maybeCmd = F2(
 	function (condition, cmd) {
 		return condition ? cmd(0) : $elm$core$Platform$Cmd$none;
-	});
-var $author$project$Tree$addNode = F5(
-	function (pack, unpack, nodes, path, newNode) {
-		if (path.$ === 1) {
-			var index = path.a;
-			var subpath = path.b;
-			var recurse = function (node) {
-				return _Utils_update(
-					node,
-					{
-						bu: pack(
-							A5(
-								$author$project$Tree$addNode,
-								pack,
-								unpack,
-								unpack(node.bu),
-								subpath,
-								newNode))
-					});
-			};
-			return A3($elm_community$list_extra$List$Extra$updateAt, index, recurse, nodes);
-		} else {
-			var index = path.a;
-			if (_Utils_cmp(
-				$elm$core$List$length(nodes),
-				index) < 0) {
-				return nodes;
-			} else {
-				var tail = A2($elm$core$List$drop, index, nodes);
-				var head = A2($elm$core$List$take, index, nodes);
-				return _Utils_ap(
-					head,
-					A2($elm$core$List$cons, newNode, tail));
-			}
-		}
 	});
 var $author$project$Tree$adjustPathForMove = F2(
 	function (removed, path) {
@@ -6571,7 +6291,7 @@ var $author$project$Tree$isValidInsertionPath = F3(
 				if (tail.b) {
 					var first = tail.a;
 					var $temp$unpack = unpack,
-						$temp$nodes = unpack(first.bu),
+						$temp$nodes = unpack(first.bv),
 						$temp$path = subpath;
 					unpack = $temp$unpack;
 					nodes = $temp$nodes;
@@ -6604,7 +6324,7 @@ var $author$project$Tree$nodeAt = F3(
 				if (!_v1.$) {
 					var node = _v1.a;
 					var $temp$unpack = unpack,
-						$temp$nodes = unpack(node.bu),
+						$temp$nodes = unpack(node.bv),
 						$temp$path = subpath;
 					unpack = $temp$unpack;
 					nodes = $temp$nodes;
@@ -6651,37 +6371,28 @@ var $author$project$DragControl$portRafAlign = _Platform_outgoingPort(
 var $author$project$DragControl$stopDrag = function (appState) {
 	return _Utils_update(
 		appState,
-		{K: 0, R: $elm$core$Maybe$Nothing});
+		{L: 0, R: $elm$core$Maybe$Nothing});
 };
 var $author$project$DragControl$updateNodePosition = F3(
 	function (nodes, path, _v0) {
 		var dx = _v0.a;
 		var dy = _v0.b;
 		var addDelta = function (node) {
-			var position = A2($author$project$Geometry$Vector, node.s.y + dx, node.s.z + dy);
+			var position = A2($author$project$Geometry$Vector, node.s.A + dx, node.s.B + dy);
 			return _Utils_update(
 				node,
 				{s: position});
 		};
 		return A3($author$project$TreeSpec$updateNode, nodes, path, addDelta);
 	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$DragControl$applyDragByData = F3(
 	function (appState, children, _v0) {
-		var action = appState.K;
+		var action = appState.L;
 		var drag = appState.R;
 		var nodes = children;
 		var targetId = _v0.av;
-		var dx = _v0.aG;
-		var dy = _v0.aH;
+		var dx = _v0.aH;
+		var dy = _v0.aI;
 		var geometry = _v0.an;
 		if (action !== 1) {
 			return _Utils_Tuple3(appState, children, $elm$core$Platform$Cmd$none);
@@ -6785,7 +6496,7 @@ var $author$project$DragControl$setNodePosition = F3(
 	});
 var $author$project$DragControl$applyDragStartData = F3(
 	function (appState, children, _v0) {
-		var action = appState.K;
+		var action = appState.L;
 		var nodes = children;
 		var targetId = _v0.av;
 		var geometry = _v0.an;
@@ -6803,14 +6514,14 @@ var $author$project$DragControl$applyDragStartData = F3(
 			return _Utils_Tuple3(
 				_Utils_update(
 					appState,
-					{K: newAction, R: newDrag}),
+					{L: newAction, R: newDrag}),
 				newNodes,
 				$elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$DragControl$applyDragStop = F2(
 	function (appState, children) {
-		var action = appState.K;
+		var action = appState.L;
 		return (action === 1) ? _Utils_Tuple3(
 			$author$project$DragControl$stopDrag(appState),
 			children,
@@ -6836,7 +6547,7 @@ var $author$project$DragControl$update = F2(
 var $author$project$Map$handleMapKeyDown = F2(
 	function (key, model) {
 		if ((key === 'Backspace') || (key === 'Delete')) {
-			var _v4 = model.i.I;
+			var _v4 = model.a.y;
 			if (!_v4.$) {
 				var id = _v4.a;
 				return A2(
@@ -6844,10 +6555,32 @@ var $author$project$Map$handleMapKeyDown = F2(
 					$author$project$Map$MsgDeleteNode(id),
 					model);
 			} else {
-				return A2($author$project$Map$updateAndSave, $author$project$Map$MsgNoop, model);
+				return A2($author$project$Map$update, $author$project$Map$MsgNoop, model);
 			}
 		} else {
-			return A2($author$project$Map$updateAndSave, $author$project$Map$MsgNoop, model);
+			if ((key === 'Tab') && (!model.a.L)) {
+				var _v5 = model.a.y;
+				if (!_v5.$) {
+					var id = _v5.a;
+					var mpath = A2($author$project$Map$pathToFirstChildOfId, model.d, id);
+					if (!mpath.$) {
+						var path = mpath.a;
+						return A2(
+							$author$project$Map$update,
+							A2(
+								$author$project$Map$MsgNewNode,
+								path,
+								$author$project$Map$newNode(model.d)),
+							model);
+					} else {
+						return A2($author$project$Map$update, $author$project$Map$MsgNoop, model);
+					}
+				} else {
+					return A2($author$project$Map$update, $author$project$Map$MsgNoop, model);
+				}
+			} else {
+				return A2($author$project$Map$update, $author$project$Map$MsgNoop, model);
+			}
 		}
 	});
 var $author$project$Map$update = F2(
@@ -6865,14 +6598,14 @@ var $author$project$Map$update = F2(
 					var _v3 = A2(
 						$author$project$DragControl$update,
 						dragMsg,
-						_Utils_Tuple2(model.i, model.f));
+						_Utils_Tuple2(model.a, model.d));
 					var state = _v3.a;
 					var nodes = _v3.b;
 					var cmd = _v3.c;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{f: nodes, i: state}),
+							{d: nodes, a: state}),
 						A2($elm$core$Platform$Cmd$map, $author$project$Map$MsgDrag, cmd));
 				case 3:
 					var data = msg.a;
@@ -6880,28 +6613,28 @@ var $author$project$Map$update = F2(
 						_Utils_update(
 							model,
 							{
-								f: A2($author$project$Map$applyChildEdgeHeightChange, model.f, data)
+								d: A2($author$project$Map$applyChildEdgeHeightChange, model.d, data)
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 5:
 					var nodeId = msg.a;
-					var state = A2($author$project$Map$applyEditLabelState, model.i, nodeId);
+					var state = A2($author$project$Map$applyEditLabelState, model.a, nodeId);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{i: state}),
+							{a: state}),
 						$author$project$Map$portEditLabel(
 							{
 								av: $author$project$Node$idToAttribute(nodeId)
 							}));
 				case 4:
 					var data = msg.a;
-					var state = $author$project$Map$endEditLabelState(model.i);
-					var nodes = A3($author$project$Map$applyLabelChange, model.f, data.av, data.B);
+					var state = $author$project$Map$endEditLabelState(model.a);
+					var nodes = A3($author$project$Map$applyLabelChange, model.d, data.av, data.w);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{f: nodes, i: state}),
+							{d: nodes, a: state}),
 						$elm$core$Platform$Cmd$none);
 				case 1:
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -6910,39 +6643,49 @@ var $author$project$Map$update = F2(
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{f: children}),
+							{d: children}),
 						$elm$core$Platform$Cmd$none);
 				case 7:
-					var node = msg.a;
+					var path = msg.a;
+					var node = msg.b;
+					var state = A2(
+						$author$project$Map$selectNode,
+						model.a,
+						$elm$core$Maybe$Just(node.ab));
 					var $temp$msg = $author$project$Map$MsgEditLabel(node.ab),
 						$temp$model = _Utils_update(
 						model,
 						{
-							f: A2($author$project$Map$appendChild, model.f, node)
+							d: A3($author$project$Map$insertChild, model.d, path, node),
+							a: state
 						});
 					msg = $temp$msg;
 					model = $temp$model;
 					continue update;
 				case 8:
 					var id = msg.a;
-					var state = A2($author$project$Map$selectNode, model.i, id);
+					var state = A2($author$project$Map$selectNode, model.a, id);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{i: state}),
+							{a: state}),
 						$elm$core$Platform$Cmd$none);
 				case 9:
 					var id = msg.a;
+					var state = _Utils_eq(
+						model.a.y,
+						$elm$core$Maybe$Just(id)) ? A2($author$project$Map$selectNode, model.a, $elm$core$Maybe$Nothing) : model.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								f: A2($author$project$Map$removeChild, model.f, id)
+								d: A2($author$project$Map$removeChild, model.d, id),
+								a: state
 							}),
 						$elm$core$Platform$Cmd$none);
 				default:
 					var key = msg.a;
-					return A2($author$project$Map$handleMapKeyDown, key, model);
+					return A2($author$project$Map$handleMapKeyDown, key.aD, model);
 			}
 		}
 	});
@@ -6958,8 +6701,8 @@ var $author$project$Map$updateAndSave = F2(
 		var _v0 = A2($author$project$Map$update, msg, model);
 		var newModel = _v0.a;
 		var cmd = _v0.b;
-		var saveCmd = ((!isDelete) && _Utils_eq(model.i.K, newModel.i.K)) ? $elm$core$Platform$Cmd$none : $author$project$Map$portSaveState(
-			$author$project$Map$encodeNodes(newModel.f));
+		var saveCmd = ((!isDelete) && _Utils_eq(model.a.L, newModel.a.L)) ? $elm$core$Platform$Cmd$none : $author$project$Map$portSaveState(
+			$author$project$Map$encodeNodes(newModel.d));
 		return _Utils_Tuple2(
 			newModel,
 			$elm$core$Platform$Cmd$batch(
@@ -7004,10 +6747,10 @@ var $author$project$DragControl$getDragNode = F2(
 			},
 			drag);
 	});
-var $author$project$MapView$defaultViewState = {v: $elm$core$Maybe$Nothing, aI: $elm$core$Maybe$Nothing, aO: '', bL: '', I: $elm$core$Maybe$Nothing, ch: false, cm: '', ax: false};
+var $author$project$MapView$defaultViewState = {v: $elm$core$Maybe$Nothing, aJ: $elm$core$Maybe$Nothing, aP: '', bM: '', y: $elm$core$Maybe$Nothing, ci: false, cn: '', ax: false};
 var $author$project$DragControl$adjustInitialViewState = F2(
 	function (_v0, view) {
-		var action = _v0.K;
+		var action = _v0.L;
 		var drag = _v0.R;
 		var viewBeacons = action === 1;
 		var dragId = A2(
@@ -7024,7 +6767,7 @@ var $author$project$Map$adjustInitialViewState = F2(
 	function (state, viewState) {
 		return _Utils_update(
 			viewState,
-			{aI: state.S, I: state.I});
+			{aJ: state.S, y: state.y});
 	});
 var $author$project$Map$initialViewStateAdjusters = function (state) {
 	return _List_fromArray(
@@ -7058,69 +6801,40 @@ var $author$project$Map$getInitialViewState = function (state) {
 };
 var $author$project$Map$FlatNode = F8(
 	function (id, label, x, y, width, height, childEdgeHeight, children) {
-		return {L: childEdgeHeight, bu: children, aa: height, ab: id, B: label, bk: width, y: x, z: y};
+		return {F: childEdgeHeight, bv: children, aa: height, ab: id, w: label, bl: width, A: x, B: y};
 	});
-var $author$project$Map$MsgNewNode = function (a) {
-	return {$: 7, a: a};
-};
 var $author$project$Map$andStopPropagation = function (msg) {
-	return {aU: msg, a3: false, be: true};
-};
-var $elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $author$project$Map$findMaxId = function (_v0) {
-	var nodes = _v0;
-	return A2(
-		$elm$core$Maybe$withDefault,
-		0,
-		$elm$core$List$maximum(
-			_Utils_ap(
-				A2(
-					$elm$core$List$map,
-					function ($) {
-						return $.ab;
-					},
-					nodes),
-				A2(
-					$elm$core$List$map,
-					function (node) {
-						return $author$project$Map$findMaxId(node.bu);
-					},
-					nodes))));
+	return {aV: msg, a4: false, bf: true};
 };
 var $author$project$Geometry$add = F2(
 	function (a, b) {
-		return {y: a.y + b.y, z: a.z + b.z};
+		return {A: a.A + b.A, B: a.B + b.B};
 	});
 var $elm$core$Basics$negate = function (n) {
 	return -n;
 };
-var $author$project$Map$newNodeOffset = {y: -40.0, z: -20.0};
+var $author$project$Map$newNodeOffset = {A: -40.0, B: -20.0};
 var $author$project$Map$flatNodeToNode = function (f) {
 	return {
-		L: f.L,
-		bu: f.bu,
+		F: f.F,
+		bv: f.bv,
 		ab: f.ab,
-		B: f.B,
+		w: f.w,
 		s: A2(
 			$author$project$Geometry$add,
-			A2($author$project$Geometry$Vector, f.y, f.z),
+			A2($author$project$Geometry$Vector, f.A, f.B),
 			$author$project$Map$newNodeOffset),
-		aj: A2($author$project$Geometry$Vector, f.bk, f.aa)
+		aj: A2($author$project$Geometry$Vector, f.bl, f.aa)
 	};
 };
 var $author$project$Map$onAddNewNodeClickDecoder = function (children) {
 	return A2(
 		$elm$json$Json$Decode$map,
-		A2($elm$core$Basics$composeR, $author$project$Map$MsgNewNode, $author$project$Map$andStopPropagation),
+		A2(
+			$elm$core$Basics$composeR,
+			$author$project$Map$MsgNewNode(
+				$author$project$Tree$AtIndex(0)),
+			$author$project$Map$andStopPropagation),
 		A2(
 			$elm$json$Json$Decode$map,
 			$author$project$Map$flatNodeToNode,
@@ -7215,13 +6929,13 @@ var $author$project$DragControl$adjustViewStateForNode = F3(
 			$elm$core$Maybe$Just(node.ab));
 		var htmlNodeId = shadow ? $author$project$Node$idToShadowAttribute(node.ab) : $author$project$Node$idToAttribute(node.ab);
 		var headBeaconPath = $elm$core$String$trimLeft(
-			state.aO + (' ' + $elm$core$String$fromInt(index)));
+			state.aP + (' ' + $elm$core$String$fromInt(index)));
 		var tailBeaconPath = headBeaconPath + (' ' + $elm$core$String$fromInt(
 			$elm$core$List$length(
-				$author$project$Node$childList(node.bu))));
+				$author$project$Node$childList(node.bv))));
 		return _Utils_update(
 			state,
-			{aO: headBeaconPath, bL: htmlNodeId, ch: shadow, cm: tailBeaconPath, ax: viewBeacons});
+			{aP: headBeaconPath, bM: htmlNodeId, ci: shadow, cn: tailBeaconPath, ax: viewBeacons});
 	});
 var $author$project$Map$adjustViewStateForNode = F3(
 	function (_v0, _v1, viewState) {
@@ -7316,7 +7030,7 @@ var $author$project$Map$MsgOnLabelChanged = function (a) {
 };
 var $author$project$Map$OnLabelChangedData = F2(
 	function (targetId, label) {
-		return {B: label, av: targetId};
+		return {w: label, av: targetId};
 	});
 var $author$project$Map$onLabelChangedDecoder = function (targetId) {
 	return A2(
@@ -7336,7 +7050,7 @@ var $author$project$Map$MsgOnPointerDown = function (a) {
 };
 var $author$project$Map$OnPointerDownPortData = F4(
 	function (targetId, pointerType, x, y) {
-		return {a1: pointerType, av: targetId, y: x, z: y};
+		return {a2: pointerType, av: targetId, A: x, B: y};
 	});
 var $author$project$Map$onPointerDownDecoder = function (targetId) {
 	return A2(
@@ -7362,7 +7076,7 @@ var $author$project$Map$onPointerDownDecoder = function (targetId) {
 var $author$project$Map$viewNodeContents = F2(
 	function (node, viewState) {
 		var attributes = _Utils_ap(
-			_Utils_eq(viewState.aI, $elm$core$Maybe$Nothing) ? _List_fromArray(
+			_Utils_eq(viewState.aJ, $elm$core$Maybe$Nothing) ? _List_fromArray(
 				[
 					A2(
 					$elm$html$Html$Events$custom,
@@ -7378,7 +7092,7 @@ var $author$project$Map$viewNodeContents = F2(
 							_Utils_Tuple2(
 							'selected',
 							_Utils_eq(
-								viewState.I,
+								viewState.y,
 								$elm$core$Maybe$Just(node.ab)))
 						]))
 				]));
@@ -7413,7 +7127,7 @@ var $author$project$Map$viewNodeContents = F2(
 									$elm$html$Html$Events$on,
 									'labelchanged',
 									$author$project$Map$onLabelChangedDecoder(node.ab)),
-									A2($elm$html$Html$Attributes$attribute, 'label', node.B)
+									A2($elm$html$Html$Attributes$attribute, 'label', node.w)
 								]),
 							_List_Nil)
 						]))
@@ -7426,19 +7140,19 @@ var $author$project$Map$viewChildNode = F3(
 			$author$project$Utilities$maybeArray,
 			localState.ax,
 			function (_v1) {
-				return $author$project$Map$viewBeacon(localState.cm);
+				return $author$project$Map$viewBeacon(localState.cn);
 			});
 		var headBeacons = A2(
 			$author$project$Utilities$maybeArray,
 			parentState.ax,
 			function (_v0) {
-				return $author$project$Map$viewBeacon(localState.aO);
+				return $author$project$Map$viewBeacon(localState.aP);
 			});
 		var childNodes = $elm$core$List$concat(
 			A2(
 				$elm$core$List$indexedMap,
 				$author$project$Map$viewChildNode(localState),
-				$author$project$Node$childList(node.bu)));
+				$author$project$Node$childList(node.bv)));
 		return _Utils_ap(
 			headBeacons,
 			_List_fromArray(
@@ -7452,12 +7166,12 @@ var $author$project$Map$viewChildNode = F3(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$id(localState.bL),
+									$elm$html$Html$Attributes$id(localState.bM),
 									$elm$html$Html$Attributes$classList(
 									_List_fromArray(
 										[
 											_Utils_Tuple2('child', true),
-											_Utils_Tuple2('shadow', localState.ch)
+											_Utils_Tuple2('shadow', localState.ci)
 										]))
 								]),
 							_List_fromArray(
@@ -7487,7 +7201,7 @@ var $author$project$Map$viewChildNode = F3(
 											A2(
 											$elm$html$Html$Attributes$style,
 											'height',
-											$author$project$Map$asPx(node.L))
+											$author$project$Map$asPx(node.F))
 										]),
 									_List_Nil),
 									A3(
@@ -7514,33 +7228,33 @@ var $author$project$Map$viewTopNode = F3(
 			$author$project$Utilities$maybeArray,
 			localState.ax,
 			function (_v0) {
-				return $author$project$Map$viewBeacon(localState.cm);
+				return $author$project$Map$viewBeacon(localState.cn);
 			});
 		var childNodes = $elm$core$List$concat(
 			A2(
 				$elm$core$List$indexedMap,
 				$author$project$Map$viewChildNode(localState),
-				$author$project$Node$childList(node.bu)));
+				$author$project$Node$childList(node.bv)));
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$id(localState.bL),
+					$elm$html$Html$Attributes$id(localState.bM),
 					$elm$html$Html$Attributes$class('top_child'),
 					$elm$html$Html$Attributes$classList(
 					_List_fromArray(
 						[
-							_Utils_Tuple2('shadow', localState.ch),
+							_Utils_Tuple2('shadow', localState.ci),
 							_Utils_Tuple2('on_top', onTop)
 						])),
 					A2(
 					$elm$html$Html$Attributes$style,
 					'left',
-					$author$project$Map$asPx(node.s.y)),
+					$author$project$Map$asPx(node.s.A)),
 					A2(
 					$elm$html$Html$Attributes$style,
 					'top',
-					$author$project$Map$asPx(node.s.z))
+					$author$project$Map$asPx(node.s.B))
 				]),
 			_List_fromArray(
 				[
@@ -7561,7 +7275,7 @@ var $author$project$Map$viewTopNode = F3(
 									A2(
 									$elm$html$Html$Attributes$style,
 									'height',
-									$author$project$Map$asPx(node.L))
+									$author$project$Map$asPx(node.F))
 								]),
 							_List_Nil),
 							A3(
@@ -7583,13 +7297,13 @@ var $author$project$Map$viewDragNode = function (node) {
 	return A3($author$project$Map$viewTopNode, $author$project$DragControl$dragNodeViewState, -1, node);
 };
 var $author$project$Map$view = function (model) {
-	var viewState = $author$project$Map$getInitialViewState(model.i);
-	var nodes = $author$project$Node$childList(model.f);
+	var viewState = $author$project$Map$getInitialViewState(model.a);
+	var nodes = $author$project$Node$childList(model.d);
 	var dragViewList = A2(
 		$elm$core$List$map,
 		$author$project$Map$viewDragNode,
 		$elm_community$maybe_extra$Maybe$Extra$toList(
-			A2($author$project$DragControl$getDragNode, model.i, nodes)));
+			A2($author$project$DragControl$getDragNode, model.a, nodes)));
 	var childrenViewList = A2(
 		$elm$core$List$indexedMap,
 		$author$project$Map$viewTopNode(viewState),
@@ -7602,7 +7316,7 @@ var $author$project$Map$view = function (model) {
 				A2(
 				$elm$html$Html$Events$custom,
 				'dblclick',
-				$author$project$Map$onAddNewNodeClickDecoder(model.f)),
+				$author$project$Map$onAddNewNodeClickDecoder(model.d)),
 				A2(
 				$elm$html$Html$Events$custom,
 				'click',
@@ -7611,6 +7325,6 @@ var $author$project$Map$view = function (model) {
 		_Utils_ap(childrenViewList, dragViewList));
 };
 var $author$project$Map$main = $elm$browser$Browser$element(
-	{bO: $author$project$Map$init, cj: $author$project$Map$subscriptions, cs: $author$project$Map$updateAndSave, ct: $author$project$Map$view});
+	{bP: $author$project$Map$init, ck: $author$project$Map$subscriptions, ct: $author$project$Map$updateAndSave, cu: $author$project$Map$view});
 _Platform_export({'Map':{'init':$author$project$Map$main(
 	$elm$json$Json$Decode$succeed(0))(0)}});}(this));
