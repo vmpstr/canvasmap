@@ -13,6 +13,7 @@ module Tree exposing
   , takeNode
   , addNode
   , appendPath
+  , incrementBase
   )
 
 {- TODOs
@@ -260,6 +261,14 @@ appendPath index maybePath =
           InSubtree subindex (appendPath index (Just subpath))
     Nothing ->
       AtIndex index
+
+incrementBase : Path -> Path
+incrementBase path =
+  case path of
+    AtIndex base ->
+      AtIndex (base + 1)
+    InSubtree index subpath ->
+      InSubtree index (incrementBase subpath)
 
 nodeAtById : (b -> List { c | children : b, id : a })
              -> List { c | children : b, id : a }

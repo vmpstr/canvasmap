@@ -494,6 +494,7 @@ handleMapKeyDown key model =
        Nothing ->
         update MsgNoop model
   -- TODO: support Editing as well, but need to stop editing
+  -- This seems to work already. How?
   else if key == "Tab" && model.state.action == UserAction.Idle then
     case model.state.selected of
       Just id ->
@@ -505,8 +506,27 @@ handleMapKeyDown key model =
             update MsgNoop model
       Nothing -> 
         update MsgNoop model
+  else if key == "Enter" && model.state.action == UserAction.Idle then
+    case model.state.selected of
+      Just id ->
+        let mpath = pathToNextSiblingOfId model.nodes id in
+        case mpath of
+          Just ppath ->
+            update (MsgNewNode path (newNode model.nodes)) Model
+          Nothing ->
+            update MsgNoop Model
+      Nothing ->
+        update MsgNoop model    
   else
     update MsgNoop model
+
+pathToNextSiblingOfId : Children -> Id -> Maybe Tree.Path
+pathToNextSiblingOfId (Children nodes) id =
+  case TreeSpec.findNode nodes id of
+    Just path ->
+      Just (Tree.incrementBase path)
+    Nothing ->
+      Nothing
 
 pathToFirstChildOfId : Children -> Id -> Maybe Tree.Path
 pathToFirstChildOfId (Children nodes) id =
