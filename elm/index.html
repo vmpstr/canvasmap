@@ -138,7 +138,6 @@ onload = () => {
   document.addEventListener("keydown", (e) => {
     // TODO: Maybe filter based on what is handled?
     e.preventDefault();
-
     app.ports.portOnKeyDown.send({ code: e.code });
   })
 };

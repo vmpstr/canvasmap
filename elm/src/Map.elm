@@ -511,10 +511,10 @@ handleMapKeyDown key model =
       Just id ->
         let mpath = pathToNextSiblingOfId model.nodes id in
         case mpath of
-          Just ppath ->
-            update (MsgNewNode path (newNode model.nodes)) Model
+          Just path ->
+            update (MsgNewNode path (newNode model.nodes)) model
           Nothing ->
-            update MsgNoop Model
+            update MsgNoop model
       Nothing ->
         update MsgNoop model    
   else
