@@ -4,13 +4,13 @@ import Browser
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, classList, style, attribute, id)
 import Html.Events exposing (custom, on)
-import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field)
+import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field, bool, fail)
 import Json.Decode.Pipeline exposing (required, hardcoded)
 import Json.Encode as Encode
 import Maybe.Extra
 
 import DragControl
-import Node exposing (Node, Children(..), childList, idToAttribute, idToShadowAttribute, Id)
+import Node exposing (Node, Children(..), childList, idToAttribute, idToShadowAttribute, Id, NodeType(..))
 import UserAction
 import TreeSpec
 import MapView exposing (ViewState)
@@ -127,6 +127,7 @@ type alias FlatNode =
   , height : Float
   , childEdgeHeight : Float
   , children : Children
+  , shift : Bool
   }
 
 newNodeOffset : Geometry.Vector
@@ -137,12 +138,16 @@ newNodeOffset =
 
 flatNodeToNode : FlatNode -> Node
 flatNodeToNode f =
+  let
+    nodeType = if f.shift then NodeTypeScroller else NodeTypeTree
+  in
   { id = f.id
   , label = f.label
   , position = Geometry.add (Geometry.Vector f.x f.y) newNodeOffset
   , size = Geometry.Vector f.width f.height
   , childEdgeHeight = f.childEdgeHeight
   , children = f.children
+  , nodeType = nodeType
   }
 
 findMaxId : Children -> Int
@@ -163,6 +168,7 @@ newNode children =
   , size = Geometry.Vector 0 0
   , childEdgeHeight = 0
   , children = Children []
+  , nodeType = NodeTypeTree
   }
 
 onAddNewNodeClickDecoder : Children -> Decoder MsgWithEventOptions
@@ -177,7 +183,8 @@ onAddNewNodeClickDecoder children =
         |> hardcoded 0.0
         |> hardcoded 0.0
         |> hardcoded 0.0
-        |> hardcoded (Children [])))
+        |> hardcoded (Children [])
+        |> required "shiftKey" bool))
     
 onPointerDownDecoder : Id -> Decoder MsgWithEventOptions
 onPointerDownDecoder targetId =
@@ -388,6 +395,12 @@ encodeId : Id -> Encode.Value
 encodeId id =
   Encode.int id
 
+encodeNodeType : NodeType -> Encode.Value
+encodeNodeType nodeType =
+  case nodeType of
+    NodeTypeTree -> Encode.string "tree"
+    NodeTypeScroller -> Encode.string "scroller"
+
 encodeNode : Node -> Encode.Value
 encodeNode node =
   Encode.object
@@ -396,11 +409,25 @@ encodeNode node =
     , ("position", encodeVector node.position)
     , ("size", encodeVector node.size)
     , ("children", encodeNodes node.children)
+    , ("nodeType", encodeNodeType node.nodeType)
     ]
 
 encodeNodes : Children -> Encode.Value
 encodeNodes (Children nodes) =
   Encode.list encodeNode nodes
+
+nodeTypeDecoder : Decoder NodeType
+nodeTypeDecoder =
+  let
+    stringToNodeType s =
+      if s == "tree" then
+        succeed NodeTypeTree
+      else if s == "scroller" then
+        succeed NodeTypeScroller
+      else
+        fail ("Unknown node type " ++ s)
+  in
+  string |> Decoder.andThen stringToNodeType
 
 nodeDecoder : Decoder Node
 nodeDecoder =
@@ -411,6 +438,7 @@ nodeDecoder =
     |> required "size" Geometry.vectorDecoder
     |> hardcoded 0.0
     |> required "children" (Decoder.lazy (\() -> nodesDecoder))
+    |> required "nodeType" nodeTypeDecoder
 
 nodesDecoder : Decoder Children
 nodesDecoder =

@@ -6,6 +6,7 @@ module Node exposing
   , idToAttribute
   , idToShadowAttribute
   , Node
+  , NodeType(..)
   )
 
 import Geometry exposing (Vector)
@@ -15,6 +16,10 @@ type Children = Children (List Node)
 
 type alias Id = Int
 
+type NodeType
+  = NodeTypeTree
+  | NodeTypeScroller
+
 type alias Node =
   { id : Id
   , label : String
@@ -22,6 +27,7 @@ type alias Node =
   , size : Vector
   , childEdgeHeight: Float
   , children : Children
+  , nodeType : NodeType
   }
 
 attributePrefix : String

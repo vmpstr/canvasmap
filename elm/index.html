@@ -112,7 +112,7 @@ function onEditLabel(e) {
   });
 }
 
-const kStateVersion = "2"
+const kStateVersion = "3"
 function saveState(nodes) {
   localStorage.setItem("mm-version", kStateVersion);
   localStorage.setItem("mm-nodes", JSON.stringify(nodes));
