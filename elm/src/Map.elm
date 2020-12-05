@@ -1,9 +1,9 @@
 port module Map exposing (main)
 
 import Browser
-import Html exposing (Html, div, text)
+import Html exposing (Html, div, text, label)
 import Html.Attributes exposing (class, classList, style, attribute, id)
-import Html.Events exposing (custom, on)
+import Html.Events exposing (custom, on, onDoubleClick)
 import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field, bool, fail)
 import Json.Decode.Pipeline exposing (required, hardcoded)
 import Json.Encode as Encode
@@ -14,12 +14,16 @@ import Node exposing (Node, Children(..), childList, idToAttribute, idToShadowAt
 import UserAction
 import TreeSpec
 import MapView exposing (ViewState)
-import Utilities
-import Html.Events exposing (onDoubleClick)
-import Html exposing (label)
 import Geometry
-import Utilities exposing (toMsgOrNoop)
+import Utilities exposing (toMsgOrNoop, asPx)
 import Tree
+import TreeLayout
+import ScrollerLayout
+import MapMsg exposing (..)
+import EventDecodersData exposing (..)
+
+-- Probably work to remove this
+import EventDecoders exposing (..)
 
 {- TODOs
  - I think it's overkill to have Vector and not array
@@ -30,22 +34,6 @@ import Tree
     moving down: maybe bot left corner, moving up: maybe top left corner
  - selection gets removed after drag is finished
  -}
-
-type Msg
-  = MsgDrag DragControl.Msg
-  | MsgNoop
-  | MsgOnPointerDown OnPointerDownPortData
-  | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
-  | MsgOnLabelChanged OnLabelChangedData
-  | MsgEditLabel Id
-  | MsgSetNodes Children
-  | MsgNewNode Tree.Path Node
-  | MsgSelectNode (Maybe Id)
-  | MsgDeleteNode Id
-  | MsgMapKeyDown Key
-
-type alias Key =
-  { code : String }
 
 type alias Model =
   { nodes : Children
@@ -60,109 +48,10 @@ type alias State =
   , selected : Maybe Id
   }
 
--- Helpers
-asPx : Float -> String
-asPx n =
-  String.fromInt (round n) ++ "px"
-
-type alias OnPointerDownPortData =
-  { targetId : String
-  , pointerType : String
-  , x : Float
-  , y : Float
-  }
-
-type alias OnLabelChangedData =
-  { targetId : Id
-  , label : String
-  }
-
-type alias OnChildEdgeHeightChangedData =
-  { targetId : Id
-  , height: Float
-  }
-
-type alias MsgWithEventOptions =
-  { message: Msg
-  , stopPropagation: Bool
-  , preventDefault: Bool
-  }
-
-andStopPropagation : Msg -> MsgWithEventOptions
-andStopPropagation msg =
-  { message = msg
-  , stopPropagation = True
-  , preventDefault = False
-  }
-
 -- Functionality
-onLabelChangedDecoder : Id -> Decoder Msg
-onLabelChangedDecoder targetId =
-  Decoder.map MsgOnLabelChanged
-    (succeed OnLabelChangedData
-      |> hardcoded targetId
-      |> required "detail" (field "label" string))
-
-keyDecoder : Decoder Key
-keyDecoder =
-  succeed Key
-    |> required "code" string
-
-onSelectClickDecoder : Maybe Id -> Decoder MsgWithEventOptions
-onSelectClickDecoder targetId =
-  Decoder.map (MsgSelectNode >> andStopPropagation)
-    (succeed targetId)
-
-onEditLabelClickDecoder : Id -> Decoder MsgWithEventOptions
-onEditLabelClickDecoder targetId =
-  Decoder.map (MsgEditLabel >> andStopPropagation)
-    (succeed targetId)
-
-type alias FlatNode =
-  { id : Int
-  , label : String
-  , x : Float
-  , y : Float
-  , width : Float
-  , height : Float
-  , childEdgeHeight : Float
-  , children : Children
-  , shift : Bool
-  }
-
-newNodeOffset : Geometry.Vector
-newNodeOffset =
-  { x = -40.0
-  , y = -20.0
-  }
-
-flatNodeToNode : FlatNode -> Node
-flatNodeToNode f =
-  let
-    nodeType = if f.shift then NodeTypeScroller else NodeTypeTree
-  in
-  { id = f.id
-  , label = f.label
-  , position = Geometry.add (Geometry.Vector f.x f.y) newNodeOffset
-  , size = Geometry.Vector f.width f.height
-  , childEdgeHeight = f.childEdgeHeight
-  , children = f.children
-  , nodeType = nodeType
-  }
-
-findMaxId : Children -> Int
-findMaxId (Children nodes) =
-  Maybe.withDefault
-    0
-    (List.maximum
-      ( (List.map .id nodes)
-        ++ (List.map (\node -> findMaxId node.children) nodes)
-      )
-    )
-
 newNode : Children -> Node
 newNode children =
-  { id = (findMaxId children) + 1
+  { id = (TreeSpec.findMaxId children) + 1
   , label = "new item"
   , position = Geometry.Vector 0 0
   , size = Geometry.Vector 0 0
@@ -170,37 +59,6 @@ newNode children =
   , children = Children []
   , nodeType = NodeTypeTree
   }
-
-onAddNewNodeClickDecoder : Children -> Decoder MsgWithEventOptions
-onAddNewNodeClickDecoder children =
-  Decoder.map (MsgNewNode (Tree.AtIndex 0) >> andStopPropagation)
-    (Decoder.map flatNodeToNode
-      (succeed FlatNode
-        |> hardcoded ((findMaxId children) + 1)
-        |> hardcoded "new item"
-        |> required "clientX" float
-        |> required "clientY" float
-        |> hardcoded 0.0
-        |> hardcoded 0.0
-        |> hardcoded 0.0
-        |> hardcoded (Children [])
-        |> required "shiftKey" bool))
-    
-onPointerDownDecoder : Id -> Decoder MsgWithEventOptions
-onPointerDownDecoder targetId =
-  Decoder.map (MsgOnPointerDown >> andStopPropagation)
-    (succeed OnPointerDownPortData
-      |> hardcoded (idToAttribute targetId)
-      |> required "pointerType" string
-      |> required "clientX" float
-      |> required "clientY" float)
-
-onChildEdgeHeightChangedDecoder : Id -> Decoder Msg
-onChildEdgeHeightChangedDecoder targetId =
-  Decoder.map MsgOnChildEdgeHeightChanged
-    (succeed OnChildEdgeHeightChangedData
-      |> hardcoded targetId
-      |> required "detail" (field "height" float))
 
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
 port portEditLabel : { targetId : String } -> Cmd msg
@@ -240,36 +98,6 @@ viewDragNode : Node -> Html Msg
 viewDragNode node =
   viewTopNode DragControl.dragNodeViewState -1 node
 
-viewNodeContents : Node -> ViewState -> Html Msg
-viewNodeContents node viewState =
-  let
-    attributes =
-      ( if viewState.editId == Nothing then
-          [ custom "pointerdown" (onPointerDownDecoder node.id) ]
-        else
-          []
-      ) ++
-      [ classList
-          [ ( "selection_container", True)
-          , ( "selected", viewState.selected == Just node.id)
-          ]
-      ]
-  in
-  div
-    attributes
-    [ div
-        [ class "contents_container"
-        , custom "click" (onSelectClickDecoder (Just node.id))
-        , custom "dblclick" (onEditLabelClickDecoder node.id)
-        ]
-        [ Html.node "node-label"
-            [ on "labelchanged" (onLabelChangedDecoder node.id)
-            , attribute "label" node.label
-            ]
-            []
-        ]
-    ]
-
 viewTopNode : ViewState -> Int -> Node -> Html Msg
 viewTopNode parentState index node =
   let
@@ -286,27 +114,9 @@ viewTopNode parentState index node =
         |> List.indexedMap (viewChildNode localState)
         |> List.concat
   in
-  div
-    [ id localState.htmlNodeId
-      , class "top_child"
-      , classList [("shadow", localState.shadow), ("on_top", onTop)]
-      , style "left" (asPx node.position.x)
-      , style "top" (asPx node.position.y)
-    ]
-    [ viewNodeContents node localState
-    , div
-        [ class "child_holder" ]
-        [ div
-            [ class "child_edge"
-            , style "height" (asPx node.childEdgeHeight)
-            ] []
-        , Html.node "child-area"
-            [ class "child_area"
-            , on "childedgeheightchanged" (onChildEdgeHeightChangedDecoder node.id)
-            ]
-            (childNodes ++ tailBeacons)
-        ]
-    ]
+  case node.nodeType of
+    NodeTypeTree -> TreeLayout.viewTopNode onTop tailBeacons childNodes localState node
+    NodeTypeScroller -> ScrollerLayout.viewTopNode onTop tailBeacons childNodes localState node
 
 viewChildNode : ViewState -> Int -> Node -> List (Html Msg)
 viewChildNode parentState index node =
@@ -325,29 +135,9 @@ viewChildNode parentState index node =
          |> List.indexedMap (viewChildNode localState)
          |> List.concat
   in
-  headBeacons ++
-  [ div []
-      [ div
-          [ id localState.htmlNodeId
-          , classList [("child", True), ("shadow", localState.shadow)]
-          ]
-          [ viewNodeContents node localState
-          , div [ class "parent_edge" ] []
-          ]
-      , div
-          [ class "child_holder" ]
-          [ div
-              [ class "child_edge"
-              , style "height" (asPx node.childEdgeHeight)
-              ] []
-          , Html.node "child-area"
-              [ class "child_area"
-              , on "childedgeheightchanged" (onChildEdgeHeightChangedDecoder node.id)
-              ]
-              (childNodes ++ tailBeacons)
-          ]
-       ]
-   ]
+  case node.nodeType of
+    NodeTypeTree -> TreeLayout.viewChildNodes headBeacons tailBeacons childNodes localState node
+    NodeTypeScroller -> ScrollerLayout.viewChildNodes headBeacons tailBeacons childNodes localState node
 
 viewBeacon : String -> Html Msg
 viewBeacon path =

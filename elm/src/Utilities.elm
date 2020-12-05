@@ -4,6 +4,7 @@ module Utilities exposing
   , toMsgOrNoop
   , listApply
   , maybeArray
+  , asPx
   )
 
 maybeJust : Bool -> a -> Maybe a
@@ -42,3 +43,7 @@ maybeArray condition generator =
     [generator ()]
   else
     []
+
+asPx : Float -> String
+asPx n =
+  String.fromInt (round n) ++ "px"

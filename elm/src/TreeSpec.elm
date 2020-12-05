@@ -1,4 +1,4 @@
-module TreeSpec exposing (findNode, moveNode, nodeAtById, updateNode, removeNode, addNode)
+module TreeSpec exposing (findNode, moveNode, nodeAtById, updateNode, removeNode, addNode, findMaxId)
 
 import Tree
 import Node exposing (Node, Id, childList, Children(..))
@@ -20,3 +20,13 @@ removeNode = Tree.removeNode Children childList
 
 addNode : List Node -> Tree.Path -> Node -> List Node
 addNode = Tree.addNode Children childList
+
+findMaxId : Children -> Int
+findMaxId (Children nodes) =
+  Maybe.withDefault
+    0
+    (List.maximum
+      ( (List.map .id nodes)
+        ++ (List.map (\node -> findMaxId node.children) nodes)
+      )
+    )
