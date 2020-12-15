@@ -10,5 +10,3 @@
 - styles
 
 - github auto populate
-
-- makefile

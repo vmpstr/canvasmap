@@ -1,0 +1,29 @@
+/* top-most / selection container of the scroller */
+.scroller {
+  /* it contains abspos drag handles */
+  position: relative;
+
+  /* flourish */
+  box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.5);
+  background-color: rgb(195, 231, 240);
+  border-radius: 10px;
+
+  /* ??? */
+  min-width: 20px;
+  max-width: max-content;
+}
+
+.scroller > .contents {
+  display: flex;
+  flex-direction: column;
+}
+
+.scroller > .contents > .label {
+  display: block;
+}
+.scroller > .contents > .divider {
+  display: block;
+}
+.scroller > .contents > .child_area {
+  display: block;
+}

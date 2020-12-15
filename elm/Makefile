@@ -6,7 +6,8 @@ debug:
 
 deploy:
 	elm make --output=map.js src/Map.elm --optimize
-	cp *.js *.html *.css ../elm-deploy/
+	rm -rf ../elm-deploy/*
+	cp -r *.js *.html styles ../elm-deploy/
 
 test:
 	elm-test
