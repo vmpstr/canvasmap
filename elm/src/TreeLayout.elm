@@ -1,4 +1,4 @@
-module TreeLayout exposing (viewTopNode, viewChildNodes)
+module TreeLayout exposing (viewTopNode, viewChildNodes, adjustStateForChildren)
 
 import MapView exposing (ViewState)
 import Html exposing (Html, div, text)
@@ -33,6 +33,10 @@ viewTopNode onTop tailBeacons childNodes localState node =
         ]
     ]
 
+adjustStateForChildren : ViewState -> ViewState
+adjustStateForChildren state =
+    { state | showParentEdge = True }
+
 viewChildNodes : List (Html Msg) -> List (Html Msg) -> List (Html Msg) -> ViewState  -> Node -> List (Html Msg)
 viewChildNodes headBeacons tailBeacons childNodes localState node =
   headBeacons ++
@@ -42,7 +46,8 @@ viewChildNodes headBeacons tailBeacons childNodes localState node =
           , classList [("child", True), ("shadow", localState.shadow)]
           ]
           [ viewNodeContents node localState
-          , div [ class "parent_edge" ] []
+          -- TODO: Don't show the div if there is no parent edge.
+          , div [ classList [ ("parent_edge", localState.showParentEdge) ] ] []
           ]
       , div
           [ class "child_holder" ]

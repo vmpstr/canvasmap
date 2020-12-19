@@ -109,9 +109,13 @@ viewTopNode parentState index node =
       Utilities.maybeArray
         localState.viewBeacons
         (\() -> viewBeacon localState.tailBeaconPath)
+    childState =
+      case node.nodeType of
+        NodeTypeTree -> TreeLayout.adjustStateForChildren localState
+        NodeTypeScroller -> ScrollerLayout.adjustStateForChildren localState
     childNodes =
       childList node.children
-        |> List.indexedMap (viewChildNode localState)
+        |> List.indexedMap (viewChildNode childState)
         |> List.concat
   in
   case node.nodeType of
@@ -130,9 +134,13 @@ viewChildNode parentState index node =
       Utilities.maybeArray
         localState.viewBeacons
         (\() -> viewBeacon localState.tailBeaconPath)
+    childState =
+      case node.nodeType of
+        NodeTypeTree -> TreeLayout.adjustStateForChildren localState
+        NodeTypeScroller -> ScrollerLayout.adjustStateForChildren localState
     childNodes =
        childList node.children
-         |> List.indexedMap (viewChildNode localState)
+         |> List.indexedMap (viewChildNode childState)
          |> List.concat
   in
   case node.nodeType of

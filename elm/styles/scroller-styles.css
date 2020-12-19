@@ -1,8 +1,5 @@
 /* top-most / selection container of the scroller */
 .scroller {
-  /* it contains abspos drag handles */
-  position: relative;
-
   /* flourish */
   box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.5);
   background-color: rgb(195, 231, 240);
@@ -18,12 +15,21 @@
   flex-direction: column;
 }
 
-.scroller > .contents > .label {
+.scroller > .contents > .label_container {
   display: block;
+  padding: 5px;
 }
 .scroller > .contents > .divider {
   display: block;
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.5);
 }
 .scroller > .contents > .child_area {
   display: block;
+  background: rgba(0, 0, 0, 0.1);
+  min-height: 20px;
+  margin-bottom: 5px;
+  margin-top: 5px;
+  padding: 5px;
+  padding-top: 0;
 }

@@ -11,6 +11,7 @@ type alias ViewState =
   , shadow : Bool
   , htmlNodeId : String
   , selected : Maybe Id
+  , showParentEdge : Bool
   }
 
 defaultViewState : ViewState
@@ -23,4 +24,5 @@ defaultViewState =
   , shadow = False
   , htmlNodeId = ""
   , selected = Nothing
+  , showParentEdge = True
   }
