@@ -19,15 +19,7 @@ viewTopNode onTop tailBeacons childNodes localState node =
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
     ]
-    [ div
-        [ class "contents" ]
-        [ viewNodeContents node localState
-        , div [ class "divider" ] []
-        , div
-          [ class "child_area" ] 
-          childNodes
-        ]
-    ]
+    [ viewNodeContents node localState childNodes tailBeacons ]
 
 adjustStateForChildren : ViewState -> ViewState
 adjustStateForChildren state =
@@ -39,43 +31,42 @@ viewChildNodes headBeacons tailBeacons childNodes localState node =
   [ div []
       [ div
           [ id localState.htmlNodeId
-          , classList [("child", True), ("shadow", localState.shadow)]
+          , class "child"
+          , class "scroller"
+          , classList [("shadow", localState.shadow)]
           ]
-          [ viewNodeContents node localState
-          , div [ class "parent_edge" ] []
+          -- TODO: Don't show the div if there is no parent edge.
+          [ div [ classList [ ("parent_edge", localState.showParentEdge) ] ] []
+          , viewNodeContents node localState childNodes tailBeacons
           ]
-      , div
-          [ class "child_holder" ]
-          [ div
-              [ class "child_edge"
-              , style "height" (asPx node.childEdgeHeight)
-              ] []
-          , Html.node "child-area"
-              [ class "child_area"
-              , on "childedgeheightchanged" (onChildEdgeHeightChangedDecoder node.id)
-              ]
-              (childNodes ++ tailBeacons)
-          ]
-       ]
+      ]
    ]
 
-viewNodeContents : Node -> ViewState -> Html Msg
-viewNodeContents node viewState =
+viewNodeContents : Node -> ViewState -> List (Html Msg) -> List (Html Msg) -> Html Msg
+viewNodeContents node viewState childNodes tailBeacons =
   let
     attributes =
+      [ class "contents" ] ++
       if viewState.editId == Nothing then
         [ custom "pointerdown" (onPointerDownDecoder node.id) ]
       else
         []
   in
   div
-    [ class "label_container"
-    , custom "click" (onSelectClickDecoder (Just node.id))
-    , custom "dblclick" (onEditLabelClickDecoder node.id)
-    ]
-    [ Html.node "node-label"
-        [ on "labelchanged" (onLabelChangedDecoder node.id)
-        , attribute "label" node.label
+      attributes
+      [ div
+        [ class "label_container"
+        , custom "click" (onSelectClickDecoder (Just node.id))
+        , custom "dblclick" (onEditLabelClickDecoder node.id)
         ]
-        []
-    ]
+        [ Html.node "node-label"
+            [ on "labelchanged" (onLabelChangedDecoder node.id)
+            , attribute "label" node.label
+            ]
+            []
+        ]
+      , div [ class "divider" ] []
+      , div
+          [ class "child_area" ] 
+          (childNodes ++ tailBeacons)
+      ]

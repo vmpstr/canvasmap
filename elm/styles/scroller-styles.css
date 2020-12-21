@@ -33,3 +33,14 @@
   padding: 5px;
   padding-top: 0;
 }
+.scroller > .parent_edge {
+  border-bottom: 1px solid rgb(50, 50, 50);
+  border-left: 1px solid rgb(50, 50, 50);
+  box-sizing: border-box;
+  position: absolute;
+  right: 100%;
+  top: 0;
+  height: 15px;
+  width: 13px;
+  border-radius: 0 0 0 50%;
+}

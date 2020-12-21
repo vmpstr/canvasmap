@@ -10,3 +10,9 @@
 - styles
 
 - github auto populate
+
+
+## thoughts
+
+### flavors
+same layout types layout as bullet point, numbered list, checkboxes, etc
