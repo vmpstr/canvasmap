@@ -39,16 +39,20 @@ adjustStateForChildren state =
 
 viewChildNodes : List (Html Msg) -> List (Html Msg) -> List (Html Msg) -> ViewState  -> Node -> List (Html Msg)
 viewChildNodes headBeacons tailBeacons childNodes localState node =
+  let
+    parentEdge =
+        if localState.showParentEdge then
+            [ div [ class "parent_edge" ] [] ]
+        else
+            []
+  in
   headBeacons ++
   [ div []
       [ div
           [ id localState.htmlNodeId
           , classList [("child", True), ("shadow", localState.shadow)]
           ]
-          [ viewNodeContents node localState
-          -- TODO: Don't show the div if there is no parent edge.
-          , div [ classList [ ("parent_edge", localState.showParentEdge) ] ] []
-          ]
+          ([ viewNodeContents node localState ] ++ parentEdge)
       , div
           [ class "child_holder" ]
           [ div
@@ -92,4 +96,8 @@ viewNodeContents node viewState =
             ]
             []
         ]
+    , div
+        [ class "ew_resizer"
+        ]
+        []
     ]

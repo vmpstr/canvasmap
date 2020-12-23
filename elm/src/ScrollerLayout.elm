@@ -46,7 +46,11 @@ viewNodeContents : Node -> ViewState -> List (Html Msg) -> List (Html Msg) -> Ht
 viewNodeContents node viewState childNodes tailBeacons =
   let
     attributes =
-      [ class "contents" ] ++
+      [ class "contents"
+      , class "selection_container"
+      , classList [ ("selected", viewState.selected == Just node.id) ]
+      , custom "click" (onSelectClickDecoder (Just node.id))
+      ] ++
       if viewState.editId == Nothing then
         [ custom "pointerdown" (onPointerDownDecoder node.id) ]
       else
@@ -56,7 +60,6 @@ viewNodeContents node viewState childNodes tailBeacons =
       attributes
       [ div
         [ class "label_container"
-        , custom "click" (onSelectClickDecoder (Just node.id))
         , custom "dblclick" (onEditLabelClickDecoder node.id)
         ]
         [ Html.node "node-label"
