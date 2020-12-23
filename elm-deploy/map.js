@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.bM,
-		impl.ct,
-		impl.ck,
+		impl.bN,
+		impl.cu,
+		impl.cl,
 		function() { return function() {} }
 	);
 });
@@ -2704,9 +2704,9 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		bP: func(record.bP),
-		cj: record.cj,
-		ce: record.ce
+		bQ: func(record.bQ),
+		ck: record.ck,
+		cf: record.cf
 	}
 });
 
@@ -2974,11 +2974,11 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.bP;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.cj;
+		var message = !tag ? value : tag < 3 ? value.a : value.bQ;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.ck;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.ce) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.cf) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3928,11 +3928,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.bM,
-		impl.ct,
-		impl.ck,
+		impl.bN,
+		impl.cu,
+		impl.cl,
 		function(sendToApp, initialModel) {
-			var view = impl.cu;
+			var view = impl.cv;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3964,12 +3964,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.bM,
-		impl.ct,
-		impl.ck,
+		impl.bN,
+		impl.cu,
+		impl.cl,
 		function(sendToApp, initialModel) {
 			var divertHrefToApp = impl.ar && impl.ar(sendToApp)
-			var view = impl.cu;
+			var view = impl.cv;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3977,12 +3977,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.bl);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.bm);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.cr) && (_VirtualDom_doc.title = title = doc.cr);
+				(title !== doc.cs) && (_VirtualDom_doc.title = title = doc.cs);
 			});
 		}
 	);
@@ -4038,8 +4038,8 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.b5;
-	var onUrlRequest = impl.b6;
+	var onUrlChange = impl.b6;
+	var onUrlRequest = impl.b7;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
@@ -4069,13 +4069,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		bM: function(flags)
+		bN: function(flags)
 		{
-			return A3(impl.bM, flags, _Browser_getUrl(), key);
+			return A3(impl.bN, flags, _Browser_getUrl(), key);
 		},
+		cv: impl.cv,
 		cu: impl.cu,
-		ct: impl.ct,
-		ck: impl.ck
+		cl: impl.cl
 	});
 }
 
@@ -4141,17 +4141,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { bI: 'hidden', bo: 'visibilitychange' }
+		? { bJ: 'hidden', bp: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { bI: 'mozHidden', bo: 'mozvisibilitychange' }
+		? { bJ: 'mozHidden', bp: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { bI: 'msHidden', bo: 'msvisibilitychange' }
+		? { bJ: 'msHidden', bp: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { bI: 'webkitHidden', bo: 'webkitvisibilitychange' }
-		: { bI: 'hidden', bo: 'visibilitychange' };
+		? { bJ: 'webkitHidden', bp: 'webkitvisibilitychange' }
+		: { bJ: 'hidden', bp: 'visibilitychange' };
 }
 
 
@@ -4233,10 +4233,10 @@ function _Browser_getViewport()
 {
 	return {
 		a8: _Browser_getScene(),
-		bf: {
+		bg: {
 			z: _Browser_window.pageXOffset,
 			A: _Browser_window.pageYOffset,
-			bg: _Browser_doc.documentElement.clientWidth,
+			bh: _Browser_doc.documentElement.clientWidth,
 			aN: _Browser_doc.documentElement.clientHeight
 		}
 	};
@@ -4247,7 +4247,7 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		bg: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		bh: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
 		aN: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
@@ -4272,13 +4272,13 @@ function _Browser_getViewportOf(id)
 	{
 		return {
 			a8: {
-				bg: node.scrollWidth,
+				bh: node.scrollWidth,
 				aN: node.scrollHeight
 			},
-			bf: {
+			bg: {
 				z: node.scrollLeft,
 				A: node.scrollTop,
-				bg: node.clientWidth,
+				bh: node.clientWidth,
 				aN: node.clientHeight
 			}
 		};
@@ -4310,16 +4310,16 @@ function _Browser_getElement(id)
 		var y = _Browser_window.pageYOffset;
 		return {
 			a8: _Browser_getScene(),
-			bf: {
+			bg: {
 				z: x,
 				A: y,
-				bg: _Browser_doc.documentElement.clientWidth,
+				bh: _Browser_doc.documentElement.clientWidth,
 				aN: _Browser_doc.documentElement.clientHeight
 			},
-			bB: {
+			bC: {
 				z: x + rect.left,
 				A: y + rect.top,
-				bg: rect.width,
+				bh: rect.width,
 				aN: rect.height
 			}
 		};
@@ -5171,7 +5171,7 @@ var $elm$core$Basics$composeR = F3(
 	});
 var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $author$project$EventDecodersData$Key = function (code) {
-	return {bs: code};
+	return {bt: code};
 };
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $elm$json$Json$Decode$field = _Json_decodeField;
@@ -5209,7 +5209,7 @@ var $author$project$MapMsg$MsgSetNodes = function (a) {
 };
 var $author$project$Node$Node = F7(
 	function (id, label, position, size, childEdgeHeight, children, nodeType) {
-		return {ah: childEdgeHeight, bq: children, Z: id, an: label, bU: nodeType, s: position, ag: size};
+		return {ah: childEdgeHeight, br: children, Z: id, an: label, bV: nodeType, s: position, ag: size};
 	});
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$hardcoded = A2($elm$core$Basics$composeR, $elm$json$Json$Decode$succeed, $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom);
 var $elm$json$Json$Decode$int = _Json_decodeInt;
@@ -5584,7 +5584,7 @@ var $author$project$Tree$findNode = F3(
 				A3(
 					$author$project$Tree$findNode,
 					unpack,
-					unpack(node.bq),
+					unpack(node.br),
 					target));
 		};
 		var indexed = A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, nodes);
@@ -5772,12 +5772,12 @@ var $author$project$Tree$updateNode = F5(
 				return _Utils_update(
 					node,
 					{
-						bq: pack(
+						br: pack(
 							A5(
 								$author$project$Tree$updateNode,
 								pack,
 								unpack,
-								unpack(node.bq),
+								unpack(node.br),
 								subpath,
 								updater))
 					});
@@ -5897,10 +5897,10 @@ var $author$project$Map$encodeNode = function (node) {
 				$author$project$Map$encodeVector(node.ag)),
 				_Utils_Tuple2(
 				'children',
-				$author$project$Map$encodeNodes(node.bq)),
+				$author$project$Map$encodeNodes(node.br)),
 				_Utils_Tuple2(
 				'nodeType',
-				$author$project$Map$encodeNodeType(node.bU))
+				$author$project$Map$encodeNodeType(node.bV))
 			]));
 };
 var $author$project$Map$encodeNodes = function (_v0) {
@@ -5926,12 +5926,12 @@ var $author$project$Tree$addNode = F5(
 				return _Utils_update(
 					node,
 					{
-						bq: pack(
+						br: pack(
 							A5(
 								$author$project$Tree$addNode,
 								pack,
 								unpack,
-								unpack(node.bq),
+								unpack(node.br),
 								subpath,
 								newNode))
 					});
@@ -5994,17 +5994,17 @@ var $author$project$TreeSpec$findMaxId = function (_v0) {
 				A2(
 					$elm$core$List$map,
 					function (node) {
-						return $author$project$TreeSpec$findMaxId(node.bq);
+						return $author$project$TreeSpec$findMaxId(node.br);
 					},
 					nodes))));
 };
 var $author$project$Map$newNode = function (children) {
 	return {
 		ah: 0,
-		bq: _List_Nil,
+		br: _List_Nil,
 		Z: $author$project$TreeSpec$findMaxId(children) + 1,
 		an: 'new item',
-		bU: 0,
+		bV: 0,
 		s: A2($author$project$Geometry$Vector, 0, 0),
 		ag: A2($author$project$Geometry$Vector, 0, 0)
 	};
@@ -6095,7 +6095,7 @@ var $author$project$Map$portOnPointerDown = _Platform_outgoingPort(
 				[
 					_Utils_Tuple2(
 					'pointerType',
-					$elm$json$Json$Encode$string($.cc)),
+					$elm$json$Json$Encode$string($.cd)),
 					_Utils_Tuple2(
 					'targetId',
 					$elm$json$Json$Encode$string($.au)),
@@ -6136,12 +6136,12 @@ var $author$project$Tree$removeNode = F4(
 				return _Utils_update(
 					node,
 					{
-						bq: pack(
+						br: pack(
 							A4(
 								$author$project$Tree$removeNode,
 								pack,
 								unpack,
-								unpack(node.bq),
+								unpack(node.br),
 								subpath))
 					});
 			};
@@ -6339,7 +6339,7 @@ var $author$project$Tree$isValidInsertionPath = F3(
 				if (tail.b) {
 					var first = tail.a;
 					var $temp$unpack = unpack,
-						$temp$nodes = unpack(first.bq),
+						$temp$nodes = unpack(first.br),
 						$temp$path = subpath;
 					unpack = $temp$unpack;
 					nodes = $temp$nodes;
@@ -6372,7 +6372,7 @@ var $author$project$Tree$nodeAt = F3(
 				if (!_v1.$) {
 					var node = _v1.a;
 					var $temp$unpack = unpack,
-						$temp$nodes = unpack(node.bq),
+						$temp$nodes = unpack(node.br),
 						$temp$path = subpath;
 					unpack = $temp$unpack;
 					nodes = $temp$nodes;
@@ -6749,7 +6749,7 @@ var $author$project$Map$update = F2(
 						$elm$core$Platform$Cmd$none);
 				default:
 					var key = msg.a;
-					return A2($author$project$Map$handleMapKeyDown, key.bs, model);
+					return A2($author$project$Map$handleMapKeyDown, key.bt, model);
 			}
 		}
 	});
@@ -6811,7 +6811,7 @@ var $author$project$DragControl$getDragNode = F2(
 			},
 			drag);
 	});
-var $author$project$MapView$defaultViewState = {v: $elm$core$Maybe$Nothing, bA: $elm$core$Maybe$Nothing, aM: '', bJ: '', x: $elm$core$Maybe$Nothing, ci: false, cn: '', aw: false};
+var $author$project$MapView$defaultViewState = {v: $elm$core$Maybe$Nothing, bB: $elm$core$Maybe$Nothing, aM: '', bK: '', x: $elm$core$Maybe$Nothing, cj: false, ba: true, co: '', aw: false};
 var $author$project$DragControl$adjustInitialViewState = F2(
 	function (_v0, view) {
 		var action = _v0.J;
@@ -6831,7 +6831,7 @@ var $author$project$Map$adjustInitialViewState = F2(
 	function (state, viewState) {
 		return _Utils_update(
 			viewState,
-			{bA: state.Q, x: state.x});
+			{bB: state.Q, x: state.x});
 	});
 var $author$project$Map$initialViewStateAdjusters = function (state) {
 	return _List_fromArray(
@@ -6865,10 +6865,10 @@ var $author$project$Map$getInitialViewState = function (state) {
 };
 var $author$project$EventDecoders$FlatNode = F9(
 	function (id, label, x, y, width, height, childEdgeHeight, children, shift) {
-		return {ah: childEdgeHeight, bq: children, aN: height, Z: id, an: label, a9: shift, bg: width, z: x, A: y};
+		return {ah: childEdgeHeight, br: children, aN: height, Z: id, an: label, a9: shift, bh: width, z: x, A: y};
 	});
 var $author$project$EventDecoders$andStopPropagation = function (msg) {
-	return {bP: msg, ce: false, cj: true};
+	return {bQ: msg, cf: false, ck: true};
 };
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Geometry$add = F2(
@@ -6883,15 +6883,15 @@ var $author$project$EventDecoders$flatNodeToNode = function (f) {
 	var nodeType = f.a9 ? 1 : 0;
 	return {
 		ah: f.ah,
-		bq: f.bq,
+		br: f.br,
 		Z: f.Z,
 		an: f.an,
-		bU: nodeType,
+		bV: nodeType,
 		s: A2(
 			$author$project$Geometry$add,
 			A2($author$project$Geometry$Vector, f.z, f.A),
 			$author$project$EventDecoders$newNodeOffset),
-		ag: A2($author$project$Geometry$Vector, f.bg, f.aN)
+		ag: A2($author$project$Geometry$Vector, f.bh, f.aN)
 	};
 };
 var $author$project$EventDecoders$onAddNewNodeClickDecoder = function (children) {
@@ -6956,6 +6956,16 @@ var $elm_community$maybe_extra$Maybe$Extra$toList = function (m) {
 	}
 };
 var $author$project$DragControl$dragNodeViewState = $author$project$MapView$defaultViewState;
+var $author$project$ScrollerLayout$adjustStateForChildren = function (state) {
+	return _Utils_update(
+		state,
+		{ba: false});
+};
+var $author$project$TreeLayout$adjustStateForChildren = function (state) {
+	return _Utils_update(
+		state,
+		{ba: true});
+};
 var $elm$core$List$append = F2(
 	function (xs, ys) {
 		if (!ys.b) {
@@ -6984,10 +6994,10 @@ var $author$project$DragControl$adjustViewStateForNode = F3(
 			state.aM + (' ' + $elm$core$String$fromInt(index)));
 		var tailBeaconPath = headBeaconPath + (' ' + $elm$core$String$fromInt(
 			$elm$core$List$length(
-				$author$project$Node$childList(node.bq))));
+				$author$project$Node$childList(node.br))));
 		return _Utils_update(
 			state,
-			{aM: headBeaconPath, bJ: htmlNodeId, ci: shadow, cn: tailBeaconPath, aw: viewBeacons});
+			{aM: headBeaconPath, bK: htmlNodeId, cj: shadow, co: tailBeaconPath, aw: viewBeacons});
 	});
 var $author$project$Map$adjustViewStateForNode = F3(
 	function (_v0, _v1, viewState) {
@@ -7033,11 +7043,6 @@ var $author$project$Map$viewBeacon = function (path) {
 			]),
 		_List_Nil);
 };
-var $elm$core$Basics$round = _Basics_round;
-var $author$project$Utilities$asPx = function (n) {
-	return $elm$core$String$fromInt(
-		$elm$core$Basics$round(n)) + 'px';
-};
 var $elm$core$Tuple$second = function (_v0) {
 	var y = _v0.b;
 	return y;
@@ -7068,28 +7073,6 @@ var $elm$html$Html$Events$on = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$Normal(decoder));
 	});
-var $author$project$MapMsg$MsgOnChildEdgeHeightChanged = function (a) {
-	return {$: 3, a: a};
-};
-var $author$project$EventDecodersData$OnChildEdgeHeightChangedData = F2(
-	function (targetId, height) {
-		return {aN: height, au: targetId};
-	});
-var $author$project$EventDecoders$onChildEdgeHeightChangedDecoder = function (targetId) {
-	return A2(
-		$elm$json$Json$Decode$map,
-		$author$project$MapMsg$MsgOnChildEdgeHeightChanged,
-		A3(
-			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'detail',
-			A2($elm$json$Json$Decode$field, 'height', $elm$json$Json$Decode$float),
-			A2(
-				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$hardcoded,
-				targetId,
-				$elm$json$Json$Decode$succeed($author$project$EventDecodersData$OnChildEdgeHeightChangedData))));
-};
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$EventDecoders$onEditLabelClickDecoder = function (targetId) {
 	return A2(
 		$elm$json$Json$Decode$map,
@@ -7121,7 +7104,7 @@ var $author$project$MapMsg$MsgOnPointerDown = function (a) {
 };
 var $author$project$EventDecodersData$OnPointerDownPortData = F4(
 	function (targetId, pointerType, x, y) {
-		return {cc: pointerType, au: targetId, z: x, A: y};
+		return {cd: pointerType, au: targetId, z: x, A: y};
 	});
 var $author$project$EventDecoders$onPointerDownDecoder = function (targetId) {
 	return A2(
@@ -7144,29 +7127,35 @@ var $author$project$EventDecoders$onPointerDownDecoder = function (targetId) {
 						$author$project$Node$idToAttribute(targetId),
 						$elm$json$Json$Decode$succeed($author$project$EventDecodersData$OnPointerDownPortData))))));
 };
-var $author$project$ScrollerLayout$viewNodeContents = F2(
-	function (node, viewState) {
+var $author$project$ScrollerLayout$viewNodeContents = F4(
+	function (node, viewState, childNodes, tailBeacons) {
 		var attributes = _Utils_ap(
-			_Utils_eq(viewState.bA, $elm$core$Maybe$Nothing) ? _List_fromArray(
-				[
-					A2(
-					$elm$html$Html$Events$custom,
-					'pointerdown',
-					$author$project$EventDecoders$onPointerDownDecoder(node.Z))
-				]) : _List_Nil,
 			_List_fromArray(
 				[
+					$elm$html$Html$Attributes$class('contents'),
+					$elm$html$Html$Attributes$class('selection_container'),
 					$elm$html$Html$Attributes$classList(
 					_List_fromArray(
 						[
-							_Utils_Tuple2('selection_container', true),
 							_Utils_Tuple2(
 							'selected',
 							_Utils_eq(
 								viewState.x,
 								$elm$core$Maybe$Just(node.Z)))
-						]))
-				]));
+						])),
+					A2(
+					$elm$html$Html$Events$custom,
+					'click',
+					$author$project$EventDecoders$onSelectClickDecoder(
+						$elm$core$Maybe$Just(node.Z)))
+				]),
+			_Utils_eq(viewState.bB, $elm$core$Maybe$Nothing) ? _List_fromArray(
+				[
+					A2(
+					$elm$html$Html$Events$custom,
+					'pointerdown',
+					$author$project$EventDecoders$onPointerDownDecoder(node.Z))
+				]) : _List_Nil);
 		return A2(
 			$elm$html$Html$div,
 			attributes,
@@ -7176,12 +7165,7 @@ var $author$project$ScrollerLayout$viewNodeContents = F2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('contents_container'),
-							A2(
-							$elm$html$Html$Events$custom,
-							'click',
-							$author$project$EventDecoders$onSelectClickDecoder(
-								$elm$core$Maybe$Just(node.Z))),
+							$elm$html$Html$Attributes$class('label_container'),
 							A2(
 							$elm$html$Html$Events$custom,
 							'dblclick',
@@ -7201,7 +7185,21 @@ var $author$project$ScrollerLayout$viewNodeContents = F2(
 									A2($elm$html$Html$Attributes$attribute, 'label', node.an)
 								]),
 							_List_Nil)
-						]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('divider')
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('child_area')
+						]),
+					_Utils_ap(childNodes, tailBeacons))
 				]));
 	});
 var $author$project$ScrollerLayout$viewChildNodes = F5(
@@ -7219,64 +7217,64 @@ var $author$project$ScrollerLayout$viewChildNodes = F5(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$id(localState.bJ),
+									$elm$html$Html$Attributes$id(localState.bK),
+									$elm$html$Html$Attributes$class('child'),
+									$elm$html$Html$Attributes$class('scroller'),
 									$elm$html$Html$Attributes$classList(
 									_List_fromArray(
 										[
-											_Utils_Tuple2('child', true),
-											_Utils_Tuple2('shadow', localState.ci)
+											_Utils_Tuple2('shadow', localState.cj)
 										]))
 								]),
 							_List_fromArray(
 								[
-									A2($author$project$ScrollerLayout$viewNodeContents, node, localState),
 									A2(
 									$elm$html$Html$div,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('parent_edge')
-										]),
-									_List_Nil)
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('child_holder')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('child_edge'),
-											A2(
-											$elm$html$Html$Attributes$style,
-											'height',
-											$author$project$Utilities$asPx(node.ah))
+											$elm$html$Html$Attributes$classList(
+											_List_fromArray(
+												[
+													_Utils_Tuple2('parent_edge', localState.ba)
+												]))
 										]),
 									_List_Nil),
-									A3(
-									$elm$html$Html$node,
-									'child-area',
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('child_area'),
-											A2(
-											$elm$html$Html$Events$on,
-											'childedgeheightchanged',
-											$author$project$EventDecoders$onChildEdgeHeightChangedDecoder(node.Z))
-										]),
-									_Utils_ap(childNodes, tailBeacons))
+									A4($author$project$ScrollerLayout$viewNodeContents, node, localState, childNodes, tailBeacons)
 								]))
 						]))
 				]));
 	});
+var $elm$core$Basics$round = _Basics_round;
+var $author$project$Utilities$asPx = function (n) {
+	return $elm$core$String$fromInt(
+		$elm$core$Basics$round(n)) + 'px';
+};
+var $author$project$MapMsg$MsgOnChildEdgeHeightChanged = function (a) {
+	return {$: 3, a: a};
+};
+var $author$project$EventDecodersData$OnChildEdgeHeightChangedData = F2(
+	function (targetId, height) {
+		return {aN: height, au: targetId};
+	});
+var $author$project$EventDecoders$onChildEdgeHeightChangedDecoder = function (targetId) {
+	return A2(
+		$elm$json$Json$Decode$map,
+		$author$project$MapMsg$MsgOnChildEdgeHeightChanged,
+		A3(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'detail',
+			A2($elm$json$Json$Decode$field, 'height', $elm$json$Json$Decode$float),
+			A2(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$hardcoded,
+				targetId,
+				$elm$json$Json$Decode$succeed($author$project$EventDecodersData$OnChildEdgeHeightChangedData))));
+};
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$TreeLayout$viewNodeContents = F2(
 	function (node, viewState) {
 		var attributes = _Utils_ap(
-			_Utils_eq(viewState.bA, $elm$core$Maybe$Nothing) ? _List_fromArray(
+			_Utils_eq(viewState.bB, $elm$core$Maybe$Nothing) ? _List_fromArray(
 				[
 					A2(
 					$elm$html$Html$Events$custom,
@@ -7330,11 +7328,28 @@ var $author$project$TreeLayout$viewNodeContents = F2(
 									A2($elm$html$Html$Attributes$attribute, 'label', node.an)
 								]),
 							_List_Nil)
-						]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ew_resizer')
+						]),
+					_List_Nil)
 				]));
 	});
 var $author$project$TreeLayout$viewChildNodes = F5(
 	function (headBeacons, tailBeacons, childNodes, localState, node) {
+		var parentEdge = localState.ba ? _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('parent_edge')
+					]),
+				_List_Nil)
+			]) : _List_Nil;
 		return _Utils_ap(
 			headBeacons,
 			_List_fromArray(
@@ -7348,25 +7363,20 @@ var $author$project$TreeLayout$viewChildNodes = F5(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$id(localState.bJ),
+									$elm$html$Html$Attributes$id(localState.bK),
 									$elm$html$Html$Attributes$classList(
 									_List_fromArray(
 										[
 											_Utils_Tuple2('child', true),
-											_Utils_Tuple2('shadow', localState.ci)
+											_Utils_Tuple2('shadow', localState.cj)
 										]))
 								]),
-							_List_fromArray(
-								[
-									A2($author$project$TreeLayout$viewNodeContents, node, localState),
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('parent_edge')
-										]),
-									_List_Nil)
-								])),
+							_Utils_ap(
+								_List_fromArray(
+									[
+										A2($author$project$TreeLayout$viewNodeContents, node, localState)
+									]),
+								parentEdge)),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
@@ -7408,21 +7418,29 @@ var $author$project$Map$viewChildNode = F3(
 		var tailBeacons = A2(
 			$author$project$Utilities$maybeArray,
 			localState.aw,
-			function (_v2) {
-				return $author$project$Map$viewBeacon(localState.cn);
+			function (_v3) {
+				return $author$project$Map$viewBeacon(localState.co);
 			});
 		var headBeacons = A2(
 			$author$project$Utilities$maybeArray,
 			parentState.aw,
-			function (_v1) {
+			function (_v2) {
 				return $author$project$Map$viewBeacon(localState.aM);
 			});
+		var childState = function () {
+			var _v1 = node.bV;
+			if (!_v1) {
+				return $author$project$TreeLayout$adjustStateForChildren(localState);
+			} else {
+				return $author$project$ScrollerLayout$adjustStateForChildren(localState);
+			}
+		}();
 		var childNodes = $elm$core$List$concat(
 			A2(
 				$elm$core$List$indexedMap,
-				$author$project$Map$viewChildNode(localState),
-				$author$project$Node$childList(node.bq)));
-		var _v0 = node.bU;
+				$author$project$Map$viewChildNode(childState),
+				$author$project$Node$childList(node.br)));
+		var _v0 = node.bV;
 		if (!_v0) {
 			return A5($author$project$TreeLayout$viewChildNodes, headBeacons, tailBeacons, childNodes, localState, node);
 		} else {
@@ -7435,12 +7453,13 @@ var $author$project$ScrollerLayout$viewTopNode = F5(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$id(localState.bJ),
+					$elm$html$Html$Attributes$id(localState.bK),
 					$elm$html$Html$Attributes$class('top_child'),
+					$elm$html$Html$Attributes$class('scroller'),
 					$elm$html$Html$Attributes$classList(
 					_List_fromArray(
 						[
-							_Utils_Tuple2('shadow', localState.ci),
+							_Utils_Tuple2('shadow', localState.cj),
 							_Utils_Tuple2('on_top', onTop)
 						])),
 					A2(
@@ -7454,39 +7473,7 @@ var $author$project$ScrollerLayout$viewTopNode = F5(
 				]),
 			_List_fromArray(
 				[
-					A2($author$project$ScrollerLayout$viewNodeContents, node, localState),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('child_holder')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('child_edge'),
-									A2(
-									$elm$html$Html$Attributes$style,
-									'height',
-									$author$project$Utilities$asPx(node.ah))
-								]),
-							_List_Nil),
-							A3(
-							$elm$html$Html$node,
-							'child-area',
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('child_area'),
-									A2(
-									$elm$html$Html$Events$on,
-									'childedgeheightchanged',
-									$author$project$EventDecoders$onChildEdgeHeightChangedDecoder(node.Z))
-								]),
-							_Utils_ap(childNodes, tailBeacons))
-						]))
+					A4($author$project$ScrollerLayout$viewNodeContents, node, localState, childNodes, tailBeacons)
 				]));
 	});
 var $author$project$TreeLayout$viewTopNode = F5(
@@ -7495,12 +7482,12 @@ var $author$project$TreeLayout$viewTopNode = F5(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$id(localState.bJ),
+					$elm$html$Html$Attributes$id(localState.bK),
 					$elm$html$Html$Attributes$class('top_child'),
 					$elm$html$Html$Attributes$classList(
 					_List_fromArray(
 						[
-							_Utils_Tuple2('shadow', localState.ci),
+							_Utils_Tuple2('shadow', localState.cj),
 							_Utils_Tuple2('on_top', onTop)
 						])),
 					A2(
@@ -7556,15 +7543,23 @@ var $author$project$Map$viewTopNode = F3(
 		var tailBeacons = A2(
 			$author$project$Utilities$maybeArray,
 			localState.aw,
-			function (_v1) {
-				return $author$project$Map$viewBeacon(localState.cn);
+			function (_v2) {
+				return $author$project$Map$viewBeacon(localState.co);
 			});
+		var childState = function () {
+			var _v1 = node.bV;
+			if (!_v1) {
+				return $author$project$TreeLayout$adjustStateForChildren(localState);
+			} else {
+				return $author$project$ScrollerLayout$adjustStateForChildren(localState);
+			}
+		}();
 		var childNodes = $elm$core$List$concat(
 			A2(
 				$elm$core$List$indexedMap,
-				$author$project$Map$viewChildNode(localState),
-				$author$project$Node$childList(node.bq)));
-		var _v0 = node.bU;
+				$author$project$Map$viewChildNode(childState),
+				$author$project$Node$childList(node.br)));
+		var _v0 = node.bV;
 		if (!_v0) {
 			return A5($author$project$TreeLayout$viewTopNode, onTop, tailBeacons, childNodes, localState, node);
 		} else {
@@ -7603,6 +7598,6 @@ var $author$project$Map$view = function (model) {
 		_Utils_ap(childrenViewList, dragViewList));
 };
 var $author$project$Map$main = $elm$browser$Browser$element(
-	{bM: $author$project$Map$init, ck: $author$project$Map$subscriptions, ct: $author$project$Map$updateAndSave, cu: $author$project$Map$view});
+	{bN: $author$project$Map$init, cl: $author$project$Map$subscriptions, cu: $author$project$Map$updateAndSave, cv: $author$project$Map$view});
 _Platform_export({'Map':{'init':$author$project$Map$main(
 	$elm$json$Json$Decode$succeed(0))(0)}});}(this));
