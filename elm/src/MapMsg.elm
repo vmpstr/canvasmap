@@ -9,8 +9,10 @@ type Msg
   = MsgDrag DragControl.Msg
   | MsgNoop
   | MsgOnPointerDown OnPointerDownPortData
+  | MsgOnEwResizePointerDown OnPointerDownPortData
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
   | MsgOnLabelChanged OnLabelChangedData
+  | MsgOnMaxWidthChanged OnMaxWidthChangedData
   | MsgEditLabel Id
   | MsgSetNodes Children
   | MsgNewNode Tree.Path Node

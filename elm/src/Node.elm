@@ -28,6 +28,7 @@ type alias Node =
   , childEdgeHeight: Float
   , children : Children
   , nodeType : NodeType
+  , maxWidth : Maybe Float
   }
 
 attributePrefix : String

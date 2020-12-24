@@ -1,7 +1,7 @@
 module EventDecoders exposing (..)
 
-import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field, bool, fail)
-import Json.Decode.Pipeline exposing (required, hardcoded)
+import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field, bool, fail, nullable)
+import Json.Decode.Pipeline exposing (required, hardcoded, optional)
 
 import EventDecodersData exposing (..)
 import MapMsg exposing (..)
@@ -9,6 +9,7 @@ import Node exposing (Node, NodeType(..), Id, idToAttribute, Children(..))
 import Geometry
 import Tree
 import TreeSpec
+import Node exposing (idDecoder)
 
 andStopPropagation : Msg -> MsgWithEventOptions
 andStopPropagation msg =
@@ -27,6 +28,15 @@ onChildEdgeHeightChangedDecoder targetId =
 onPointerDownDecoder : Id -> Decoder MsgWithEventOptions
 onPointerDownDecoder targetId =
   Decoder.map (MsgOnPointerDown >> andStopPropagation)
+    (succeed OnPointerDownPortData
+      |> hardcoded (idToAttribute targetId)
+      |> required "pointerType" string
+      |> required "clientX" float
+      |> required "clientY" float)
+
+onEwResizePointerDown : Id -> Decoder MsgWithEventOptions
+onEwResizePointerDown targetId =
+  Decoder.map (MsgOnEwResizePointerDown >> andStopPropagation)
     (succeed OnPointerDownPortData
       |> hardcoded (idToAttribute targetId)
       |> required "pointerType" string
@@ -65,6 +75,7 @@ type alias FlatNode =
   , childEdgeHeight : Float
   , children : Children
   , shift : Bool
+  , maxWidth : Maybe Float
   }
 
 newNodeOffset : Geometry.Vector
@@ -85,11 +96,17 @@ flatNodeToNode f =
   , childEdgeHeight = f.childEdgeHeight
   , children = f.children
   , nodeType = nodeType
+  , maxWidth = f.maxWidth
   }
 
 
+maxWidthDecoder : Decoder (Maybe Float)
+maxWidthDecoder =
+  nullable float
+
 onAddNewNodeClickDecoder : Children -> Decoder MsgWithEventOptions
 onAddNewNodeClickDecoder children =
+  -- TODO: document the fields
   Decoder.map (MsgNewNode (Tree.AtIndex 0) >> andStopPropagation)
     (Decoder.map flatNodeToNode
       (succeed FlatNode
@@ -101,5 +118,11 @@ onAddNewNodeClickDecoder children =
         |> hardcoded 0.0
         |> hardcoded 0.0
         |> hardcoded (Children [])
-        |> required "shiftKey" bool))
+        |> required "shiftKey" bool
+        |> hardcoded Nothing))
     
+onMaxWidthChangedDataDecoder : Decoder OnMaxWidthChangedData
+onMaxWidthChangedDataDecoder =
+  succeed OnMaxWidthChangedData
+    |> required "targetId" idDecoder
+    |> optional "maxWidth" maxWidthDecoder Nothing

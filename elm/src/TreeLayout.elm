@@ -11,13 +11,21 @@ import EventDecoders exposing (..)
 
 viewTopNode : Bool -> List (Html Msg) -> List (Html Msg) -> ViewState -> Node -> Html Msg
 viewTopNode onTop tailBeacons childNodes localState node =
+  let
+    attributes =
+        ([ id localState.htmlNodeId
+        , class "top_child"
+        , classList [("shadow", localState.shadow), ("on_top", onTop)]
+        , style "left" (asPx node.position.x)
+        , style "top" (asPx node.position.y)
+        ]) ++
+        (case node.maxWidth of
+            Just width -> [ style "max-width" (asPx width) ]
+            Nothing -> []
+        )
+  in
   div
-    [ id localState.htmlNodeId
-      , class "top_child"
-      , classList [("shadow", localState.shadow), ("on_top", onTop)]
-      , style "left" (asPx node.position.x)
-      , style "top" (asPx node.position.y)
-    ]
+    attributes
     [ viewNodeContents node localState
     , div
         [ class "child_holder" ]
@@ -45,13 +53,20 @@ viewChildNodes headBeacons tailBeacons childNodes localState node =
             [ div [ class "parent_edge" ] [] ]
         else
             []
+
+    attributes =
+        ([ id localState.htmlNodeId
+        , classList [("child", True), ("shadow", localState.shadow)]
+        ]) ++
+        (case node.maxWidth of
+            Just width -> [ style "max-width" (asPx width) ]
+            Nothing -> []
+        )
   in
   headBeacons ++
   [ div []
       [ div
-          [ id localState.htmlNodeId
-          , classList [("child", True), ("shadow", localState.shadow)]
-          ]
+          attributes
           ([ viewNodeContents node localState ] ++ parentEdge)
       , div
           [ class "child_holder" ]
@@ -98,6 +113,7 @@ viewNodeContents node viewState =
         ]
     , div
         [ class "ew_resizer"
+        , custom "pointerdown" (onEwResizePointerDown node.id)
         ]
         []
     ]

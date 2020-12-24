@@ -1,4 +1,4 @@
-module TreeSpec exposing (findNode, moveNode, nodeAtById, updateNode, removeNode, addNode, findMaxId)
+module TreeSpec exposing (findNode, moveNode, nodeAtById, updateNode, removeNode, addNode, findMaxId, updateNodeById)
 
 import Tree
 import Node exposing (Node, Id, childList, Children(..))
@@ -30,3 +30,9 @@ findMaxId (Children nodes) =
         ++ (List.map (\node -> findMaxId node.children) nodes)
       )
     )
+
+updateNodeById : List Node -> Id -> (Node -> Node) -> List Node
+updateNodeById nodes id updater =
+  case findNode nodes id of
+    Just path -> updateNode nodes path updater
+    Nothing -> nodes

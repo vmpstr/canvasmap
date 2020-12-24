@@ -5,7 +5,7 @@ import Html exposing (Html, div, text, label)
 import Html.Attributes exposing (class, classList, style, attribute, id)
 import Html.Events exposing (custom, on, onDoubleClick)
 import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field, bool, fail)
-import Json.Decode.Pipeline exposing (required, hardcoded)
+import Json.Decode.Pipeline exposing (required, hardcoded, optional)
 import Json.Encode as Encode
 import Maybe.Extra
 
@@ -58,9 +58,13 @@ newNode children =
   , childEdgeHeight = 0
   , children = Children []
   , nodeType = NodeTypeTree
+  , maxWidth = Nothing
   }
 
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
+port portOnEwResizePointerDown : OnPointerDownPortData -> Cmd msg
+port portOnNsResizePointerDown : OnPointerDownPortData -> Cmd msg
+port portOnEwnsResizePointerDown : OnPointerDownPortData -> Cmd msg
 port portEditLabel : { targetId : String } -> Cmd msg
 port portSaveState : Encode.Value -> Cmd msg
 port portLoadState : () -> Cmd msg
@@ -202,13 +206,17 @@ encodeNodeType nodeType =
 encodeNode : Node -> Encode.Value
 encodeNode node =
   Encode.object
-    [ ("id", encodeId node.id)
+    ([ ("id", encodeId node.id)
     , ("label", Encode.string node.label)
     , ("position", encodeVector node.position)
     , ("size", encodeVector node.size)
     , ("children", encodeNodes node.children)
     , ("nodeType", encodeNodeType node.nodeType)
-    ]
+    ] ++
+    (case node.maxWidth of
+      Just width -> [("maxWidth", Encode.float width)]
+      Nothing -> []
+    ))
 
 encodeNodes : Children -> Encode.Value
 encodeNodes (Children nodes) =
@@ -237,6 +245,7 @@ nodeDecoder =
     |> hardcoded 0.0
     |> required "children" (Decoder.lazy (\() -> nodesDecoder))
     |> required "nodeType" nodeTypeDecoder
+    |> optional "maxWidth" maxWidthDecoder Nothing
 
 nodesDecoder : Decoder Children
 nodesDecoder =
@@ -248,6 +257,15 @@ update msg model =
     MsgOnPointerDown data ->
       -- filter this: primary button only for drag?
       (model, portOnPointerDown data)
+
+    MsgOnEwResizePointerDown data ->
+      (model, portOnEwResizePointerDown data)
+
+    MsgOnMaxWidthChanged data ->
+      let
+        nodes = applyMaxWidthChanged model.nodes data
+      in
+      ({ model | nodes = nodes }, Cmd.none)
 
     MsgDrag dragMsg ->
       let
@@ -308,6 +326,14 @@ update msg model =
     MsgMapKeyDown key ->
       handleMapKeyDown key.code model
 
+
+applyMaxWidthChanged : Children -> OnMaxWidthChangedData -> Children
+applyMaxWidthChanged (Children nodes) data =
+  let
+    updater node =
+      { node | maxWidth = data.maxWidth }
+  in
+  Children (TreeSpec.updateNodeById nodes data.targetId updater)
 
 handleMapKeyDown : String -> Model -> (Model, Cmd Msg)
 handleMapKeyDown key model =
@@ -408,11 +434,19 @@ onKeyDownSubscription =
   portOnKeyDown
     (Decoder.decodeValue keyDecoder >> toMsgOrNoop MsgMapKeyDown MsgNoop)
 
+port portOnMaxWidthChanged : (Decoder.Value -> msg) -> Sub msg
+
+onMaxWidthChangedSubscription : Sub Msg
+onMaxWidthChangedSubscription =
+  portOnMaxWidthChanged
+    (Decoder.decodeValue onMaxWidthChangedDataDecoder >> toMsgOrNoop MsgOnMaxWidthChanged MsgNoop)
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
   [ Sub.map MsgDrag (DragControl.subscriptions ())
   , onLoadStateSubscription
   , onKeyDownSubscription
+  , onMaxWidthChangedSubscription
   ] |> Sub.batch
 
 initialViewStateAdjusters : State -> List (ViewState -> ViewState)
