@@ -52,6 +52,15 @@ onNsResizePointerDown targetId =
       |> required "clientX" float
       |> required "clientY" float)
 
+onNsewResizePointerDown : Id -> Decoder MsgWithEventOptions
+onNsewResizePointerDown targetId =
+  Decoder.map (MsgOnNsewResizePointerDown >> andStopPropagation)
+    (succeed OnPointerDownPortData
+      |> hardcoded (idToAttribute targetId)
+      |> required "pointerType" string
+      |> required "clientX" float
+      |> required "clientY" float)
+
 onLabelChangedDecoder : Id -> Decoder Msg
 onLabelChangedDecoder targetId =
   Decoder.map MsgOnLabelChanged

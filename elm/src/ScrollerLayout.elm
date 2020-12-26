@@ -94,4 +94,9 @@ viewNodeContents node viewState childNodes tailBeacons =
           , custom "pointerdown" (onNsResizePointerDown node.id)
           ]
           []
+      , div
+          [ class "nsew_resizer"
+          , custom "pointerdown" (onNsewResizePointerDown node.id)
+          ]
+          []
       ]

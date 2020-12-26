@@ -270,6 +270,9 @@ update msg model =
     MsgOnNsResizePointerDown data ->
       (model, portOnNsResizePointerDown data)
 
+    MsgOnNsewResizePointerDown data ->
+      (model, [ portOnNsResizePointerDown data, portOnEwResizePointerDown data ] |> Cmd.batch)
+
     MsgOnMaxWidthChanged data ->
       let
         nodes = applyMaxWidthChanged model.nodes data

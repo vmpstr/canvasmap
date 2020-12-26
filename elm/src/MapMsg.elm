@@ -11,6 +11,7 @@ type Msg
   | MsgOnPointerDown OnPointerDownPortData
   | MsgOnEwResizePointerDown OnPointerDownPortData
   | MsgOnNsResizePointerDown OnPointerDownPortData
+  | MsgOnNsewResizePointerDown OnPointerDownPortData
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
   | MsgOnLabelChanged OnLabelChangedData
   | MsgOnMaxWidthChanged OnMaxDimensionChangedData
