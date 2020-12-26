@@ -9,7 +9,11 @@ window.customElements.define('node-label', class extends HTMLElement {
       const shadow = this.attachShadow({ mode: 'open' });
       shadow.innerHTML = `
       <style>
-      div { white-space: pre; }
+      div {
+        white-space: pre;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
       </style>
       <div id=label></div>`;
     }

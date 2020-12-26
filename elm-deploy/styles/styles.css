@@ -31,6 +31,7 @@ body {
   margin-top: 5px;
   box-sizing: border-box;
   position: relative;
+  max-width: max-content;
 }
 
 .parent_edge {
@@ -58,7 +59,7 @@ body {
   contain: layout;
 }
 
-.ewhandle {
+.ew_resizer {
   position: absolute;
   top: 3px;
   bottom: 3px;
@@ -137,6 +138,7 @@ body {
   flex-shrink: 1;
   flex-wrap: nowrap;
   padding: 10px;
+  width: 100%;
 }
 
 .label {
@@ -158,4 +160,8 @@ body {
   left: 12px;
   width: 0;
   border-left: 1px solid rgb(50, 50, 50);
+}
+
+node-label {
+  max-width: 100%;
 }

@@ -129,6 +129,55 @@ function loadState() {
   app.ports.portOnLoadState.send(nodes);
 }
 
+let ewData = undefined;
+function onEwResizePointerDown(e) {
+  document.body.addEventListener("pointermove", onEwResizePointerMove);
+  document.body.addEventListener("pointerup", onEwResizePointerUp);
+  const target = document.getElementById(e.targetId);
+  const rect = target.getBoundingClientRect();
+
+  const style = target.getAttribute("style");
+  target.setAttribute("style", "");
+  const unboundRect = target.getBoundingClientRect();
+  target.setAttribute("style", style);
+
+  ewData = {
+    targetId: e.targetId,
+    lastX: e.x,
+    lastWidth: rect.width,
+    unboundWidth: unboundRect.width
+  };
+}
+
+function onEwResizePointerMove(e) {
+  e.preventDefault();
+  if (blockInput)
+    return;
+
+  dx = e.clientX - ewData.lastX;
+  ewData.lastX = e.clientX;
+
+  const newWidth = ewData.lastWidth + dx;
+  ewData.lastWidth = newWidth;
+  if (newWidth >= ewData.unboundWidth) {
+    app.ports.portOnMaxWidthChanged.send({
+      targetId: ewData.targetId
+    });
+  } else {
+    app.ports.portOnMaxWidthChanged.send({
+      targetId: ewData.targetId,
+      maxWidth: Math.max(0, newWidth)
+    });
+  }
+}
+
+function onEwResizePointerUp(e) {
+  e.preventDefault();
+  document.body.removeEventListener("pointermove", onEwResizePointerMove);
+  document.body.removeEventListener("pointerup", onEwResizePointerUp);
+  ewData = undefined;
+}
+
 onload = () => {
   app = Elm.Map.init({ node: document.getElementById("map") });
   app.ports.portOnPointerDown.subscribe(onPointerDown);
@@ -136,6 +185,7 @@ onload = () => {
   app.ports.portEditLabel.subscribe(onEditLabel);
   app.ports.portSaveState.subscribe(saveState);
   app.ports.portLoadState.subscribe(loadState);
+  app.ports.portOnEwResizePointerDown.subscribe(onEwResizePointerDown);
   document.addEventListener("keydown", (e) => {
     // TODO: Maybe filter based on what is handled?
     e.preventDefault();
