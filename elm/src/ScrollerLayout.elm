@@ -22,6 +22,10 @@ viewTopNode onTop tailBeacons childNodes localState node =
     (case node.maxWidth of
         Just width -> [ style "max-width" (asPx width) ]
         Nothing -> []
+    ) ++
+    (case node.maxHeight of
+        Just height -> [ style "max-height" (asPx height) ]
+        Nothing -> []
     ))
     [ viewNodeContents node localState childNodes tailBeacons ]
 
@@ -83,6 +87,11 @@ viewNodeContents node viewState childNodes tailBeacons =
       , div
           [ class "ew_resizer"
           , custom "pointerdown" (onEwResizePointerDown node.id)
+          ]
+          []
+      , div
+          [ class "ns_resizer"
+          , custom "pointerdown" (onNsResizePointerDown node.id)
           ]
           []
       ]

@@ -22,7 +22,7 @@ type alias OnChildEdgeHeightChangedData =
 type alias Key =
   { code : String }
 
-type alias OnMaxWidthChangedData =
+type alias OnMaxDimensionChangedData =
   { targetId : Id
-  , maxWidth: Maybe Float
+  , value: Maybe Float
   }

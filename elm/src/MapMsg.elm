@@ -10,9 +10,11 @@ type Msg
   | MsgNoop
   | MsgOnPointerDown OnPointerDownPortData
   | MsgOnEwResizePointerDown OnPointerDownPortData
+  | MsgOnNsResizePointerDown OnPointerDownPortData
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
   | MsgOnLabelChanged OnLabelChangedData
-  | MsgOnMaxWidthChanged OnMaxWidthChangedData
+  | MsgOnMaxWidthChanged OnMaxDimensionChangedData
+  | MsgOnMaxHeightChanged OnMaxDimensionChangedData
   | MsgEditLabel Id
   | MsgSetNodes Children
   | MsgNewNode Tree.Path Node

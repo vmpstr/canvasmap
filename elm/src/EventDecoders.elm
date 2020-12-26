@@ -43,6 +43,15 @@ onEwResizePointerDown targetId =
       |> required "clientX" float
       |> required "clientY" float)
 
+onNsResizePointerDown : Id -> Decoder MsgWithEventOptions
+onNsResizePointerDown targetId =
+  Decoder.map (MsgOnNsResizePointerDown >> andStopPropagation)
+    (succeed OnPointerDownPortData
+      |> hardcoded (idToAttribute targetId)
+      |> required "pointerType" string
+      |> required "clientX" float
+      |> required "clientY" float)
+
 onLabelChangedDecoder : Id -> Decoder Msg
 onLabelChangedDecoder targetId =
   Decoder.map MsgOnLabelChanged
@@ -76,6 +85,7 @@ type alias FlatNode =
   , children : Children
   , shift : Bool
   , maxWidth : Maybe Float
+  , maxHeight : Maybe Float
   }
 
 newNodeOffset : Geometry.Vector
@@ -97,12 +107,8 @@ flatNodeToNode f =
   , children = f.children
   , nodeType = nodeType
   , maxWidth = f.maxWidth
+  , maxHeight = f.maxHeight
   }
-
-
-maxWidthDecoder : Decoder (Maybe Float)
-maxWidthDecoder =
-  nullable float
 
 onAddNewNodeClickDecoder : Children -> Decoder MsgWithEventOptions
 onAddNewNodeClickDecoder children =
@@ -119,10 +125,11 @@ onAddNewNodeClickDecoder children =
         |> hardcoded 0.0
         |> hardcoded (Children [])
         |> required "shiftKey" bool
+        |> hardcoded Nothing
         |> hardcoded Nothing))
     
-onMaxWidthChangedDataDecoder : Decoder OnMaxWidthChangedData
-onMaxWidthChangedDataDecoder =
-  succeed OnMaxWidthChangedData
+onMaxDimensionChangedDataDecoder : Decoder OnMaxDimensionChangedData
+onMaxDimensionChangedDataDecoder =
+  succeed OnMaxDimensionChangedData
     |> required "targetId" idDecoder
-    |> optional "maxWidth" maxWidthDecoder Nothing
+    |> optional "value" (nullable float) Nothing

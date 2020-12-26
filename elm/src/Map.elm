@@ -4,7 +4,7 @@ import Browser
 import Html exposing (Html, div, text, label)
 import Html.Attributes exposing (class, classList, style, attribute, id)
 import Html.Events exposing (custom, on, onDoubleClick)
-import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field, bool, fail)
+import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field, bool, fail, nullable)
 import Json.Decode.Pipeline exposing (required, hardcoded, optional)
 import Json.Encode as Encode
 import Maybe.Extra
@@ -59,12 +59,13 @@ newNode children =
   , children = Children []
   , nodeType = NodeTypeTree
   , maxWidth = Nothing
+  , maxHeight = Nothing
   }
 
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
 port portOnEwResizePointerDown : OnPointerDownPortData -> Cmd msg
 port portOnNsResizePointerDown : OnPointerDownPortData -> Cmd msg
-port portOnEwnsResizePointerDown : OnPointerDownPortData -> Cmd msg
+port portOnNsewResizePointerDown : OnPointerDownPortData -> Cmd msg
 port portEditLabel : { targetId : String } -> Cmd msg
 port portSaveState : Encode.Value -> Cmd msg
 port portLoadState : () -> Cmd msg
@@ -216,6 +217,10 @@ encodeNode node =
     (case node.maxWidth of
       Just width -> [("maxWidth", Encode.float width)]
       Nothing -> []
+    ) ++
+    (case node.maxHeight of
+      Just height -> [("maxHeight", Encode.float height)]
+      Nothing -> []
     ))
 
 encodeNodes : Children -> Encode.Value
@@ -245,7 +250,8 @@ nodeDecoder =
     |> hardcoded 0.0
     |> required "children" (Decoder.lazy (\() -> nodesDecoder))
     |> required "nodeType" nodeTypeDecoder
-    |> optional "maxWidth" maxWidthDecoder Nothing
+    |> optional "maxWidth" (nullable float) Nothing
+    |> optional "maxHeight" (nullable float) Nothing
 
 nodesDecoder : Decoder Children
 nodesDecoder =
@@ -261,9 +267,18 @@ update msg model =
     MsgOnEwResizePointerDown data ->
       (model, portOnEwResizePointerDown data)
 
+    MsgOnNsResizePointerDown data ->
+      (model, portOnNsResizePointerDown data)
+
     MsgOnMaxWidthChanged data ->
       let
         nodes = applyMaxWidthChanged model.nodes data
+      in
+      ({ model | nodes = nodes }, Cmd.none)
+
+    MsgOnMaxHeightChanged data ->
+      let
+        nodes = applyMaxHeightChanged model.nodes data
       in
       ({ model | nodes = nodes }, Cmd.none)
 
@@ -327,11 +342,19 @@ update msg model =
       handleMapKeyDown key.code model
 
 
-applyMaxWidthChanged : Children -> OnMaxWidthChangedData -> Children
+applyMaxWidthChanged : Children -> OnMaxDimensionChangedData -> Children
 applyMaxWidthChanged (Children nodes) data =
   let
     updater node =
-      { node | maxWidth = data.maxWidth }
+      { node | maxWidth = data.value }
+  in
+  Children (TreeSpec.updateNodeById nodes data.targetId updater)
+
+applyMaxHeightChanged : Children -> OnMaxDimensionChangedData -> Children
+applyMaxHeightChanged (Children nodes) data =
+  let
+    updater node =
+      { node | maxHeight = data.value }
   in
   Children (TreeSpec.updateNodeById nodes data.targetId updater)
 
@@ -435,11 +458,17 @@ onKeyDownSubscription =
     (Decoder.decodeValue keyDecoder >> toMsgOrNoop MsgMapKeyDown MsgNoop)
 
 port portOnMaxWidthChanged : (Decoder.Value -> msg) -> Sub msg
+port portOnMaxHeightChanged : (Decoder.Value -> msg) -> Sub msg
 
 onMaxWidthChangedSubscription : Sub Msg
 onMaxWidthChangedSubscription =
   portOnMaxWidthChanged
-    (Decoder.decodeValue onMaxWidthChangedDataDecoder >> toMsgOrNoop MsgOnMaxWidthChanged MsgNoop)
+    (Decoder.decodeValue onMaxDimensionChangedDataDecoder >> toMsgOrNoop MsgOnMaxWidthChanged MsgNoop)
+
+onMaxHeightChangedSubscription : Sub Msg
+onMaxHeightChangedSubscription =
+  portOnMaxHeightChanged
+    (Decoder.decodeValue onMaxDimensionChangedDataDecoder >> toMsgOrNoop MsgOnMaxHeightChanged MsgNoop)
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
@@ -447,6 +476,7 @@ subscriptions _ =
   , onLoadStateSubscription
   , onKeyDownSubscription
   , onMaxWidthChangedSubscription
+  , onMaxHeightChangedSubscription
   ] |> Sub.batch
 
 initialViewStateAdjusters : State -> List (ViewState -> ViewState)

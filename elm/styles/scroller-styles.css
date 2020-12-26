@@ -8,6 +8,8 @@
   /* ??? */
   min-width: 20px;
   max-width: max-content;
+  display: flex;
+  min-height: 65px;
 }
 
 .scroller > .contents {

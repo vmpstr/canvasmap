@@ -13,6 +13,7 @@
 - only add event handlers for states where it makes sense (like idle?)
 - refactor js into separate files
 - maybe use attribute for maxWidth and use that in style?
+- refactor resizers
 
 ## bugs
 
@@ -21,6 +22,8 @@
 - when resizing cursor should always be present
 - resizing does not trigger a state change, so it doesn't save
 - after editing label, maxWidth may need to be reset (from EW resizing)
+- scroller needs to scroll if dragging needs it to
+- tab new item needs to focus
 
 ## thoughts
 
