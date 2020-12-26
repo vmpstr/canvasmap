@@ -12,13 +12,17 @@ import EventDecoders exposing (..)
 viewTopNode : Bool -> List (Html Msg) -> List (Html Msg) -> ViewState -> Node -> Html Msg
 viewTopNode onTop tailBeacons childNodes localState node =
   div
-    [ id localState.htmlNodeId
+    ([ id localState.htmlNodeId
       , class "top_child"
       , class "scroller"
       , classList [("shadow", localState.shadow), ("on_top", onTop)]
       , style "left" (asPx node.position.x)
       , style "top" (asPx node.position.y)
-    ]
+    ] ++
+    (case node.maxWidth of
+        Just width -> [ style "max-width" (asPx width) ]
+        Nothing -> []
+    ))
     [ viewNodeContents node localState childNodes tailBeacons ]
 
 adjustStateForChildren : ViewState -> ViewState
@@ -30,11 +34,15 @@ viewChildNodes headBeacons tailBeacons childNodes localState node =
   headBeacons ++
   [ div []
       [ div
-          [ id localState.htmlNodeId
+          ([ id localState.htmlNodeId
           , class "child"
           , class "scroller"
           , classList [("shadow", localState.shadow)]
-          ]
+          ] ++
+          (case node.maxWidth of
+              Just width -> [ style "max-width" (asPx width) ]
+              Nothing -> []
+          ))
           -- TODO: Don't show the div if there is no parent edge.
           [ div [ classList [ ("parent_edge", localState.showParentEdge) ] ] []
           , viewNodeContents node localState childNodes tailBeacons
@@ -72,4 +80,9 @@ viewNodeContents node viewState childNodes tailBeacons =
       , div
           [ class "child_area" ] 
           (childNodes ++ tailBeacons)
+      , div
+          [ class "ew_resizer"
+          , custom "pointerdown" (onEwResizePointerDown node.id)
+          ]
+          []
       ]

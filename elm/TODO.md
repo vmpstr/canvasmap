@@ -1,15 +1,18 @@
 ## todos
 
-- resizing tree node
 - resizing scroller node
 - hide children
 - links / decorations
 - github auto populate
 - styles
+- error system (e.g. when memento fails to load or parse)
 
 ## refactors
 
 - move node encoders decoders and definitions to a isolated place
+- only add event handlers for states where it makes sense (like idle?)
+- refactor js into separate files
+- maybe use attribute for maxWidth and use that in style?
 
 ## bugs
 
@@ -22,4 +25,5 @@
 ## thoughts
 
 - flavors: same layout types present as bullet point, numbered list, checkboxes, etc
-- scribe: js class that remembers states, allows for setting state and retrieving previous/next states (undo/redo)
+- scribe: js class that remembers states, allows for setting state and retrieving previous/next states (undo/redo). can piggy back off memento that remembers stuff
+- memento: saving system.
