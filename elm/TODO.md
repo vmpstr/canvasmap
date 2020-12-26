@@ -16,7 +16,6 @@
 
 ## bugs
 
-- enter (sibling add) on a top level should add child
 - when clicking ew resizer, the scroller parent gets selected
 - when resizing cursor should always be present
 - resizing does not trigger a state change, so it doesn't save

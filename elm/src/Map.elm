@@ -312,7 +312,10 @@ pathToNextSiblingOfId : Children -> Id -> Maybe Tree.Path
 pathToNextSiblingOfId (Children nodes) id =
   case TreeSpec.findNode nodes id of
     Just path ->
-      Just (Tree.incrementBase path)
+      -- Next sibling of top level item is its first child
+      case path of
+        Tree.AtIndex index -> pathToFirstChildOfId (Children nodes) id
+        _ -> Just (Tree.incrementBase path)
     Nothing ->
       Nothing
 
