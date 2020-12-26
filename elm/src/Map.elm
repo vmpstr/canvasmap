@@ -99,7 +99,7 @@ viewTopNode parentState index node =
 
     onTop = index < 0
     tailBeacons =
-      Utilities.maybeArray
+      Utils.maybeArray
         localState.viewBeacons
         (\() -> viewBeacon localState.tailBeaconPath)
     childState =
@@ -120,11 +120,11 @@ viewChildNode parentState index node =
   let
     localState = getViewStateForNode index node parentState
     headBeacons =
-      Utilities.maybeArray
+      Utils.maybeArray
         parentState.viewBeacons
         (\() -> viewBeacon localState.headBeaconPath)
     tailBeacons =
-      Utilities.maybeArray
+      Utils.maybeArray
         localState.viewBeacons
         (\() -> viewBeacon localState.tailBeaconPath)
     childState =
@@ -417,13 +417,13 @@ viewStateAdjustersForNode index node =
 
 getInitialViewState : State -> ViewState
 getInitialViewState state =
-  Utilities.listApply
+  Utils.listApply
     MapView.defaultViewState
     (initialViewStateAdjusters state)
 
 getViewStateForNode : Int -> Node -> ViewState -> ViewState
 getViewStateForNode index node viewState =
-  Utilities.listApply
+  Utils.listApply
     viewState
     (viewStateAdjustersForNode index node)
 
