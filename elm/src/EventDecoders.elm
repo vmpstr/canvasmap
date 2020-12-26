@@ -5,11 +5,11 @@ import Json.Decode.Pipeline exposing (required, hardcoded, optional)
 
 import EventDecodersData exposing (..)
 import MapMsg exposing (..)
-import Node exposing (Node, NodeType(..), Id, idToAttribute, Children(..))
+import Node exposing (Node, NodeType(..), Id, Children(..))
+import NodeUtils exposing (idToAttribute, idAttributeDecoder, nodeFromClickDecoder)
 import Geometry
 import Tree
 import TreeSpec
-import Node exposing (idDecoder)
 
 andStopPropagation : Msg -> MsgWithEventOptions
 andStopPropagation msg =
@@ -83,62 +83,14 @@ keyDecoder =
   succeed Key
     |> required "code" string
 
-type alias FlatNode =
-  { id : Int
-  , label : String
-  , x : Float
-  , y : Float
-  , width : Float
-  , height : Float
-  , childEdgeHeight : Float
-  , children : Children
-  , shift : Bool
-  , maxWidth : Maybe Float
-  , maxHeight : Maybe Float
-  }
-
-newNodeOffset : Geometry.Vector
-newNodeOffset =
-  { x = -40.0
-  , y = -20.0
-  }
-
-flatNodeToNode : FlatNode -> Node
-flatNodeToNode f =
-  let
-    nodeType = if f.shift then NodeTypeScroller else NodeTypeTree
-  in
-  { id = f.id
-  , label = f.label
-  , position = Geometry.add (Geometry.Vector f.x f.y) newNodeOffset
-  , size = Geometry.Vector f.width f.height
-  , childEdgeHeight = f.childEdgeHeight
-  , children = f.children
-  , nodeType = nodeType
-  , maxWidth = f.maxWidth
-  , maxHeight = f.maxHeight
-  }
-
 onAddNewNodeClickDecoder : Children -> Decoder MsgWithEventOptions
 onAddNewNodeClickDecoder children =
   -- TODO: document the fields
   Decoder.map (MsgNewNode (Tree.AtIndex 0) >> andStopPropagation)
-    (Decoder.map flatNodeToNode
-      (succeed FlatNode
-        |> hardcoded ((TreeSpec.findMaxId children) + 1)
-        |> hardcoded "new item"
-        |> required "clientX" float
-        |> required "clientY" float
-        |> hardcoded 0.0
-        |> hardcoded 0.0
-        |> hardcoded 0.0
-        |> hardcoded (Children [])
-        |> required "shiftKey" bool
-        |> hardcoded Nothing
-        |> hardcoded Nothing))
+    (nodeFromClickDecoder children)
     
 onMaxDimensionChangedDataDecoder : Decoder OnMaxDimensionChangedData
 onMaxDimensionChangedDataDecoder =
   succeed OnMaxDimensionChangedData
-    |> required "targetId" idDecoder
+    |> required "targetId" idAttributeDecoder
     |> optional "value" (nullable float) Nothing

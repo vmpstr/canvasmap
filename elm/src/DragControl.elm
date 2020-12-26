@@ -13,7 +13,8 @@ import Json.Decode as Decoder exposing (Decoder, succeed, float, list)
 import Json.Decode.Pipeline exposing (required, optional)
 
 import Geometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
-import Node exposing (Children(..), Node, Id, idDecoder, idToShadowAttribute, idToAttribute, childList)
+import Node exposing (Children(..), Node, Id, childList)
+import NodeUtils exposing (idAttributeDecoder, idToShadowAttribute, idToAttribute)
 import Tree exposing (Path(..), pathDecoder, isSubpath)
 import TreeSpec
 import UserAction
@@ -301,7 +302,7 @@ geometryDecoder =
 onDragDecoder : Decoder OnDragData
 onDragDecoder =
   succeed OnDragData
-    |> required "targetId" idDecoder
+    |> required "targetId" idAttributeDecoder
     |> optional "dx" float 0
     |> optional "dy" float 0
     |> required "geometry" geometryDecoder

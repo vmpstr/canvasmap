@@ -288,4 +288,3 @@ isSubpath path lead =
       pi == li -- if path goes into the subtree of lead, it's a subpath
     (InSubtree pi psub, InSubtree li lsub) ->
       pi == li && isSubpath psub lsub -- recurse if equal
-

@@ -1,18 +1,21 @@
 module Node exposing
-  ( childList
-  , Children(..)
+  (Children(..)
+  , childList
   , Id
-  , idDecoder
-  , idToAttribute
-  , idToShadowAttribute
   , Node
   , NodeType(..)
   )
 
 import Geometry exposing (Vector)
-import Json.Decode as Decoder exposing (Decoder, succeed, fail, string)
+import Json.Decode as Decoder exposing (Decoder, succeed, fail, string, nullable, float)
+import Json.Encode as Encode
+import Json.Decode.Pipeline exposing (required, hardcoded, optional)
 
 type Children = Children (List Node)
+
+childList : Children -> List Node
+childList (Children nodes) =
+  nodes
 
 type alias Id = Int
 
@@ -24,41 +27,9 @@ type alias Node =
   { id : Id
   , label : String
   , position : Vector
-  , size : Vector
   , childEdgeHeight: Float
   , children : Children
   , nodeType : NodeType
   , maxWidth : Maybe Float
   , maxHeight : Maybe Float
   }
-
-attributePrefix : String
-attributePrefix = "n"
-
-childList : Children -> List Node
-childList (Children nodes) =
-  nodes
-
-idToAttribute : Id -> String
-idToAttribute id =
-  attributePrefix ++ String.fromInt id
-
-idToShadowAttribute : Id -> String
-idToShadowAttribute id =
-  "shadow-" ++ idToAttribute id
-
-decodeId : String -> Decoder Id
-decodeId str =
-  if String.startsWith attributePrefix str then
-    case String.dropLeft (String.length attributePrefix) str |> String.toInt of
-       Just id ->
-        succeed id
-       Nothing ->
-        fail ("Invalid id " ++ str)
-  else
-    fail ("Invalid id " ++ str)
-
--- rename this to idAttributeDecoder
-idDecoder : Decoder Id
-idDecoder =
-  string |> Decoder.andThen decodeId

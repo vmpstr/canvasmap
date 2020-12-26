@@ -10,7 +10,8 @@ import Json.Encode as Encode
 import Maybe.Extra
 
 import DragControl
-import Node exposing (Node, Children(..), childList, idToAttribute, idToShadowAttribute, Id, NodeType(..))
+import Node exposing (Node, Children(..), childList, Id, NodeType(..))
+import NodeUtils exposing (idToAttribute, idToShadowAttribute, nodesDecoder, encodeNodes)
 import UserAction
 import TreeSpec
 import MapView exposing (ViewState)
@@ -49,19 +50,6 @@ type alias State =
   }
 
 -- Functionality
-newNode : Children -> Node
-newNode children =
-  { id = (TreeSpec.findMaxId children) + 1
-  , label = "new item"
-  , position = Geometry.Vector 0 0
-  , size = Geometry.Vector 0 0
-  , childEdgeHeight = 0
-  , children = Children []
-  , nodeType = NodeTypeTree
-  , maxWidth = Nothing
-  , maxHeight = Nothing
-  }
-
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
 port portOnEwResizePointerDown : OnPointerDownPortData -> Cmd msg
 port portOnNsResizePointerDown : OnPointerDownPortData -> Cmd msg
@@ -187,76 +175,6 @@ updateAndSave msg model =
   (newModel, [cmd, saveCmd] |> Cmd.batch)
 
 
-encodeVector : Geometry.Vector -> Encode.Value
-encodeVector v =
-  Encode.object
-    [ ("x", Encode.float v.x )
-    , ("y", Encode.float v.y )
-    ]
-
-encodeId : Id -> Encode.Value
-encodeId id =
-  Encode.int id
-
-encodeNodeType : NodeType -> Encode.Value
-encodeNodeType nodeType =
-  case nodeType of
-    NodeTypeTree -> Encode.string "tree"
-    NodeTypeScroller -> Encode.string "scroller"
-
-encodeNode : Node -> Encode.Value
-encodeNode node =
-  Encode.object
-    ([ ("id", encodeId node.id)
-    , ("label", Encode.string node.label)
-    , ("position", encodeVector node.position)
-    , ("size", encodeVector node.size)
-    , ("children", encodeNodes node.children)
-    , ("nodeType", encodeNodeType node.nodeType)
-    ] ++
-    (case node.maxWidth of
-      Just width -> [("maxWidth", Encode.float width)]
-      Nothing -> []
-    ) ++
-    (case node.maxHeight of
-      Just height -> [("maxHeight", Encode.float height)]
-      Nothing -> []
-    ))
-
-encodeNodes : Children -> Encode.Value
-encodeNodes (Children nodes) =
-  Encode.list encodeNode nodes
-
-nodeTypeDecoder : Decoder NodeType
-nodeTypeDecoder =
-  let
-    stringToNodeType s =
-      if s == "tree" then
-        succeed NodeTypeTree
-      else if s == "scroller" then
-        succeed NodeTypeScroller
-      else
-        fail ("Unknown node type " ++ s)
-  in
-  string |> Decoder.andThen stringToNodeType
-
-nodeDecoder : Decoder Node
-nodeDecoder =
-  succeed Node
-    |> required "id" Decoder.int
-    |> required "label" Decoder.string
-    |> required "position" Geometry.vectorDecoder
-    |> required "size" Geometry.vectorDecoder
-    |> hardcoded 0.0
-    |> required "children" (Decoder.lazy (\() -> nodesDecoder))
-    |> required "nodeType" nodeTypeDecoder
-    |> optional "maxWidth" (nullable float) Nothing
-    |> optional "maxHeight" (nullable float) Nothing
-
-nodesDecoder : Decoder Children
-nodesDecoder =
-  Decoder.map Children (Decoder.list nodeDecoder)
-
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -377,14 +295,14 @@ handleMapKeyDown key model =
     case model.state.selected
           |> Maybe.andThen (pathToFirstChildOfId model.nodes) of
       Just path ->
-        update (MsgNewNode path (newNode model.nodes)) model
+        update (MsgNewNode path (NodeUtils.newNode model.nodes)) model
       Nothing ->
         update MsgNoop model
   else if key == "Enter" && model.state.action == UserAction.Idle then
     case model.state.selected
           |> Maybe.andThen (pathToNextSiblingOfId model.nodes) of
       Just path ->
-        update (MsgNewNode path (newNode model.nodes)) model
+        update (MsgNewNode path (NodeUtils.newNode model.nodes)) model
       Nothing ->
         update MsgNoop model
   else

@@ -1,6 +1,5 @@
 ## todos
 
-- resizing scroller node
 - hide children
 - links / decorations
 - github auto populate
