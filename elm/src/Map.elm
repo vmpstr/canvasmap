@@ -16,7 +16,7 @@ import UserAction
 import TreeSpec
 import MapView exposing (ViewState)
 import Geometry
-import Utilities exposing (toMsgOrNoop, asPx)
+import Utils exposing (toMsgOrNoop, asPx)
 import Tree
 import TreeLayout
 import ScrollerLayout

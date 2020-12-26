@@ -18,7 +18,7 @@ import NodeUtils exposing (idAttributeDecoder, idToShadowAttribute, idToAttribut
 import Tree exposing (Path(..), pathDecoder, isSubpath)
 import TreeSpec
 import UserAction
-import Utilities exposing (maybeJust, maybeCmd, toMsgOrNoop)
+import Utils exposing (maybeJust, maybeCmd, toMsgOrNoop)
 import MapView exposing (ViewState)
 
 

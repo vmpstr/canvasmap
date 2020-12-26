@@ -1,4 +1,4 @@
-module Utilities exposing
+module Utils exposing
   ( maybeJust
   , maybeCmd
   , toMsgOrNoop

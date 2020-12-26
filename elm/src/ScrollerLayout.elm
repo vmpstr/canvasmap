@@ -6,7 +6,7 @@ import Html.Attributes exposing (attribute, id, style, class, classList)
 import Html.Events exposing (on, custom)
 import Node exposing (Node, Children(..), childList, Id, NodeType(..))
 import NodeUtils exposing (idToAttribute, idToShadowAttribute)
-import Utilities exposing (asPx)
+import Utils exposing (asPx)
 import MapMsg exposing (Msg)
 import EventDecoders exposing (..)
 
