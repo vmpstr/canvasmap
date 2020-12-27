@@ -128,6 +128,16 @@ function loadState() {
   window.app.ports.portOnLoadState.send(nodes);
 }
 
+function onNodeSelected(e) {
+  // Since we could have just created the node, defer until
+  // DOM actually reflects the new state.
+  requestAnimationFrame(() => {
+    const target = document.getElementById(e.targetId);
+    if (target)
+      target.scrollIntoViewIfNeeded();
+  });
+}
+
 onload = () => {
   window.app = Elm.Map.init({ node: document.getElementById("map") });
   window.app.ports.portOnPointerDown.subscribe(onPointerDown);
@@ -135,6 +145,7 @@ onload = () => {
   window.app.ports.portEditLabel.subscribe(onEditLabel);
   window.app.ports.portSaveState.subscribe(saveState);
   window.app.ports.portLoadState.subscribe(loadState);
+  window.app.ports.portNodeSelected.subscribe(onNodeSelected);
 
   initResizers();
   document.addEventListener("keydown", (e) => {

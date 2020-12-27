@@ -54,6 +54,7 @@ type alias State =
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
 port portEditLabel : { targetId : String } -> Cmd msg
 port portSaveState : Encode.Value -> Cmd msg
+port portNodeSelected : { targetId : String } -> Cmd msg
 port portLoadState : () -> Cmd msg
 
 initModel : Model
@@ -226,30 +227,32 @@ update msg model =
     -- Node genesis
     MsgNewNode path node ->
       let 
-        state = selectNode model.state (Just node.id)
+        (state, cmd) = selectNode model.state (Just node.id)
+        (newModel, editCmd) =
+          update
+            (MsgEditLabel node.id)
+            { model
+              | nodes = insertChild model.nodes path node
+              , state = state
+            }
       in
-      update
-        (MsgEditLabel node.id)
-        { model
-          | nodes = insertChild model.nodes path node
-          , state = state
-        }
+      (newModel, [ cmd, editCmd ] |> Cmd.batch)
 
     MsgSelectNode id ->
       let
-        state = selectNode model.state id
+        (state, cmd) = selectNode model.state id
       in
-      ({ model | state = state }, Cmd.none)
+      ({ model | state = state }, cmd)
 
     MsgDeleteNode id ->
       let
-        state =
+        (state, cmd) =
           if model.state.selected == Just id then
             selectNode model.state Nothing
           else
-            model.state
+            (model.state, Cmd.none)
       in
-      ({ model | nodes = removeChild model.nodes id, state = state }, Cmd.none)
+      ({ model | nodes = removeChild model.nodes id, state = state }, cmd)
 
     -- TODO: modularize input control
     MsgMapKeyDown key ->
@@ -304,9 +307,18 @@ pathToFirstChildOfId (Children nodes) id =
     Nothing ->
       Nothing
 
-selectNode : State -> Maybe Id -> State
+selectNode : State -> Maybe Id -> (State, Cmd Msg)
 selectNode state id =
-  { state | selected = id }
+  let
+    cmd =
+      if state.selected /= id then
+        case id of 
+          Just value -> portNodeSelected { targetId = idToAttribute value }
+          Nothing -> Cmd.none
+      else
+        Cmd.none
+  in
+  ({ state | selected = id }, cmd)
 
 insertChild : Children -> Tree.Path -> Node -> Children
 insertChild (Children nodes) path node =

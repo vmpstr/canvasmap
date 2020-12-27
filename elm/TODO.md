@@ -19,8 +19,9 @@ other:
 
 ## bugs
 
-- resizing does not trigger a state change, so it doesn't save
-- tab new item needs to focus
+- scroller child does not have max height?
+- when resizing a scroller, scroll offset gets reset because we determine
+  unrestricted size
 - when clicking ew resizer, the scroller parent gets selected
 - when resizing cursor should always be present
 - after editing label, maxWidth may need to be reset (from EW resizing)
