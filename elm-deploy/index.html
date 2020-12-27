@@ -2,6 +2,7 @@
 <head>
   <link rel=stylesheet href='styles/styles.css'></link>
   <link rel=stylesheet href='styles/scroller-styles.css'></link>
+  <link rel=stylesheet href='styles/resizers.css'></link>
   <link href="https://fonts.googleapis.com/css?family=Lato&display=swap" rel="stylesheet">
   <meta charset="utf-8">
 </head>
@@ -12,16 +13,14 @@
 
 
 <script src="map.js"></script>
-<script src="child-area.js"></script>
-<script src="node-label.js"></script>
+<script src="js/child-area.js"></script>
+<script src="js/node-label.js"></script>
+<script src="js/resizers.js"></script>
 <script>
-let app = undefined;
-
 let lastX = 0;
 let lastY = 0;
 let id = "";
 let dragging = false;
-let blockInput = false;
 function onPointerDown(e) {
   document.body.addEventListener("pointermove", onPointerMove);
   document.body.addEventListener("pointerup", onPointerUp);
@@ -32,7 +31,7 @@ function onPointerDown(e) {
 
 function onPointerMove(e) {
   e.preventDefault();
-  if (blockInput)
+  if (window.blockInput)
     return;
 
   const dx = e.clientX - lastX;
@@ -46,7 +45,7 @@ function onPointerMove(e) {
       lastY = e.clientY;
 
       const target_rect = document.getElementById(id).getBoundingClientRect();
-      app.ports.portOnDragStart.send({
+      window.app.ports.portOnDragStart.send({
         targetId: id,
         geometry: {
           target: {
@@ -62,7 +61,7 @@ function onPointerMove(e) {
   lastY = e.clientY;
 
   const target_rect = document.getElementById(id).getBoundingClientRect();
-  app.ports.portOnDragBy.send({
+  window.app.ports.portOnDragBy.send({
     targetId: id,
     dx: dx,
     dy: dy,
@@ -95,13 +94,13 @@ function onPointerUp(e) {
   document.body.removeEventListener("pointermove", onPointerMove);
   document.body.removeEventListener("pointerup", onPointerUp);
 
-  app.ports.portOnDragStop.send();
+  window.app.ports.portOnDragStop.send();
 }
 
 function onRafAlignRequest() {
-  blockInput = true;
+  window.blockInput = true;
   requestAnimationFrame(() => {
-    blockInput = false;
+    window.blockInput = false;
     // setTimeout for processing accumulated input?
   });
 }
@@ -122,74 +121,26 @@ function saveState(nodes) {
 function loadState() {
   const version = localStorage.getItem("mm-version");
   if (!version || version !== kStateVersion) {
-    app.ports.portOnLoadState.send([]);
+    window.app.ports.portOnLoadState.send([]);
     return;
   }
   const nodes = JSON.parse(localStorage.getItem("mm-nodes"));
-  app.ports.portOnLoadState.send(nodes);
-}
-
-let ewData = undefined;
-function onEwResizePointerDown(e) {
-  document.body.addEventListener("pointermove", onEwResizePointerMove);
-  document.body.addEventListener("pointerup", onEwResizePointerUp);
-  const target = document.getElementById(e.targetId);
-  const rect = target.getBoundingClientRect();
-
-  const style = target.getAttribute("style");
-  target.setAttribute("style", "");
-  const unboundRect = target.getBoundingClientRect();
-  target.setAttribute("style", style);
-
-  ewData = {
-    targetId: e.targetId,
-    lastX: e.x,
-    lastWidth: rect.width,
-    unboundWidth: unboundRect.width
-  };
-}
-
-function onEwResizePointerMove(e) {
-  e.preventDefault();
-  if (blockInput)
-    return;
-
-  dx = e.clientX - ewData.lastX;
-  ewData.lastX = e.clientX;
-
-  const newWidth = ewData.lastWidth + dx;
-  ewData.lastWidth = newWidth;
-  if (newWidth >= ewData.unboundWidth) {
-    app.ports.portOnMaxWidthChanged.send({
-      targetId: ewData.targetId
-    });
-  } else {
-    app.ports.portOnMaxWidthChanged.send({
-      targetId: ewData.targetId,
-      maxWidth: Math.max(0, newWidth)
-    });
-  }
-}
-
-function onEwResizePointerUp(e) {
-  e.preventDefault();
-  document.body.removeEventListener("pointermove", onEwResizePointerMove);
-  document.body.removeEventListener("pointerup", onEwResizePointerUp);
-  ewData = undefined;
+  window.app.ports.portOnLoadState.send(nodes);
 }
 
 onload = () => {
-  app = Elm.Map.init({ node: document.getElementById("map") });
-  app.ports.portOnPointerDown.subscribe(onPointerDown);
-  app.ports.portRafAlign.subscribe(onRafAlignRequest);
-  app.ports.portEditLabel.subscribe(onEditLabel);
-  app.ports.portSaveState.subscribe(saveState);
-  app.ports.portLoadState.subscribe(loadState);
-  app.ports.portOnEwResizePointerDown.subscribe(onEwResizePointerDown);
+  window.app = Elm.Map.init({ node: document.getElementById("map") });
+  window.app.ports.portOnPointerDown.subscribe(onPointerDown);
+  window.app.ports.portRafAlign.subscribe(onRafAlignRequest);
+  window.app.ports.portEditLabel.subscribe(onEditLabel);
+  window.app.ports.portSaveState.subscribe(saveState);
+  window.app.ports.portLoadState.subscribe(loadState);
+
+  initResizers();
   document.addEventListener("keydown", (e) => {
     // TODO: Maybe filter based on what is handled?
     e.preventDefault();
-    app.ports.portOnKeyDown.send({ code: e.code });
+    window.app.ports.portOnKeyDown.send({ code: e.code });
   })
 };
 </script>
