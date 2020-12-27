@@ -49,6 +49,7 @@ function onEwResizePointerUp(e) {
   document.body.removeEventListener("pointermove", onEwResizePointerMove);
   document.body.removeEventListener("pointerup", onEwResizePointerUp);
   ewData = undefined;
+  window.app.ports.portOnResizeEnd.send();
 }
 
 // NS resizing
@@ -99,6 +100,7 @@ function onNsResizePointerUp(e) {
   document.body.removeEventListener("pointermove", onNsResizePointerMove);
   document.body.removeEventListener("pointerup", onNsResizePointerUp);
   nsData = undefined;
+  window.app.ports.portOnResizeEnd.send();
 }
 
 function initResizers() {

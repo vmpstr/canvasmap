@@ -23,6 +23,7 @@ type Msg
   | MsgOnNsewResizePointerDown OnPointerDownPortData
   | MsgOnMaxWidthChanged OnMaxDimensionChangedData
   | MsgOnMaxHeightChanged OnMaxDimensionChangedData
+  | MsgOnResizeEnd
 
 ewResizer : Id -> Html Msg 
 ewResizer id =
@@ -53,6 +54,7 @@ onMaxDimensionChangedDataDecoder =
 
 port portOnMaxWidthChanged : (Decoder.Value -> msg) -> Sub msg
 port portOnMaxHeightChanged : (Decoder.Value -> msg) -> Sub msg
+port portOnResizeEnd : (Decoder.Value -> msg) -> Sub msg
 
 onMaxWidthChangedSubscription : Sub Msg
 onMaxWidthChangedSubscription =
@@ -64,10 +66,15 @@ onMaxHeightChangedSubscription =
   portOnMaxHeightChanged
     (Decoder.decodeValue onMaxDimensionChangedDataDecoder >> toMsgOrNoop MsgOnMaxHeightChanged MsgNoop)
 
+onResizeEnd : Sub Msg
+onResizeEnd =
+  portOnResizeEnd (\_ -> MsgOnResizeEnd)
+
 subscriptions : () -> Sub Msg
 subscriptions () =
   [ onMaxWidthChangedSubscription
   , onMaxHeightChangedSubscription
+  , onResizeEnd
   ] |> Sub.batch
 
 port portOnEwResizePointerDown : OnPointerDownPortData -> Cmd msg
@@ -81,21 +88,37 @@ update msg (appState, nodes) =
       (appState, nodes, Cmd.none)
 
     MsgOnEwResizePointerDown data ->
-      (appState, nodes, portOnEwResizePointerDown data)
+      let
+        (newState, cmd) = startResizeIfIdle appState (\() -> portOnEwResizePointerDown data)
+      in
+      (newState, nodes, cmd)
 
     MsgOnNsResizePointerDown data ->
-      (appState, nodes, portOnNsResizePointerDown data)
+      let
+        (newState, cmd) = startResizeIfIdle appState (\() -> portOnNsResizePointerDown data)
+      in
+      (newState, nodes, cmd)
 
     MsgOnNsewResizePointerDown data ->
-      (appState, nodes, [ portOnNsResizePointerDown data, portOnEwResizePointerDown data ] |> Cmd.batch)
+      let
+        (newState, cmd) =
+          startResizeIfIdle
+            appState
+            (\() -> [ portOnNsResizePointerDown data, portOnEwResizePointerDown data ] |> Cmd.batch)
+      in
+      (newState, nodes, cmd)
 
     MsgOnMaxWidthChanged data ->
-      let newNodes = applyMaxWidthChanged nodes data in
+      let newNodes = applyMaxWidthChanged appState nodes data in
       (appState, newNodes, Cmd.none)
 
     MsgOnMaxHeightChanged data ->
-      let newNodes = applyMaxHeightChanged nodes data in
+      let newNodes = applyMaxHeightChanged appState nodes data in
       (appState, newNodes, Cmd.none)
+
+    MsgOnResizeEnd ->
+      let newState = endResize appState in
+      (newState, nodes, Cmd.none)
 
 
 -- Internal
@@ -150,12 +173,32 @@ onNsewResizePointerDown targetId =
       |> required "clientX" float
       |> required "clientY" float)
 
-applyMaxWidthChanged : Children -> OnMaxDimensionChangedData -> Children
-applyMaxWidthChanged (Children nodes) data =
-  let updater node = { node | maxWidth = data.value } in
-  Children (TreeSpec.updateNodeById nodes data.targetId updater)
+applyMaxWidthChanged : AppState a -> Children -> OnMaxDimensionChangedData -> Children
+applyMaxWidthChanged appState (Children nodes) data =
+  if appState.action == UserAction.Resizing then
+    let updater node = { node | maxWidth = data.value } in
+    Children (TreeSpec.updateNodeById nodes data.targetId updater)
+  else
+    (Children nodes)
 
-applyMaxHeightChanged : Children -> OnMaxDimensionChangedData -> Children
-applyMaxHeightChanged (Children nodes) data =
-  let updater node = { node | maxHeight = data.value } in
-  Children (TreeSpec.updateNodeById nodes data.targetId updater)
+applyMaxHeightChanged : AppState a -> Children -> OnMaxDimensionChangedData -> Children
+applyMaxHeightChanged appState (Children nodes) data =
+  if appState.action == UserAction.Resizing then
+    let updater node = { node | maxHeight = data.value } in
+    Children (TreeSpec.updateNodeById nodes data.targetId updater)
+  else
+    (Children nodes)
+
+startResizeIfIdle : AppState a -> (() -> Cmd Msg) -> (AppState a, Cmd Msg)
+startResizeIfIdle appState cmdGenerator =
+  if UserAction.canPreempt UserAction.Resizing appState.action then
+    ({ appState | action = UserAction.Resizing }, cmdGenerator ())
+  else
+    (appState, Cmd.none)
+
+endResize : AppState a -> AppState a
+endResize appState =
+  if appState.action == UserAction.Resizing then
+    { appState | action = UserAction.Idle }
+  else
+    appState

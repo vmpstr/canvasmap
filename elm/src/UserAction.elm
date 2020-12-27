@@ -4,6 +4,7 @@ type Action
   = Idle
   | Dragging
   | Editing
+  | Resizing
 
 canPreempt : Action -> Action -> Bool
 canPreempt new old =
@@ -14,4 +15,6 @@ canPreempt new old =
     (Editing, Editing) -> True
     (Dragging, Editing) -> False
     (Editing, Dragging) -> False
+    (Resizing, _) -> False
+    (_, Resizing) -> True
 

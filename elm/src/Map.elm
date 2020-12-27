@@ -164,6 +164,9 @@ updateAndSave msg model =
         _ -> False
 
     saveCmd =
+      -- The reason we save isDelete is that there is no action change
+      -- when this happens. Create, for example, comes with an automatic
+      -- label edit which causes a state change.
       -- TODO: Make this more elegant somehow (remove not isdelete?)
       if (not isDelete) && model.state.action == newModel.state.action then
         Cmd.none
