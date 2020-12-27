@@ -48,6 +48,10 @@ viewChildNodes headBeacons tailBeacons childNodes localState node =
           (case node.maxWidth of
               Just width -> [ style "max-width" (asPx width) ]
               Nothing -> []
+          ) ++
+          (case node.maxHeight of
+              Just height -> [ style "max-height" (asPx height) ]
+              Nothing -> []
           ))
           -- TODO: Don't show the div if there is no parent edge.
           [ div [ classList [ ("parent_edge", localState.showParentEdge) ] ] []

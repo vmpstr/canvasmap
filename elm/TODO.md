@@ -19,7 +19,7 @@ other:
 
 ## bugs
 
-- scroller child does not have max height?
+- performance?
 - when resizing a scroller, scroll offset gets reset because we determine
   unrestricted size
 - when clicking ew resizer, the scroller parent gets selected
