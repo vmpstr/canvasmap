@@ -34,33 +34,6 @@ onPointerDownDecoder targetId =
       |> required "clientX" float
       |> required "clientY" float)
 
-onEwResizePointerDown : Id -> Decoder MsgWithEventOptions
-onEwResizePointerDown targetId =
-  Decoder.map (MsgOnEwResizePointerDown >> andStopPropagation)
-    (succeed OnPointerDownPortData
-      |> hardcoded (idToAttribute targetId)
-      |> required "pointerType" string
-      |> required "clientX" float
-      |> required "clientY" float)
-
-onNsResizePointerDown : Id -> Decoder MsgWithEventOptions
-onNsResizePointerDown targetId =
-  Decoder.map (MsgOnNsResizePointerDown >> andStopPropagation)
-    (succeed OnPointerDownPortData
-      |> hardcoded (idToAttribute targetId)
-      |> required "pointerType" string
-      |> required "clientX" float
-      |> required "clientY" float)
-
-onNsewResizePointerDown : Id -> Decoder MsgWithEventOptions
-onNsewResizePointerDown targetId =
-  Decoder.map (MsgOnNsewResizePointerDown >> andStopPropagation)
-    (succeed OnPointerDownPortData
-      |> hardcoded (idToAttribute targetId)
-      |> required "pointerType" string
-      |> required "clientX" float
-      |> required "clientY" float)
-
 onLabelChangedDecoder : Id -> Decoder Msg
 onLabelChangedDecoder targetId =
   Decoder.map MsgOnLabelChanged
@@ -89,8 +62,3 @@ onAddNewNodeClickDecoder children =
   Decoder.map (MsgNewNode (Tree.AtIndex 0) >> andStopPropagation)
     (nodeFromClickDecoder children)
     
-onMaxDimensionChangedDataDecoder : Decoder OnMaxDimensionChangedData
-onMaxDimensionChangedDataDecoder =
-  succeed OnMaxDimensionChangedData
-    |> required "targetId" idAttributeDecoder
-    |> optional "value" (nullable float) Nothing

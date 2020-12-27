@@ -9,6 +9,7 @@ import NodeUtils exposing (idToAttribute, idToShadowAttribute)
 import Utils exposing (asPx)
 import MapMsg exposing (Msg)
 import EventDecoders exposing (..)
+import ResizeControl
 
 viewTopNode : Bool -> List (Html Msg) -> List (Html Msg) -> ViewState -> Node -> Html Msg
 viewTopNode onTop tailBeacons childNodes localState node =
@@ -85,19 +86,7 @@ viewNodeContents node viewState childNodes tailBeacons =
       , div
           [ class "child_area" ] 
           (childNodes ++ tailBeacons)
-      , div
-          [ class "ew_resizer"
-          , custom "pointerdown" (onEwResizePointerDown node.id)
-          ]
-          []
-      , div
-          [ class "ns_resizer"
-          , custom "pointerdown" (onNsResizePointerDown node.id)
-          ]
-          []
-      , div
-          [ class "nsew_resizer"
-          , custom "pointerdown" (onNsewResizePointerDown node.id)
-          ]
-          []
+      , Html.map MapMsg.MsgResize (ResizeControl.ewResizer node.id)
+      , Html.map MapMsg.MsgResize (ResizeControl.nsResizer node.id)
+      , Html.map MapMsg.MsgResize (ResizeControl.nsewResizer node.id)
       ]

@@ -2,20 +2,17 @@ module MapMsg exposing (Msg(..), MsgWithEventOptions)
 
 import Node exposing (Id, Children, Node)
 import DragControl
+import ResizeControl
 import Tree
 import EventDecodersData exposing (..)
 
 type Msg
-  = MsgDrag DragControl.Msg
-  | MsgNoop
+  = MsgNoop
+  | MsgDrag DragControl.Msg
+  | MsgResize ResizeControl.Msg
   | MsgOnPointerDown OnPointerDownPortData
-  | MsgOnEwResizePointerDown OnPointerDownPortData
-  | MsgOnNsResizePointerDown OnPointerDownPortData
-  | MsgOnNsewResizePointerDown OnPointerDownPortData
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
   | MsgOnLabelChanged OnLabelChangedData
-  | MsgOnMaxWidthChanged OnMaxDimensionChangedData
-  | MsgOnMaxHeightChanged OnMaxDimensionChangedData
   | MsgEditLabel Id
   | MsgSetNodes Children
   | MsgNewNode Tree.Path Node

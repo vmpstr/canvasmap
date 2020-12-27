@@ -22,6 +22,7 @@ import TreeLayout
 import ScrollerLayout
 import MapMsg exposing (..)
 import EventDecodersData exposing (..)
+import ResizeControl
 
 -- Probably work to remove this
 import EventDecoders exposing (..)
@@ -51,9 +52,6 @@ type alias State =
 
 -- Functionality
 port portOnPointerDown : OnPointerDownPortData -> Cmd msg
-port portOnEwResizePointerDown : OnPointerDownPortData -> Cmd msg
-port portOnNsResizePointerDown : OnPointerDownPortData -> Cmd msg
-port portOnNsewResizePointerDown : OnPointerDownPortData -> Cmd msg
 port portEditLabel : { targetId : String } -> Cmd msg
 port portSaveState : Encode.Value -> Cmd msg
 port portLoadState : () -> Cmd msg
@@ -178,40 +176,32 @@ updateAndSave msg model =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    MsgOnPointerDown data ->
-      -- filter this: primary button only for drag?
-      (model, portOnPointerDown data)
+    -- Noop
+    MsgNoop ->
+      (model, Cmd.none)
 
-    MsgOnEwResizePointerDown data ->
-      (model, portOnEwResizePointerDown data)
-
-    MsgOnNsResizePointerDown data ->
-      (model, portOnNsResizePointerDown data)
-
-    MsgOnNsewResizePointerDown data ->
-      (model, [ portOnNsResizePointerDown data, portOnEwResizePointerDown data ] |> Cmd.batch)
-
-    MsgOnMaxWidthChanged data ->
-      let
-        nodes = applyMaxWidthChanged model.nodes data
-      in
-      ({ model | nodes = nodes }, Cmd.none)
-
-    MsgOnMaxHeightChanged data ->
-      let
-        nodes = applyMaxHeightChanged model.nodes data
-      in
-      ({ model | nodes = nodes }, Cmd.none)
-
+    -- Module deferrals
     MsgDrag dragMsg ->
       let
           (state, nodes, cmd) = DragControl.update dragMsg (model.state, model.nodes)
       in
-      ({ model | state = state, nodes = nodes}, Cmd.map MsgDrag cmd)
+      ({ model | state = state, nodes = nodes }, Cmd.map MsgDrag cmd)
 
+    MsgResize resizeMsg ->
+      let
+          (state, nodes, cmd) = ResizeControl.update resizeMsg (model.state, model.nodes)
+      in
+      ({ model | state = state, nodes = nodes }, Cmd.map MsgResize cmd)
+
+    -- TODO: Rename this to drag specific and fold into DragControl.
+    MsgOnPointerDown data ->
+      (model, portOnPointerDown data)
+
+    -- TODO: Maybe fold this into resize control?
     MsgOnChildEdgeHeightChanged data ->
       ({ model | nodes = applyChildEdgeHeightChange model.nodes data }, Cmd.none)
 
+    -- Edit control
     MsgEditLabel nodeId ->
       let
           state = applyEditLabelState model.state nodeId
@@ -225,13 +215,12 @@ update msg model =
       in
       ({ model | nodes = nodes, state = state }, Cmd.none)
 
-    MsgNoop ->
-      (model, Cmd.none)
-
     -- TODO: have a loading state so that we don't do anything before this.
+    -- Load control
     MsgSetNodes children ->
       ({ model | nodes = children }, Cmd.none)
 
+    -- Node genesis
     MsgNewNode path node ->
       let 
         state = selectNode model.state (Just node.id)
@@ -259,25 +248,10 @@ update msg model =
       in
       ({ model | nodes = removeChild model.nodes id, state = state }, Cmd.none)
 
+    -- TODO: modularize input control
     MsgMapKeyDown key ->
       handleMapKeyDown key.code model
 
-
-applyMaxWidthChanged : Children -> OnMaxDimensionChangedData -> Children
-applyMaxWidthChanged (Children nodes) data =
-  let
-    updater node =
-      { node | maxWidth = data.value }
-  in
-  Children (TreeSpec.updateNodeById nodes data.targetId updater)
-
-applyMaxHeightChanged : Children -> OnMaxDimensionChangedData -> Children
-applyMaxHeightChanged (Children nodes) data =
-  let
-    updater node =
-      { node | maxHeight = data.value }
-  in
-  Children (TreeSpec.updateNodeById nodes data.targetId updater)
 
 handleMapKeyDown : String -> Model -> (Model, Cmd Msg)
 handleMapKeyDown key model =
@@ -381,26 +355,12 @@ onKeyDownSubscription =
   portOnKeyDown
     (Decoder.decodeValue keyDecoder >> toMsgOrNoop MsgMapKeyDown MsgNoop)
 
-port portOnMaxWidthChanged : (Decoder.Value -> msg) -> Sub msg
-port portOnMaxHeightChanged : (Decoder.Value -> msg) -> Sub msg
-
-onMaxWidthChangedSubscription : Sub Msg
-onMaxWidthChangedSubscription =
-  portOnMaxWidthChanged
-    (Decoder.decodeValue onMaxDimensionChangedDataDecoder >> toMsgOrNoop MsgOnMaxWidthChanged MsgNoop)
-
-onMaxHeightChangedSubscription : Sub Msg
-onMaxHeightChangedSubscription =
-  portOnMaxHeightChanged
-    (Decoder.decodeValue onMaxDimensionChangedDataDecoder >> toMsgOrNoop MsgOnMaxHeightChanged MsgNoop)
-
 subscriptions : Model -> Sub Msg
 subscriptions _ =
   [ Sub.map MsgDrag (DragControl.subscriptions ())
+  , Sub.map MsgResize (ResizeControl.subscriptions ())
   , onLoadStateSubscription
   , onKeyDownSubscription
-  , onMaxWidthChangedSubscription
-  , onMaxHeightChangedSubscription
   ] |> Sub.batch
 
 initialViewStateAdjusters : State -> List (ViewState -> ViewState)
