@@ -51,7 +51,6 @@ type alias State =
   }
 
 -- Functionality
-port portOnPointerDown : OnPointerDownPortData -> Cmd msg
 port portEditLabel : { targetId : String } -> Cmd msg
 port portSaveState : Encode.Value -> Cmd msg
 port portNodeSelected : { targetId : String } -> Cmd msg
@@ -197,10 +196,6 @@ update msg model =
       in
       ({ model | state = state, nodes = nodes }, Cmd.map MsgResize cmd)
 
-    -- TODO: Rename this to drag specific and fold into DragControl.
-    MsgOnPointerDown data ->
-      (model, portOnPointerDown data)
-
     -- TODO: Maybe fold this into resize control?
     MsgOnChildEdgeHeightChanged data ->
       ({ model | nodes = applyChildEdgeHeightChange model.nodes data }, Cmd.none)
@@ -336,9 +331,6 @@ removeChild (Children nodes) id =
       Children nodes
 
 
-init : () -> (Model, Cmd Msg)
-init () = (initModel, portLoadState ())
-
 applyLabelChange : Children -> Id -> String -> Children
 applyLabelChange (Children nodes) targetId label =
   let updater node = { node | label = label } in
@@ -369,14 +361,6 @@ onKeyDownSubscription : Sub Msg
 onKeyDownSubscription =
   portOnKeyDown
     (Decoder.decodeValue keyDecoder >> toMsgOrNoop MsgMapKeyDown MsgNoop)
-
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-  [ Sub.map MsgDrag (DragControl.subscriptions ())
-  , Sub.map MsgResize (ResizeControl.subscriptions ())
-  , onLoadStateSubscription
-  , onKeyDownSubscription
-  ] |> Sub.batch
 
 initialViewStateAdjusters : State -> List (ViewState -> ViewState)
 initialViewStateAdjusters state =
@@ -412,7 +396,17 @@ adjustInitialViewState state viewState =
 adjustViewStateForNode : Int -> Node -> ViewState -> ViewState
 adjustViewStateForNode _ _ viewState = viewState
 
+-- Program setup.
+init : () -> (Model, Cmd Msg)
+init () = (initModel, portLoadState ())
 
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+  [ Sub.map MsgDrag (DragControl.subscriptions ())
+  , Sub.map MsgResize (ResizeControl.subscriptions ())
+  , onLoadStateSubscription
+  , onKeyDownSubscription
+  ] |> Sub.batch
 
 main : Program () Model Msg
 main =

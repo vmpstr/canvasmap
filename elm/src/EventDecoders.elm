@@ -10,13 +10,7 @@ import NodeUtils exposing (idToAttribute, idAttributeDecoder, nodeFromClickDecod
 import Geometry
 import Tree
 import TreeSpec
-
-andStopPropagation : Msg -> MsgWithEventOptions
-andStopPropagation msg =
-  { message = msg
-  , stopPropagation = True
-  , preventDefault = False
-  }
+import MsgUtils
 
 onChildEdgeHeightChangedDecoder : Id -> Decoder Msg
 onChildEdgeHeightChangedDecoder targetId =
@@ -25,15 +19,6 @@ onChildEdgeHeightChangedDecoder targetId =
       |> hardcoded targetId
       |> required "detail" (field "height" float))
 
-onPointerDownDecoder : Id -> Decoder MsgWithEventOptions
-onPointerDownDecoder targetId =
-  Decoder.map (MsgOnPointerDown >> andStopPropagation)
-    (succeed OnPointerDownPortData
-      |> hardcoded (idToAttribute targetId)
-      |> required "pointerType" string
-      |> required "clientX" float
-      |> required "clientY" float)
-
 onLabelChangedDecoder : Id -> Decoder Msg
 onLabelChangedDecoder targetId =
   Decoder.map MsgOnLabelChanged
@@ -41,14 +26,14 @@ onLabelChangedDecoder targetId =
       |> hardcoded targetId
       |> required "detail" (field "label" string))
 
-onSelectClickDecoder : Maybe Id -> Decoder MsgWithEventOptions
+onSelectClickDecoder : Maybe Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onSelectClickDecoder targetId =
-  Decoder.map (MsgSelectNode >> andStopPropagation)
+  Decoder.map (MsgSelectNode >> MsgUtils.andStopPropagation)
     (succeed targetId)
 
-onEditLabelClickDecoder : Id -> Decoder MsgWithEventOptions
+onEditLabelClickDecoder : Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onEditLabelClickDecoder targetId =
-  Decoder.map (MsgEditLabel >> andStopPropagation)
+  Decoder.map (MsgEditLabel >> MsgUtils.andStopPropagation)
     (succeed targetId)
 
 keyDecoder : Decoder Key
@@ -56,9 +41,9 @@ keyDecoder =
   succeed Key
     |> required "code" string
 
-onAddNewNodeClickDecoder : Children -> Decoder MsgWithEventOptions
+onAddNewNodeClickDecoder : Children -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onAddNewNodeClickDecoder children =
   -- TODO: document the fields
-  Decoder.map (MsgNewNode (Tree.AtIndex 0) >> andStopPropagation)
+  Decoder.map (MsgNewNode (Tree.AtIndex 0) >> MsgUtils.andStopPropagation)
     (nodeFromClickDecoder children)
     

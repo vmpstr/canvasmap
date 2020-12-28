@@ -7,6 +7,7 @@ port module DragControl exposing
   , adjustInitialViewState
   , adjustViewStateForNode
   , dragNodeViewState
+  , onDragAttribute
   )
 
 import Json.Decode as Decoder exposing (Decoder, succeed, float, list)
@@ -20,6 +21,12 @@ import TreeSpec
 import UserAction
 import Utils exposing (maybeJust, maybeCmd, toMsgOrNoop)
 import MapView exposing (ViewState)
+import Html exposing (Attribute)
+import Html.Events exposing (custom)
+import EventDecodersData exposing (OnPointerDownPortData)
+import Json.Decode.Pipeline exposing (hardcoded, optional, required)
+import Json.Decode exposing (string)
+import MsgUtils
 
 
 {- TODOs
@@ -31,6 +38,7 @@ import MapView exposing (ViewState)
 -- Exposed
 type Msg
   = MsgNoop
+  | MsgOnDragPointerDown OnPointerDownPortData
   | MsgOnDragStart OnDragData
   | MsgOnDragBy OnDragData
   | MsgOnDragStop
@@ -42,14 +50,17 @@ type alias State =
 update : Msg -> (AppState a, Children) -> (AppState a, Children, Cmd Msg)
 update msg (appState, nodes) =
   case msg of
+    MsgNoop ->
+      (appState, nodes, Cmd.none)
     MsgOnDragStart data ->
       applyDragStartData appState nodes data
     MsgOnDragBy data ->
       applyDragByData appState nodes data
     MsgOnDragStop ->
       applyDragStop appState nodes
-    MsgNoop ->
-      (appState, nodes, Cmd.none)
+    MsgOnDragPointerDown data ->
+      (appState, nodes, portOnDragPointerDown data)
+
 
 subscriptions: () -> Sub Msg
 subscriptions () =
@@ -127,6 +138,7 @@ port portOnDragStart : (Decoder.Value -> msg) -> Sub msg
 port portOnDragBy : (Decoder.Value -> msg) -> Sub msg
 port portOnDragStop : (Decoder.Value -> msg) -> Sub msg
 port portRafAlign : () -> Cmd msg
+port portOnDragPointerDown : OnPointerDownPortData -> Cmd msg
 
 type TargetBias
   = BiasMid
@@ -307,3 +319,15 @@ onDragDecoder =
     |> optional "dy" float 0
     |> required "geometry" geometryDecoder
 
+onDragAttribute : Id -> Attribute Msg
+onDragAttribute id =
+  custom "pointerdown" (onDragPointerDownDecoder id)
+
+onDragPointerDownDecoder : Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
+onDragPointerDownDecoder targetId =
+  Decoder.map (MsgOnDragPointerDown >> MsgUtils.andStopPropagation)
+    (succeed OnPointerDownPortData
+      |> hardcoded (idToAttribute targetId)
+      |> required "pointerType" string
+      |> required "clientX" float
+      |> required "clientY" float)

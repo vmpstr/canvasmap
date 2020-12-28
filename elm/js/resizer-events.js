@@ -19,7 +19,7 @@ function finalizePointerUp() {
   });
 }
 
-function initResizers() {
+function initResizerEvents() {
   window.app.ports.portOnEwResizePointerDown.subscribe(onEwResizePointerDown);
   window.app.ports.portOnNsResizePointerDown.subscribe(onNsResizePointerDown);
   window.app.ports.portOnNsewResizePointerDown.subscribe(onNsewResizePointerDown);

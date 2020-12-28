@@ -19,6 +19,7 @@ body {
   box-sizing: border-box;
   position: absolute;
   contain: layout;
+  will-change: transform;
 }
 
 .top_child > .content {

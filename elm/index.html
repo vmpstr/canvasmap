@@ -15,96 +15,9 @@
 <script src="map.js"></script>
 <script src="js/child-area.js"></script>
 <script src="js/node-label.js"></script>
-<script src="js/resizers.js"></script>
+<script src="js/resizer-events.js"></script>
+<script src="js/drag-events.js"></script>
 <script>
-let lastX = 0;
-let lastY = 0;
-let id = "";
-let dragging = false;
-function onPointerDown(e) {
-  document.body.addEventListener("pointermove", onPointerMove);
-  document.body.addEventListener("pointerup", onPointerUp);
-  lastX = e.x;
-  lastY = e.y;
-  id = e.targetId;
-}
-
-function onPointerMove(e) {
-  e.preventDefault();
-  if (window.blockInput)
-    return;
-
-  const dx = e.clientX - lastX;
-  const dy = e.clientY - lastY;
-
-  if (!dragging) {
-    const d2 = dx * dx + dy * dy;
-    dragging = d2 >= 100;
-    if (dragging) {
-      lastX = e.clientX;
-      lastY = e.clientY;
-
-      const target_rect = document.getElementById(id).getBoundingClientRect();
-      window.app.ports.portOnDragStart.send({
-        targetId: id,
-        geometry: {
-          target: {
-            position: { x: target_rect.x, y: target_rect.y },
-            size: { x: target_rect.width, y: target_rect.height }
-          }
-        }
-      });
-    }
-    return;
-  }
-  lastX = e.clientX;
-  lastY = e.clientY;
-
-  const target_rect = document.getElementById(id).getBoundingClientRect();
-  window.app.ports.portOnDragBy.send({
-    targetId: id,
-    dx: dx,
-    dy: dy,
-    geometry: {
-      target: {
-        position: { x: target_rect.x, y: target_rect.y },
-        size: { x: target_rect.width, y: target_rect.height }
-      },
-      beacons: getBeacons()
-    }
-  });
-}
-
-function getBeacons() {
-  let result = []
-  Array.from(document.getElementsByClassName("beacon")).forEach((e) => {
-    const rect = e.getBoundingClientRect();
-    result.push({
-      path: e.getAttribute("path"),
-      location: { x: rect.x, y: rect.y }
-    });
-  });
-  return result;
-}
-
-function onPointerUp(e) {
-  e.preventDefault();
-
-  dragging = false;
-  document.body.removeEventListener("pointermove", onPointerMove);
-  document.body.removeEventListener("pointerup", onPointerUp);
-
-  window.app.ports.portOnDragStop.send();
-}
-
-function onRafAlignRequest() {
-  window.blockInput = true;
-  requestAnimationFrame(() => {
-    window.blockInput = false;
-    // setTimeout for processing accumulated input?
-  });
-}
-
 function onEditLabel(e) {
   // raf since we could be just attaching the node.
   requestAnimationFrame(() => {
@@ -140,14 +53,12 @@ function onNodeSelected(e) {
 
 onload = () => {
   window.app = Elm.Map.init({ node: document.getElementById("map") });
-  window.app.ports.portOnPointerDown.subscribe(onPointerDown);
-  window.app.ports.portRafAlign.subscribe(onRafAlignRequest);
   window.app.ports.portEditLabel.subscribe(onEditLabel);
   window.app.ports.portSaveState.subscribe(saveState);
   window.app.ports.portLoadState.subscribe(loadState);
   window.app.ports.portNodeSelected.subscribe(onNodeSelected);
 
-  initResizers();
+  initResizerEvents();
   document.addEventListener("keydown", (e) => {
     // TODO: Maybe filter based on what is handled?
     e.preventDefault();

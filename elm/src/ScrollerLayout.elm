@@ -7,9 +7,10 @@ import Html.Events exposing (on, custom)
 import Node exposing (Node, Children(..), childList, Id, NodeType(..))
 import NodeUtils exposing (idToAttribute, idToShadowAttribute)
 import Utils exposing (asPx)
-import MapMsg exposing (Msg)
+import MapMsg exposing (Msg(..))
 import EventDecoders exposing (..)
 import ResizeControl
+import DragControl
 
 viewTopNode : Bool -> List (Html Msg) -> List (Html Msg) -> ViewState -> Node -> Html Msg
 viewTopNode onTop tailBeacons childNodes localState node =
@@ -70,7 +71,7 @@ viewNodeContents node viewState childNodes tailBeacons =
       , custom "click" (onSelectClickDecoder (Just node.id))
       ] ++
       if viewState.editId == Nothing then
-        [ custom "pointerdown" (onPointerDownDecoder node.id) ]
+        [ Html.Attributes.map MsgDrag (DragControl.onDragAttribute node.id) ]
       else
         []
   in

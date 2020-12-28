@@ -10,6 +10,8 @@ import Utils exposing (asPx)
 import MapMsg exposing (Msg)
 import EventDecoders exposing (..)
 import ResizeControl
+import MapMsg exposing (Msg(..))
+import DragControl
 
 viewTopNode : Bool -> List (Html Msg) -> List (Html Msg) -> ViewState -> Node -> Html Msg
 viewTopNode onTop tailBeacons childNodes localState node =
@@ -86,7 +88,7 @@ viewNodeContents node viewState =
   let
     attributes =
       ( if viewState.editId == Nothing then
-          [ custom "pointerdown" (onPointerDownDecoder node.id) ]
+          [ Html.Attributes.map MsgDrag (DragControl.onDragAttribute node.id) ]
         else
           []
       ) ++

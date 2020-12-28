@@ -11,6 +11,7 @@ import Html exposing (Html, div)
 import Html.Attributes exposing (class)
 import Html.Events exposing (custom)
 import TreeSpec
+import MsgUtils
 
 {- TODO:
  - Add a separate resize user state, so that memento can pick this up.
@@ -129,41 +130,27 @@ type alias OnMaxDimensionChangedData =
   , value: Maybe Float
   }
 
--- TODO: Extract this to msg utils
-type alias MsgWithEventOptions =
-  { message: Msg
-  , stopPropagation: Bool
-  , preventDefault: Bool
-  }
-
-andStopPropagation : Msg -> MsgWithEventOptions
-andStopPropagation msg =
-  { message = msg
-  , stopPropagation = True
-  , preventDefault = False
-  }
-
-onEwResizePointerDown : Id -> Decoder MsgWithEventOptions
+onEwResizePointerDown : Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onEwResizePointerDown targetId =
-  Decoder.map (MsgOnEwResizePointerDown >> andStopPropagation)
+  Decoder.map (MsgOnEwResizePointerDown >> MsgUtils.andStopPropagation)
     (succeed OnPointerDownPortData
       |> hardcoded (idToAttribute targetId)
       |> required "pointerType" string
       |> required "clientX" float
       |> required "clientY" float)
 
-onNsResizePointerDown : Id -> Decoder MsgWithEventOptions
+onNsResizePointerDown : Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onNsResizePointerDown targetId =
-  Decoder.map (MsgOnNsResizePointerDown >> andStopPropagation)
+  Decoder.map (MsgOnNsResizePointerDown >> MsgUtils.andStopPropagation)
     (succeed OnPointerDownPortData
       |> hardcoded (idToAttribute targetId)
       |> required "pointerType" string
       |> required "clientX" float
       |> required "clientY" float)
 
-onNsewResizePointerDown : Id -> Decoder MsgWithEventOptions
+onNsewResizePointerDown : Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onNsewResizePointerDown targetId =
-  Decoder.map (MsgOnNsewResizePointerDown >> andStopPropagation)
+  Decoder.map (MsgOnNsewResizePointerDown >> MsgUtils.andStopPropagation)
     (succeed OnPointerDownPortData
       |> hardcoded (idToAttribute targetId)
       |> required "pointerType" string

@@ -1,4 +1,4 @@
-module MapMsg exposing (Msg(..), MsgWithEventOptions)
+module MapMsg exposing (Msg(..))
 
 import Node exposing (Id, Children, Node)
 import DragControl
@@ -10,7 +10,6 @@ type Msg
   = MsgNoop
   | MsgDrag DragControl.Msg
   | MsgResize ResizeControl.Msg
-  | MsgOnPointerDown OnPointerDownPortData
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
   | MsgOnLabelChanged OnLabelChangedData
   | MsgEditLabel Id
@@ -19,9 +18,3 @@ type Msg
   | MsgSelectNode (Maybe Id)
   | MsgDeleteNode Id
   | MsgMapKeyDown Key
-
-type alias MsgWithEventOptions =
-  { message: Msg
-  , stopPropagation: Bool
-  , preventDefault: Bool
-  }
