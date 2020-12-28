@@ -4,6 +4,7 @@ for parity:
 - hide children
 - links / decorations
 - styles
+- undo / redo
 
 for replacement:
 - github auto populate
@@ -15,14 +16,15 @@ other:
 
 - refactor js into separate files
 - only add event handlers for states where it makes sense (like idle?)
-- maybe use attribute for maxWidth and use that in style?
 
 ## bugs
 
+- scroller needs to scroll if dragging needs it to
+
+minor:
 - when clicking ew resizer, the scroller parent gets selected
 - when resizing cursor should always be present
 - after editing label, maxWidth may need to be reset (from EW resizing)
-- scroller needs to scroll if dragging needs it to
 
 ## thoughts
 
