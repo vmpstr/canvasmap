@@ -5142,7 +5142,7 @@ var $author$project$Node$Children = $elm$core$Basics$identity;
 var $author$project$UserAction$Idle = 0;
 var $author$project$Map$initModel = {
 	c: _List_Nil,
-	a: {I: 0, O: $elm$core$Maybe$Nothing, P: $elm$core$Maybe$Nothing, x: $elm$core$Maybe$Nothing}
+	a: {I: 0, O: $elm$core$Maybe$Nothing, P: $elm$core$Maybe$Nothing, v: $elm$core$Maybe$Nothing}
 };
 var $elm$json$Json$Encode$null = _Json_encodeNull;
 var $author$project$Map$portLoadState = _Platform_outgoingPort(
@@ -5564,10 +5564,16 @@ var $author$project$ResizeControl$onMaxWidthChangedSubscription = $author$projec
 		$elm$core$Basics$composeR,
 		$elm$json$Json$Decode$decodeValue($author$project$ResizeControl$onMaxDimensionChangedDataDecoder),
 		A2($author$project$Utils$toMsgOrNoop, $author$project$ResizeControl$MsgOnMaxWidthChanged, $author$project$ResizeControl$MsgNoop)));
+var $author$project$ResizeControl$MsgOnResizeEnd = {$: 6};
+var $author$project$ResizeControl$portOnResizeEnd = _Platform_incomingPort('portOnResizeEnd', $elm$json$Json$Decode$value);
+var $author$project$ResizeControl$onResizeEnd = $author$project$ResizeControl$portOnResizeEnd(
+	function (_v0) {
+		return $author$project$ResizeControl$MsgOnResizeEnd;
+	});
 var $author$project$ResizeControl$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$batch(
 		_List_fromArray(
-			[$author$project$ResizeControl$onMaxWidthChangedSubscription, $author$project$ResizeControl$onMaxHeightChangedSubscription]));
+			[$author$project$ResizeControl$onMaxWidthChangedSubscription, $author$project$ResizeControl$onMaxHeightChangedSubscription, $author$project$ResizeControl$onResizeEnd]));
 };
 var $author$project$Map$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$batch(
@@ -6240,11 +6246,40 @@ var $author$project$Map$removeChild = F2(
 			return nodes;
 		}
 	});
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Map$portNodeSelected = _Platform_outgoingPort(
+	'portNodeSelected',
+	function ($) {
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'targetId',
+					$elm$json$Json$Encode$string($.as))
+				]));
+	});
 var $author$project$Map$selectNode = F2(
 	function (state, id) {
-		return _Utils_update(
-			state,
-			{x: id});
+		var cmd = function () {
+			if (!_Utils_eq(state.v, id)) {
+				if (!id.$) {
+					var value = id.a;
+					return $author$project$Map$portNodeSelected(
+						{
+							as: $author$project$NodeUtils$idToAttribute(value)
+						});
+				} else {
+					return $elm$core$Platform$Cmd$none;
+				}
+			} else {
+				return $elm$core$Platform$Cmd$none;
+			}
+		}();
+		return _Utils_Tuple2(
+			_Utils_update(
+				state,
+				{v: id}),
+			cmd);
 	});
 var $author$project$UserAction$Dragging = 1;
 var $elm$core$List$filter = F2(
@@ -6490,7 +6525,6 @@ var $author$project$Tree$moveNode = F5(
 		}
 	});
 var $author$project$TreeSpec$moveNode = A2($author$project$Tree$moveNode, $elm$core$Basics$identity, $author$project$Node$childList);
-var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$DragControl$portRafAlign = _Platform_outgoingPort(
 	'portRafAlign',
 	function ($) {
@@ -6528,11 +6562,11 @@ var $author$project$DragControl$applyDragByData = F3(
 			var stateIfMatchesTarget = function (state) {
 				return A2(
 					$author$project$Utils$maybeJust,
-					_Utils_eq(state.v, targetId),
+					_Utils_eq(state.w, targetId),
 					state);
 			};
 			var findTargetPath = function (state) {
-				return A2($author$project$TreeSpec$findNode, nodes, state.v);
+				return A2($author$project$TreeSpec$findNode, nodes, state.w);
 			};
 			var _v1 = A2(
 				$elm$core$Maybe$andThen,
@@ -6570,37 +6604,56 @@ var $author$project$UserAction$canPreempt = F2(
 		var _v0 = _Utils_Tuple2(_new, old);
 		_v0$1:
 		while (true) {
-			switch (_v0.b) {
-				case 0:
-					var _v1 = _v0.b;
-					return true;
-				case 2:
-					switch (_v0.a) {
-						case 0:
-							break _v0$1;
-						case 2:
-							var _v5 = _v0.a;
-							var _v6 = _v0.b;
-							return true;
-						default:
-							var _v7 = _v0.a;
-							var _v8 = _v0.b;
-							return false;
-					}
-				default:
-					switch (_v0.a) {
-						case 0:
-							break _v0$1;
-						case 1:
-							var _v3 = _v0.a;
-							var _v4 = _v0.b;
-							return true;
-						default:
-							var _v9 = _v0.a;
-							var _v10 = _v0.b;
-							return false;
-					}
+			_v0$6:
+			while (true) {
+				switch (_v0.b) {
+					case 0:
+						var _v1 = _v0.b;
+						return true;
+					case 2:
+						switch (_v0.a) {
+							case 0:
+								break _v0$1;
+							case 2:
+								var _v5 = _v0.a;
+								var _v6 = _v0.b;
+								return true;
+							case 1:
+								var _v7 = _v0.a;
+								var _v8 = _v0.b;
+								return false;
+							default:
+								break _v0$6;
+						}
+					case 1:
+						switch (_v0.a) {
+							case 0:
+								break _v0$1;
+							case 1:
+								var _v3 = _v0.a;
+								var _v4 = _v0.b;
+								return true;
+							case 2:
+								var _v9 = _v0.a;
+								var _v10 = _v0.b;
+								return false;
+							default:
+								break _v0$6;
+						}
+					default:
+						switch (_v0.a) {
+							case 0:
+								break _v0$1;
+							case 3:
+								break _v0$6;
+							default:
+								var _v12 = _v0.b;
+								return true;
+						}
+				}
 			}
+			var _v11 = _v0.a;
+			return false;
 		}
 		var _v2 = _v0.a;
 		return false;
@@ -6638,7 +6691,7 @@ var $author$project$DragControl$applyDragStartData = F3(
 			var newDrag = A2(
 				$author$project$Utils$maybeJust,
 				success,
-				{v: targetId});
+				{w: targetId});
 			return _Utils_Tuple3(
 				_Utils_update(
 					appState,
@@ -6672,6 +6725,7 @@ var $author$project$DragControl$update = F2(
 				return _Utils_Tuple3(appState, nodes, $elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$UserAction$Resizing = 3;
 var $author$project$TreeSpec$updateNodeById = F3(
 	function (nodes, id, updater) {
 		var _v0 = A2($author$project$TreeSpec$findNode, nodes, id);
@@ -6682,26 +6736,39 @@ var $author$project$TreeSpec$updateNodeById = F3(
 			return nodes;
 		}
 	});
-var $author$project$ResizeControl$applyMaxHeightChanged = F2(
-	function (_v0, data) {
+var $author$project$ResizeControl$applyMaxHeightChanged = F3(
+	function (appState, _v0, data) {
 		var nodes = _v0;
-		var updater = function (node) {
-			return _Utils_update(
-				node,
-				{bR: data.au});
-		};
-		return A3($author$project$TreeSpec$updateNodeById, nodes, data.as, updater);
+		if (appState.I === 3) {
+			var updater = function (node) {
+				return _Utils_update(
+					node,
+					{bR: data.au});
+			};
+			return A3($author$project$TreeSpec$updateNodeById, nodes, data.as, updater);
+		} else {
+			return nodes;
+		}
 	});
-var $author$project$ResizeControl$applyMaxWidthChanged = F2(
-	function (_v0, data) {
+var $author$project$ResizeControl$applyMaxWidthChanged = F3(
+	function (appState, _v0, data) {
 		var nodes = _v0;
-		var updater = function (node) {
-			return _Utils_update(
-				node,
-				{bS: data.au});
-		};
-		return A3($author$project$TreeSpec$updateNodeById, nodes, data.as, updater);
+		if (appState.I === 3) {
+			var updater = function (node) {
+				return _Utils_update(
+					node,
+					{bS: data.au});
+			};
+			return A3($author$project$TreeSpec$updateNodeById, nodes, data.as, updater);
+		} else {
+			return nodes;
+		}
 	});
+var $author$project$ResizeControl$endResize = function (appState) {
+	return (appState.I === 3) ? _Utils_update(
+		appState,
+		{I: 0}) : appState;
+};
 var $author$project$ResizeControl$portOnEwResizePointerDown = _Platform_outgoingPort(
 	'portOnEwResizePointerDown',
 	function ($) {
@@ -6742,6 +6809,34 @@ var $author$project$ResizeControl$portOnNsResizePointerDown = _Platform_outgoing
 					$elm$json$Json$Encode$float($.z))
 				]));
 	});
+var $author$project$ResizeControl$portOnNsewResizePointerDown = _Platform_outgoingPort(
+	'portOnNsewResizePointerDown',
+	function ($) {
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'pointerType',
+					$elm$json$Json$Encode$string($.cf)),
+					_Utils_Tuple2(
+					'targetId',
+					$elm$json$Json$Encode$string($.as)),
+					_Utils_Tuple2(
+					'x',
+					$elm$json$Json$Encode$float($.y)),
+					_Utils_Tuple2(
+					'y',
+					$elm$json$Json$Encode$float($.z))
+				]));
+	});
+var $author$project$ResizeControl$startResizeIfIdle = F2(
+	function (appState, cmdGenerator) {
+		return A2($author$project$UserAction$canPreempt, 3, appState.I) ? _Utils_Tuple2(
+			_Utils_update(
+				appState,
+				{I: 3}),
+			cmdGenerator(0)) : _Utils_Tuple2(appState, $elm$core$Platform$Cmd$none);
+	});
 var $author$project$ResizeControl$update = F2(
 	function (msg, _v0) {
 		var appState = _v0.a;
@@ -6751,43 +6846,56 @@ var $author$project$ResizeControl$update = F2(
 				return _Utils_Tuple3(appState, nodes, $elm$core$Platform$Cmd$none);
 			case 1:
 				var data = msg.a;
-				return _Utils_Tuple3(
+				var _v2 = A2(
+					$author$project$ResizeControl$startResizeIfIdle,
 					appState,
-					nodes,
-					$author$project$ResizeControl$portOnEwResizePointerDown(data));
+					function (_v3) {
+						return $author$project$ResizeControl$portOnEwResizePointerDown(data);
+					});
+				var newState = _v2.a;
+				var cmd = _v2.b;
+				return _Utils_Tuple3(newState, nodes, cmd);
 			case 2:
 				var data = msg.a;
-				return _Utils_Tuple3(
+				var _v4 = A2(
+					$author$project$ResizeControl$startResizeIfIdle,
 					appState,
-					nodes,
-					$author$project$ResizeControl$portOnNsResizePointerDown(data));
+					function (_v5) {
+						return $author$project$ResizeControl$portOnNsResizePointerDown(data);
+					});
+				var newState = _v4.a;
+				var cmd = _v4.b;
+				return _Utils_Tuple3(newState, nodes, cmd);
 			case 3:
 				var data = msg.a;
-				return _Utils_Tuple3(
+				var _v6 = A2(
+					$author$project$ResizeControl$startResizeIfIdle,
 					appState,
-					nodes,
-					$elm$core$Platform$Cmd$batch(
-						_List_fromArray(
-							[
-								$author$project$ResizeControl$portOnNsResizePointerDown(data),
-								$author$project$ResizeControl$portOnEwResizePointerDown(data)
-							])));
+					function (_v7) {
+						return $author$project$ResizeControl$portOnNsewResizePointerDown(data);
+					});
+				var newState = _v6.a;
+				var cmd = _v6.b;
+				return _Utils_Tuple3(newState, nodes, cmd);
 			case 4:
 				var data = msg.a;
-				var newNodes = A2($author$project$ResizeControl$applyMaxWidthChanged, nodes, data);
+				var newNodes = A3($author$project$ResizeControl$applyMaxWidthChanged, appState, nodes, data);
+				return _Utils_Tuple3(appState, newNodes, $elm$core$Platform$Cmd$none);
+			case 5:
+				var data = msg.a;
+				var newNodes = A3($author$project$ResizeControl$applyMaxHeightChanged, appState, nodes, data);
 				return _Utils_Tuple3(appState, newNodes, $elm$core$Platform$Cmd$none);
 			default:
-				var data = msg.a;
-				var newNodes = A2($author$project$ResizeControl$applyMaxHeightChanged, nodes, data);
-				return _Utils_Tuple3(appState, newNodes, $elm$core$Platform$Cmd$none);
+				var newState = $author$project$ResizeControl$endResize(appState);
+				return _Utils_Tuple3(newState, nodes, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Map$handleMapKeyDown = F2(
 	function (key, model) {
 		if ((key === 'Backspace') || (key === 'Delete')) {
-			var _v5 = model.a.x;
-			if (!_v5.$) {
-				var id = _v5.a;
+			var _v9 = model.a.v;
+			if (!_v9.$) {
+				var id = _v9.a;
 				return A2(
 					$author$project$Map$updateAndSave,
 					$author$project$MapMsg$MsgDeleteNode(id),
@@ -6797,12 +6905,12 @@ var $author$project$Map$handleMapKeyDown = F2(
 			}
 		} else {
 			if ((key === 'Tab') && (!model.a.I)) {
-				var _v6 = A2(
+				var _v10 = A2(
 					$elm$core$Maybe$andThen,
 					$author$project$Map$pathToFirstChildOfId(model.c),
-					model.a.x);
-				if (!_v6.$) {
-					var path = _v6.a;
+					model.a.v);
+				if (!_v10.$) {
+					var path = _v10.a;
 					return A2(
 						$author$project$Map$update,
 						A2(
@@ -6815,12 +6923,12 @@ var $author$project$Map$handleMapKeyDown = F2(
 				}
 			} else {
 				if ((key === 'Enter') && (!model.a.I)) {
-					var _v7 = A2(
+					var _v11 = A2(
 						$elm$core$Maybe$andThen,
 						$author$project$Map$pathToNextSiblingOfId(model.c),
-						model.a.x);
-					if (!_v7.$) {
-						var path = _v7.a;
+						model.a.v);
+					if (!_v11.$) {
+						var path = _v11.a;
 						return A2(
 							$author$project$Map$update,
 							A2(
@@ -6839,122 +6947,131 @@ var $author$project$Map$handleMapKeyDown = F2(
 	});
 var $author$project$Map$update = F2(
 	function (msg, model) {
-		update:
-		while (true) {
-			switch (msg.$) {
-				case 0:
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				case 1:
-					var dragMsg = msg.a;
-					var _v3 = A2(
-						$author$project$DragControl$update,
-						dragMsg,
-						_Utils_Tuple2(model.a, model.c));
-					var state = _v3.a;
-					var nodes = _v3.b;
-					var cmd = _v3.c;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{c: nodes, a: state}),
-						A2($elm$core$Platform$Cmd$map, $author$project$MapMsg$MsgDrag, cmd));
-				case 2:
-					var resizeMsg = msg.a;
-					var _v4 = A2(
-						$author$project$ResizeControl$update,
-						resizeMsg,
-						_Utils_Tuple2(model.a, model.c));
-					var state = _v4.a;
-					var nodes = _v4.b;
-					var cmd = _v4.c;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{c: nodes, a: state}),
-						A2($elm$core$Platform$Cmd$map, $author$project$MapMsg$MsgResize, cmd));
-				case 3:
-					var data = msg.a;
-					return _Utils_Tuple2(
+		switch (msg.$) {
+			case 0:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			case 1:
+				var dragMsg = msg.a;
+				var _v3 = A2(
+					$author$project$DragControl$update,
+					dragMsg,
+					_Utils_Tuple2(model.a, model.c));
+				var state = _v3.a;
+				var nodes = _v3.b;
+				var cmd = _v3.c;
+				return _Utils_Tuple2(
+					_Utils_update(
 						model,
-						$author$project$Map$portOnPointerDown(data));
-				case 4:
-					var data = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								c: A2($author$project$Map$applyChildEdgeHeightChange, model.c, data)
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 6:
-					var nodeId = msg.a;
-					var state = A2($author$project$Map$applyEditLabelState, model.a, nodeId);
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{a: state}),
-						$author$project$Map$portEditLabel(
-							{
-								as: $author$project$NodeUtils$idToAttribute(nodeId)
-							}));
-				case 5:
-					var data = msg.a;
-					var state = $author$project$Map$endEditLabelState(model.a);
-					var nodes = A3($author$project$Map$applyLabelChange, model.c, data.as, data.bQ);
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{c: nodes, a: state}),
-						$elm$core$Platform$Cmd$none);
-				case 7:
-					var children = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{c: children}),
-						$elm$core$Platform$Cmd$none);
-				case 8:
-					var path = msg.a;
-					var node = msg.b;
-					var state = A2(
-						$author$project$Map$selectNode,
-						model.a,
-						$elm$core$Maybe$Just(node.Y));
-					var $temp$msg = $author$project$MapMsg$MsgEditLabel(node.Y),
-						$temp$model = _Utils_update(
+						{c: nodes, a: state}),
+					A2($elm$core$Platform$Cmd$map, $author$project$MapMsg$MsgDrag, cmd));
+			case 2:
+				var resizeMsg = msg.a;
+				var _v4 = A2(
+					$author$project$ResizeControl$update,
+					resizeMsg,
+					_Utils_Tuple2(model.a, model.c));
+				var state = _v4.a;
+				var nodes = _v4.b;
+				var cmd = _v4.c;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{c: nodes, a: state}),
+					A2($elm$core$Platform$Cmd$map, $author$project$MapMsg$MsgResize, cmd));
+			case 3:
+				var data = msg.a;
+				return _Utils_Tuple2(
+					model,
+					$author$project$Map$portOnPointerDown(data));
+			case 4:
+				var data = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							c: A2($author$project$Map$applyChildEdgeHeightChange, model.c, data)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 6:
+				var nodeId = msg.a;
+				var state = A2($author$project$Map$applyEditLabelState, model.a, nodeId);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{a: state}),
+					$author$project$Map$portEditLabel(
+						{
+							as: $author$project$NodeUtils$idToAttribute(nodeId)
+						}));
+			case 5:
+				var data = msg.a;
+				var state = $author$project$Map$endEditLabelState(model.a);
+				var nodes = A3($author$project$Map$applyLabelChange, model.c, data.as, data.bQ);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{c: nodes, a: state}),
+					$elm$core$Platform$Cmd$none);
+			case 7:
+				var children = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{c: children}),
+					$elm$core$Platform$Cmd$none);
+			case 8:
+				var path = msg.a;
+				var node = msg.b;
+				var _v5 = A2(
+					$author$project$Map$selectNode,
+					model.a,
+					$elm$core$Maybe$Just(node.Y));
+				var state = _v5.a;
+				var cmd = _v5.b;
+				var _v6 = A2(
+					$author$project$Map$update,
+					$author$project$MapMsg$MsgEditLabel(node.Y),
+					_Utils_update(
 						model,
 						{
 							c: A3($author$project$Map$insertChild, model.c, path, node),
 							a: state
-						});
-					msg = $temp$msg;
-					model = $temp$model;
-					continue update;
-				case 9:
-					var id = msg.a;
-					var state = A2($author$project$Map$selectNode, model.a, id);
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{a: state}),
-						$elm$core$Platform$Cmd$none);
-				case 10:
-					var id = msg.a;
-					var state = _Utils_eq(
-						model.a.x,
-						$elm$core$Maybe$Just(id)) ? A2($author$project$Map$selectNode, model.a, $elm$core$Maybe$Nothing) : model.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								c: A2($author$project$Map$removeChild, model.c, id),
-								a: state
-							}),
-						$elm$core$Platform$Cmd$none);
-				default:
-					var key = msg.a;
-					return A2($author$project$Map$handleMapKeyDown, key.bs, model);
-			}
+						}));
+				var newModel = _v6.a;
+				var editCmd = _v6.b;
+				return _Utils_Tuple2(
+					newModel,
+					$elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[cmd, editCmd])));
+			case 9:
+				var id = msg.a;
+				var _v7 = A2($author$project$Map$selectNode, model.a, id);
+				var state = _v7.a;
+				var cmd = _v7.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{a: state}),
+					cmd);
+			case 10:
+				var id = msg.a;
+				var _v8 = _Utils_eq(
+					model.a.v,
+					$elm$core$Maybe$Just(id)) ? A2($author$project$Map$selectNode, model.a, $elm$core$Maybe$Nothing) : _Utils_Tuple2(model.a, $elm$core$Platform$Cmd$none);
+				var state = _v8.a;
+				var cmd = _v8.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							c: A2($author$project$Map$removeChild, model.c, id),
+							a: state
+						}),
+					cmd);
+			default:
+				var key = msg.a;
+				return A2($author$project$Map$handleMapKeyDown, key.bs, model);
 		}
 	});
 var $author$project$Map$updateAndSave = F2(
@@ -7011,11 +7128,11 @@ var $author$project$DragControl$getDragNode = F2(
 		return A2(
 			$elm$core$Maybe$andThen,
 			function (state) {
-				return A2($author$project$TreeSpec$nodeAtById, nodes, state.v);
+				return A2($author$project$TreeSpec$nodeAtById, nodes, state.w);
 			},
 			drag);
 	});
-var $author$project$MapView$defaultViewState = {v: $elm$core$Maybe$Nothing, bA: $elm$core$Maybe$Nothing, aL: '', bK: '', x: $elm$core$Maybe$Nothing, cl: false, a8: true, cq: '', av: false};
+var $author$project$MapView$defaultViewState = {w: $elm$core$Maybe$Nothing, bA: $elm$core$Maybe$Nothing, aL: '', bK: '', v: $elm$core$Maybe$Nothing, cl: false, a8: true, cq: '', av: false};
 var $author$project$DragControl$adjustInitialViewState = F2(
 	function (_v0, view) {
 		var action = _v0.I;
@@ -7024,18 +7141,18 @@ var $author$project$DragControl$adjustInitialViewState = F2(
 		var dragId = A2(
 			$elm$core$Maybe$map,
 			function ($) {
-				return $.v;
+				return $.w;
 			},
 			drag);
 		return _Utils_update(
 			view,
-			{v: dragId, av: viewBeacons});
+			{w: dragId, av: viewBeacons});
 	});
 var $author$project$Map$adjustInitialViewState = F2(
 	function (state, viewState) {
 		return _Utils_update(
 			viewState,
-			{bA: state.P, x: state.x});
+			{bA: state.P, v: state.v});
 	});
 var $author$project$Map$initialViewStateAdjusters = function (state) {
 	return _List_fromArray(
@@ -7192,10 +7309,10 @@ var $elm$core$String$trimLeft = _String_trimLeft;
 var $author$project$DragControl$adjustViewStateForNode = F3(
 	function (index, node, state) {
 		var viewBeacons = state.av && (!_Utils_eq(
-			state.v,
+			state.w,
 			$elm$core$Maybe$Just(node.Y)));
 		var shadow = _Utils_eq(
-			state.v,
+			state.w,
 			$elm$core$Maybe$Just(node.Y));
 		var htmlNodeId = shadow ? $author$project$NodeUtils$idToShadowAttribute(node.Y) : $author$project$NodeUtils$idToAttribute(node.Y);
 		var headBeaconPath = $elm$core$String$trimLeft(
@@ -7471,7 +7588,7 @@ var $author$project$ScrollerLayout$viewNodeContents = F4(
 							_Utils_Tuple2(
 							'selected',
 							_Utils_eq(
-								viewState.x,
+								viewState.v,
 								$elm$core$Maybe$Just(node.Y)))
 						])),
 					A2(
@@ -7570,21 +7687,37 @@ var $author$project$ScrollerLayout$viewChildNodes = F5(
 												_Utils_Tuple2('shadow', localState.cl)
 											]))
 									]),
-								function () {
-									var _v0 = node.bS;
-									if (!_v0.$) {
-										var width = _v0.a;
-										return _List_fromArray(
-											[
-												A2(
-												$elm$html$Html$Attributes$style,
-												'max-width',
-												$author$project$Utils$asPx(width))
-											]);
-									} else {
-										return _List_Nil;
-									}
-								}()),
+								_Utils_ap(
+									function () {
+										var _v0 = node.bS;
+										if (!_v0.$) {
+											var width = _v0.a;
+											return _List_fromArray(
+												[
+													A2(
+													$elm$html$Html$Attributes$style,
+													'max-width',
+													$author$project$Utils$asPx(width))
+												]);
+										} else {
+											return _List_Nil;
+										}
+									}(),
+									function () {
+										var _v1 = node.bR;
+										if (!_v1.$) {
+											var height = _v1.a;
+											return _List_fromArray(
+												[
+													A2(
+													$elm$html$Html$Attributes$style,
+													'max-height',
+													$author$project$Utils$asPx(height))
+												]);
+										} else {
+											return _List_Nil;
+										}
+									}())),
 							_List_fromArray(
 								[
 									A2(
@@ -7642,7 +7775,7 @@ var $author$project$TreeLayout$viewNodeContents = F2(
 							_Utils_Tuple2(
 							'selected',
 							_Utils_eq(
-								viewState.x,
+								viewState.v,
 								$elm$core$Maybe$Just(node.Y)))
 						]))
 				]));
