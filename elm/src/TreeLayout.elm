@@ -15,16 +15,12 @@ viewTopNode : Bool -> List (Html Msg) -> List (Html Msg) -> ViewState -> Node ->
 viewTopNode onTop tailBeacons childNodes localState node =
   let
     attributes =
-        ([ id localState.htmlNodeId
+        [ id localState.htmlNodeId
         , class "top_child"
         , classList [("shadow", localState.shadow), ("on_top", onTop)]
         , style "left" (asPx node.position.x)
         , style "top" (asPx node.position.y)
-        ]) ++
-        (case node.maxWidth of
-            Just width -> [ style "max-width" (asPx width) ]
-            Nothing -> []
-        )
+        ]
   in
   div
     attributes
@@ -98,7 +94,11 @@ viewNodeContents node viewState =
           [ ( "selection_container", True)
           , ( "selected", viewState.selected == Just node.id)
           ]
-      ]
+      ] ++
+      (case node.maxWidth of
+          Just width -> [ style "max-width" (asPx width) ]
+          Nothing -> []
+      )
   in
   div
     attributes

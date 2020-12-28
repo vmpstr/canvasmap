@@ -5,7 +5,7 @@ let nsData = undefined;
 function finalizePointerUp() {
   requestAnimationFrame(() => {
     const targetId = ewData ? ewData.targetId : nsData.targetId;
-    const rect = document.getElementById(targetId).getBoundingClientRect();
+    const rect = document.getElementById(targetId).querySelector(".selection_container").getBoundingClientRect();
 
     if (ewData && Math.round(ewData.lastWidth) > rect.width)
       window.app.ports.portOnMaxWidthChanged.send({ targetId: targetId });
@@ -33,7 +33,7 @@ function onEwResizePointerDown(e) {
 }
 
 function initEwResizeData(e) {
-  const target = document.getElementById(e.targetId);
+  const target = document.getElementById(e.targetId).querySelector(".selection_container");
   const rect = target.getBoundingClientRect();
 
   ewData = {
@@ -75,7 +75,7 @@ function onNsResizePointerDown(e) {
 }
 
 function initNsResizeData(e) {
-  const target = document.getElementById(e.targetId);
+  const target = document.getElementById(e.targetId).querySelector(".selection_container");
   const rect = target.getBoundingClientRect();
 
   nsData = {
