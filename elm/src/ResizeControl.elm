@@ -101,10 +101,7 @@ update msg (appState, nodes) =
 
     MsgOnNsewResizePointerDown data ->
       let
-        (newState, cmd) =
-          startResizeIfIdle
-            appState
-            (\() -> [ portOnNsResizePointerDown data, portOnEwResizePointerDown data ] |> Cmd.batch)
+        (newState, cmd) = startResizeIfIdle appState (\() -> portOnNsewResizePointerDown data)
       in
       (newState, nodes, cmd)
 
