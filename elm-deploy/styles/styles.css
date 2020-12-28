@@ -19,6 +19,7 @@ body {
   box-sizing: border-box;
   position: absolute;
   contain: layout;
+  will-change: transform;
 }
 
 .top_child > .content {
@@ -100,7 +101,7 @@ body {
   box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.5);
   background-color: rgb(195, 231, 240);
   min-width: 20px;
-  max-width: max-content;
+  width: max-content;
   border-radius: 10px;
 }
 
