@@ -59,6 +59,7 @@ onload = () => {
   window.app.ports.portNodeSelected.subscribe(onNodeSelected);
 
   initResizerEvents();
+  initDragEvents();
   document.addEventListener("keydown", (e) => {
     // TODO: Maybe filter based on what is handled?
     e.preventDefault();
