@@ -14,7 +14,6 @@ other:
 
 ## refactors
 
-- refactor js into separate files
 - only add event handlers for states where it makes sense (like idle?)
 
 ## bugs
