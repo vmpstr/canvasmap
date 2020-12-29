@@ -1,7 +1,7 @@
 module TreeSpec exposing (findNode, moveNode, nodeAtById, updateNode, removeNode, addNode, findMaxId, updateNodeById)
 
-import Tree
 import Node exposing (Node, Id, Children(..), childList)
+import Tree
 
 findNode : List Node -> Id -> Maybe Tree.Path
 findNode = Tree.findNode childList

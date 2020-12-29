@@ -1,10 +1,10 @@
 module MapMsg exposing (Msg(..))
 
-import Node exposing (Id, Children, Node)
 import DragControl
+import EventDecodersData exposing (..)
+import Node exposing (Id, Children, Node)
 import ResizeControl
 import Tree
-import EventDecodersData exposing (..)
 
 type Msg
   = MsgNoop

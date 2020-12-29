@@ -10,23 +10,21 @@ port module DragControl exposing
   , onDragAttribute
   )
 
-import Json.Decode as Decoder exposing (Decoder, succeed, float, list)
-import Json.Decode.Pipeline exposing (required, optional)
-
+import EventDecodersData exposing (OnPointerDownPortData)
 import Geometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
+import Html exposing (Attribute)
+import Html.Events exposing (custom)
+import Json.Decode as Decoder exposing (Decoder, succeed, float, list, string)
+import Json.Decode.Pipeline exposing (required, optional, hardcoded)
+import MapView exposing (ViewState)
+import MsgUtils
 import Node exposing (Children(..), Node, Id, childList)
 import NodeUtils exposing (idAttributeDecoder, idToShadowAttribute, idToAttribute)
 import Tree exposing (Path(..), pathDecoder, isSubpath)
 import TreeSpec
 import UserAction
 import Utils exposing (maybeJust, maybeCmd, toMsgOrNoop)
-import MapView exposing (ViewState)
-import Html exposing (Attribute)
-import Html.Events exposing (custom)
-import EventDecodersData exposing (OnPointerDownPortData)
-import Json.Decode.Pipeline exposing (hardcoded, optional, required)
-import Json.Decode exposing (string)
-import MsgUtils
+
 
 
 {- TODOs

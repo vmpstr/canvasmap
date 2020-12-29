@@ -1,16 +1,16 @@
 module EventDecoders exposing (..)
 
+import EventDecodersData exposing (..)
+import Geometry
 import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field, bool, fail, nullable)
 import Json.Decode.Pipeline exposing (required, hardcoded, optional)
-
-import EventDecodersData exposing (..)
 import MapMsg exposing (..)
+import MsgUtils
 import Node exposing (Node, NodeType(..), Id, Children(..))
 import NodeUtils exposing (idToAttribute, idAttributeDecoder, nodeFromClickDecoder)
-import Geometry
 import Tree
 import TreeSpec
-import MsgUtils
+
 
 onChildEdgeHeightChangedDecoder : Id -> Decoder Msg
 onChildEdgeHeightChangedDecoder targetId =

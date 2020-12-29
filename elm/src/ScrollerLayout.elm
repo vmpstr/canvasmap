@@ -1,16 +1,17 @@
 module ScrollerLayout exposing (viewTopNode, viewChildNodes, adjustStateForChildren)
 
-import MapView exposing (ViewState)
+import DragControl
+import EventDecoders exposing (..)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (attribute, id, style, class, classList)
 import Html.Events exposing (on, custom)
+import MapMsg exposing (Msg(..))
+import MapView exposing (ViewState)
 import Node exposing (Node, Children(..), childList, Id, NodeType(..))
 import NodeUtils exposing (idToAttribute, idToShadowAttribute)
-import Utils exposing (asPx)
-import MapMsg exposing (Msg(..))
-import EventDecoders exposing (..)
 import ResizeControl
-import DragControl
+import Utils exposing (asPx)
+
 
 viewTopNode : Bool -> List (Html Msg) -> List (Html Msg) -> ViewState -> Node -> Html Msg
 viewTopNode onTop tailBeacons childNodes localState node =

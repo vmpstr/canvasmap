@@ -1,17 +1,18 @@
 port module ResizeControl exposing (Msg, subscriptions, update, ewResizer, nsResizer, nsewResizer)
 
-import Json.Decode as Decoder exposing (Decoder, succeed, nullable, float, string)
-import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import EventDecodersData exposing (OnPointerDownPortData)
-import Utils exposing (toMsgOrNoop)
-import Node exposing (Id, Children(..))
-import NodeUtils exposing (idAttributeDecoder, idToAttribute)
-import UserAction
 import Html exposing (Html, div)
 import Html.Attributes exposing (class)
 import Html.Events exposing (custom)
-import TreeSpec
+import Json.Decode as Decoder exposing (Decoder, succeed, nullable, float, string)
+import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import MsgUtils
+import Node exposing (Id, Children(..))
+import NodeUtils exposing (idAttributeDecoder, idToAttribute)
+import TreeSpec
+import UserAction
+import Utils exposing (toMsgOrNoop)
+
 
 {- TODO:
  - Add a separate resize user state, so that memento can pick this up.

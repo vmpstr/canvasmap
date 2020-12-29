@@ -1,31 +1,29 @@
 port module Map exposing (main)
 
 import Browser
-import Html exposing (Html, div, text, label)
-import Html.Attributes exposing (class, classList, style, attribute, id)
-import Html.Events exposing (custom, on, onDoubleClick)
-import Json.Decode as Decoder exposing (Decoder, succeed, string, float, field, bool, fail, nullable)
-import Json.Decode.Pipeline exposing (required, hardcoded, optional)
-import Json.Encode as Encode
-import Maybe.Extra
-
 import DragControl
-import Node exposing (Node, Children(..), childList, Id, NodeType(..))
-import NodeUtils exposing (idToAttribute, idToShadowAttribute, nodesDecoder, encodeNodes)
-import UserAction
-import TreeSpec
+import EventDecoders exposing (..)
+import EventDecodersData exposing (..)
+import Html exposing (Html, div)
+import Html.Attributes exposing (class, attribute, id)
+import Html.Events exposing (custom)
+import Json.Decode as Decoder exposing (Decoder)
+import Json.Encode as Encode
+import MapMsg exposing (..)
 import MapView exposing (ViewState)
-import Geometry
-import Utils exposing (toMsgOrNoop, asPx)
+import Maybe.Extra
+import Node exposing (Node, Children(..), childList, Id, NodeType(..))
+import NodeUtils exposing (idToAttribute, nodesDecoder, encodeNodes)
+import ResizeControl
+import ScrollerLayout
 import Tree
 import TreeLayout
-import ScrollerLayout
-import MapMsg exposing (..)
-import EventDecodersData exposing (..)
-import ResizeControl
+import TreeSpec
+import UserAction
+import Utils exposing (toMsgOrNoop)
+
 
 -- Probably work to remove this
-import EventDecoders exposing (..)
 
 {- TODOs
  - I think it's overkill to have Vector and not array

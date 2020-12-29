@@ -1,12 +1,12 @@
 module NodeUtils exposing (..)
 
-import Node exposing (..)
-
+import Geometry
 import Json.Decode as Decoder exposing (Decoder, succeed, fail, string, float, nullable, bool)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import Json.Encode as Encode
+import Node exposing (..)
 import TreeSpec
-import Geometry
+
 
 -- General helpers
 attributePrefix : String

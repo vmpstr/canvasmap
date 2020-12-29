@@ -7,9 +7,6 @@ module Node exposing
   )
 
 import Geometry exposing (Vector)
-import Json.Decode as Decoder exposing (Decoder, succeed, fail, string, nullable, float)
-import Json.Encode as Encode
-import Json.Decode.Pipeline exposing (required, hardcoded, optional)
 
 type Children = Children (List Node)
 
