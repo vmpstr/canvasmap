@@ -2,8 +2,6 @@ module Map exposing (main)
 
 import Browser
 import DragControl
-import EventDecoders exposing (..)
-import EventDecodersData exposing (..)
 import Html exposing (Html, div)
 import Html.Attributes exposing (class, attribute, id)
 import Html.Events exposing (custom)
@@ -127,16 +125,6 @@ viewBeacon path =
       , attribute "path" path
       ] []
 
-
-applyChildEdgeHeightChange : Children -> OnChildEdgeHeightChangedData -> Children
-applyChildEdgeHeightChange (Children nodes) { targetId, height } =
-  let updater node = { node | childEdgeHeight = height } in
-  case TreeSpec.findNode nodes targetId of
-    Just path ->
-      Children (TreeSpec.updateNode nodes path updater)
-    Nothing ->
-      Children nodes
-
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -174,11 +162,6 @@ update msg model =
           (state, nodes, cmd) = NodeControl.update nodeMsg (model.state, model.nodes)
       in
       ({ model | state = state, nodes = nodes }, Cmd.map MsgNode cmd)
-
-
-    -- TODO: Maybe fold this into resize control?
-    MsgOnChildEdgeHeightChanged data ->
-      ({ model | nodes = applyChildEdgeHeightChange model.nodes data }, Cmd.none)
 
 
 initialViewStateAdjusters : State -> List (ViewState -> ViewState)

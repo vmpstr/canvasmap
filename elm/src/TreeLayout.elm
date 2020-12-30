@@ -1,7 +1,6 @@
 module TreeLayout exposing (viewTopNode, viewChildNodes, adjustStateForChildren)
 
 import DragControl
-import EventDecoders exposing (..)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (attribute, id, style, class, classList)
 import Html.Events exposing (on, custom)
@@ -37,7 +36,7 @@ viewTopNode onTop tailBeacons childNodes localState node =
             ] []
         , Html.node "child-area"
             [ class "child_area"
-            , on "childedgeheightchanged" (onChildEdgeHeightChangedDecoder node.id)
+            , ResizeControl.onChildEdgeHeightChangedAttribute MsgResize node.id
             ]
             (childNodes ++ tailBeacons)
         ]
@@ -78,7 +77,7 @@ viewChildNodes headBeacons tailBeacons childNodes localState node =
               ] []
           , Html.node "child-area"
               [ class "child_area"
-              , on "childedgeheightchanged" (onChildEdgeHeightChangedDecoder node.id)
+              , ResizeControl.onChildEdgeHeightChangedAttribute MsgResize node.id
               ]
               (childNodes ++ tailBeacons)
           ]

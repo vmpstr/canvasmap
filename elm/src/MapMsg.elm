@@ -1,8 +1,6 @@
 module MapMsg exposing (Msg(..))
 
 import DragControl
-import EventDecodersData exposing (..)
-import Node exposing (Id, Children, Node)
 import ResizeControl
 import Memento
 import Tree
@@ -16,4 +14,3 @@ type Msg
   | MsgMemento Memento.Msg
   | MsgInput InputControl.Msg
   | MsgNode NodeControl.Msg
-  | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData

@@ -1,7 +1,6 @@
 module ScrollerLayout exposing (viewTopNode, viewChildNodes, adjustStateForChildren)
 
 import DragControl
-import EventDecoders exposing (..)
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (attribute, id, style, class, classList)
 import Html.Events exposing (on, custom)

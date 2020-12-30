@@ -10,7 +10,7 @@ port module DragControl exposing
   , onDragAttribute
   )
 
-import EventDecodersData exposing (OnPointerDownPortData)
+import EventUtils exposing (OnPointerDownPortData)
 import Geometry exposing (Vector, Rect, vectorDecoder, rectDecoder)
 import Html exposing (Attribute)
 import Html.Events exposing (custom)

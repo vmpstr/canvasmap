@@ -1,10 +1,18 @@
-port module ResizeControl exposing (Msg, subscriptions, update, ewResizer, nsResizer, nsewResizer)
+port module ResizeControl exposing
+  ( Msg
+  , subscriptions
+  , update
+  , ewResizer
+  , nsResizer
+  , nsewResizer
+  , onChildEdgeHeightChangedAttribute
+  )
 
-import EventDecodersData exposing (OnPointerDownPortData)
-import Html exposing (Html, div)
+import EventUtils exposing (OnPointerDownPortData)
+import Html exposing (Html, div, Attribute)
 import Html.Attributes exposing (class)
-import Html.Events exposing (custom)
-import Json.Decode as Decoder exposing (Decoder, succeed, nullable, float, string)
+import Html.Events exposing (custom, on)
+import Json.Decode as Decoder exposing (Decoder, succeed, nullable, float, string, field)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import MsgUtils
 import Node exposing (Id, Children(..))
@@ -26,6 +34,7 @@ type Msg
   | MsgOnMaxWidthChanged OnMaxDimensionChangedData
   | MsgOnMaxHeightChanged OnMaxDimensionChangedData
   | MsgOnResizeEnd
+  | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
 
 ewResizer : Id -> Html Msg 
 ewResizer id =
@@ -47,6 +56,12 @@ nsewResizer id =
     [ class "nsew_resizer"
     , custom "pointerdown" (onNsewResizePointerDown id)
     ] []
+
+onChildEdgeHeightChangedAttribute : (Msg -> msg) -> Id -> Attribute msg
+onChildEdgeHeightChangedAttribute wrapMsg id =
+  Html.Attributes.map wrapMsg <|
+    on "childedgeheightchanged" (onChildEdgeHeightChangedDecoder id)
+
 
 onMaxDimensionChangedDataDecoder : Decoder OnMaxDimensionChangedData
 onMaxDimensionChangedDataDecoder =
@@ -119,6 +134,10 @@ update msg (appState, nodes) =
       let newState = endResize appState in
       (newState, nodes, Cmd.none)
 
+    MsgOnChildEdgeHeightChanged data ->
+      let newNodes = applyChildEdgeHeightChange nodes data in
+      (appState, newNodes, Cmd.none)
+
 
 -- Internal
 type alias AppState a =
@@ -187,3 +206,24 @@ endResize appState =
     { appState | action = UserAction.Idle }
   else
     appState
+
+type alias OnChildEdgeHeightChangedData =
+  { targetId : Id
+  , height: Float
+  }
+
+applyChildEdgeHeightChange : Children -> OnChildEdgeHeightChangedData -> Children
+applyChildEdgeHeightChange (Children nodes) { targetId, height } =
+  let updater node = { node | childEdgeHeight = height } in
+  case TreeSpec.findNode nodes targetId of
+    Just path ->
+      Children (TreeSpec.updateNode nodes path updater)
+    Nothing ->
+      Children nodes
+
+onChildEdgeHeightChangedDecoder : Id -> Decoder Msg
+onChildEdgeHeightChangedDecoder targetId =
+  Decoder.map MsgOnChildEdgeHeightChanged
+    (succeed OnChildEdgeHeightChangedData
+      |> hardcoded targetId
+      |> required "detail" (field "height" float))
