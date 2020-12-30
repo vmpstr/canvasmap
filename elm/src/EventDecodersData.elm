@@ -9,15 +9,8 @@ type alias OnPointerDownPortData =
   , y : Float
   }
 
-type alias OnLabelChangedData =
-  { targetId : Id
-  , label : String
-  }
-
 type alias OnChildEdgeHeightChangedData =
   { targetId : Id
   , height: Float
   }
 
-type alias Key =
-  { code : String }

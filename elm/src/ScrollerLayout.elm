@@ -11,6 +11,7 @@ import Node exposing (Node, Children(..), childList, Id, NodeType(..))
 import NodeUtils exposing (idToAttribute, idToShadowAttribute)
 import ResizeControl
 import Utils exposing (asPx)
+import NodeControl
 
 
 viewTopNode : Bool -> List (Html Msg) -> List (Html Msg) -> ViewState -> Node -> Html Msg
@@ -69,7 +70,7 @@ viewNodeContents node viewState childNodes tailBeacons =
       [ class "contents"
       , class "selection_container"
       , classList [ ("selected", viewState.selected == Just node.id) ]
-      , custom "click" (onSelectClickDecoder (Just node.id))
+      , NodeControl.onSelectAttribute MsgNode node.id
       ] ++
       if viewState.editId == Nothing then
         [ Html.Attributes.map MsgDrag (DragControl.onDragAttribute node.id) ]
@@ -80,10 +81,10 @@ viewNodeContents node viewState childNodes tailBeacons =
       attributes
       [ div
         [ class "label_container"
-        , custom "dblclick" (onEditLabelClickDecoder node.id)
+        , NodeControl.onEditLabelAttribute MsgNode node.id
         ]
         [ Html.node "node-label"
-            [ on "labelchanged" (onLabelChangedDecoder node.id)
+            [ NodeControl.onLabelChangedAttribute MsgNode node.id
             , attribute "label" node.label
             ]
             []

@@ -6,11 +6,13 @@ import Html exposing (Html, div, text)
 import Html.Attributes exposing (attribute, id, style, class, classList)
 import Html.Events exposing (on, custom)
 import MapMsg exposing (Msg(..))
+import MapMsg exposing (Msg)
 import MapView exposing (ViewState)
 import Node exposing (Node, Children(..), childList, Id, NodeType(..))
 import NodeUtils exposing (idToAttribute, idToShadowAttribute)
 import ResizeControl
 import Utils exposing (asPx)
+import NodeControl
 
 
 viewTopNode : Bool -> List (Html Msg) -> List (Html Msg) -> ViewState -> Node -> Html Msg
@@ -106,11 +108,11 @@ viewNodeContents node viewState =
     attributes
     [ div
         [ class "contents_container"
-        , custom "click" (onSelectClickDecoder (Just node.id))
-        , custom "dblclick" (onEditLabelClickDecoder node.id)
+        , NodeControl.onSelectAttribute MsgNode node.id
+        , NodeControl.onEditLabelAttribute MsgNode node.id
         ]
         [ Html.node "node-label"
-            [ on "labelchanged" (onLabelChangedDecoder node.id)
+            [ NodeControl.onLabelChangedAttribute MsgNode node.id
             , attribute "label" node.label
             ]
             []

@@ -11,7 +11,7 @@ import Json.Encode as Encode
 import UserAction
 import NodeUtils exposing (encodeNodes, nodesDecoder)
 import Node exposing (Children(..))
-import MapModel exposing (Model)
+import MapModel exposing (Model, State)
 import Json.Decode as Decoder
 import Utils exposing (toMsgOrNoop)
 
@@ -21,13 +21,13 @@ port portLoadState : () -> Cmd msg
 loadLatestState : () -> Cmd msg
 loadLatestState = portLoadState
 
-force : (msg -> Model -> (Model, Cmd msg)) -> msg -> Model -> (Model, Cmd msg)
-force updater msg model =
+force : (msg -> (State, Children) -> (State, Children, Cmd msg)) -> msg -> (State, Children) -> (State, Children, Cmd msg)
+force updater msg (state, children) =
   let
-    (newModel, cmd) = updater msg model
-    saveCmd = encodeNodes newModel.nodes |> portSaveState
+    (newState, newChildren, cmd) = updater msg (state, children)
+    saveCmd = encodeNodes newChildren |> portSaveState
   in
-  (newModel, [cmd, saveCmd] |> Cmd.batch)
+  (newState, newChildren, [cmd, saveCmd] |> Cmd.batch)
 
 intercept : (msg -> Model -> (Model, Cmd msg)) -> msg -> Model -> (Model, Cmd msg)
 intercept updater msg model =
