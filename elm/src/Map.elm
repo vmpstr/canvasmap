@@ -21,6 +21,8 @@ import TreeLayout
 import TreeSpec
 import UserAction
 import Utils exposing (toMsgOrNoop)
+import Memento
+import MapModel exposing (Model, State)
 
 
 -- Probably work to remove this
@@ -35,24 +37,9 @@ import Utils exposing (toMsgOrNoop)
  - selection gets removed after drag is finished
  -}
 
-type alias Model =
-  { nodes : Children
-  , state : State
-  }
-
--- action should just include the state
-type alias State =
-  { action : UserAction.Action
-  , drag : Maybe DragControl.State
-  , editing : Maybe Id
-  , selected : Maybe Id
-  }
-
 -- Functionality
 port portEditLabel : { targetId : String } -> Cmd msg
-port portSaveState : Encode.Value -> Cmd msg
 port portNodeSelected : { targetId : String } -> Cmd msg
-port portLoadState : () -> Cmd msg
 
 initModel : Model
 initModel =
@@ -152,28 +139,6 @@ applyChildEdgeHeightChange (Children nodes) { targetId, height } =
     Nothing ->
       Children nodes
 
-updateAndSave : Msg -> Model -> (Model, Cmd Msg)
-updateAndSave msg model =
-  let
-    (newModel, cmd) = update msg model
-    isDelete =
-      case msg of
-        MsgDeleteNode _ -> True
-        _ -> False
-
-    saveCmd =
-      -- The reason we save isDelete is that there is no action change
-      -- when this happens. Create, for example, comes with an automatic
-      -- label edit which causes a state change.
-      -- TODO: Make this more elegant somehow (remove not isdelete?)
-      if (not isDelete) && model.state.action == newModel.state.action then
-        Cmd.none
-      else
-        encodeNodes newModel.nodes |> portSaveState
-  in
-  (newModel, [cmd, saveCmd] |> Cmd.batch)
-
-
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -194,6 +159,12 @@ update msg model =
       in
       ({ model | state = state, nodes = nodes }, Cmd.map MsgResize cmd)
 
+    MsgMemento mementoMsg ->
+      let
+          (state, nodes, cmd) = Memento.update mementoMsg (model.state, model.nodes)
+      in
+      ({ model | state = state, nodes = nodes }, Cmd.map MsgMemento cmd)
+
     -- TODO: Maybe fold this into resize control?
     MsgOnChildEdgeHeightChanged data ->
       ({ model | nodes = applyChildEdgeHeightChange model.nodes data }, Cmd.none)
@@ -211,11 +182,6 @@ update msg model =
           state = endEditLabelState model.state
       in
       ({ model | nodes = nodes, state = state }, Cmd.none)
-
-    -- TODO: have a loading state so that we don't do anything before this.
-    -- Load control
-    MsgSetNodes children ->
-      ({ model | nodes = children }, Cmd.none)
 
     -- Node genesis
     MsgNewNode path node ->
@@ -257,9 +223,9 @@ handleMapKeyDown key model =
   if key == "Backspace" || key == "Delete" then
     case model.state.selected of
        Just id ->
-        -- We need to use updateAndSave here so that we intercept MsgDeleteNode
-        -- and save state.
-        updateAndSave (MsgDeleteNode id) model
+        -- We need to use memento force here so that we save state without
+        -- the user action changing.
+        Memento.force update (MsgDeleteNode id) model
        Nothing ->
         update MsgNoop model
   -- TODO: support Editing as well, but need to stop editing
@@ -346,13 +312,6 @@ applyEditLabelState : State -> Id -> State
 applyEditLabelState state id =
   { state | action = UserAction.Editing, drag = Nothing, editing = Just id }
 
-port portOnLoadState : (Decoder.Value -> msg) -> Sub msg
-
-onLoadStateSubscription : Sub Msg
-onLoadStateSubscription =
-  portOnLoadState
-    (Decoder.decodeValue nodesDecoder >> toMsgOrNoop MsgSetNodes MsgNoop)
-
 port portOnKeyDown : (Decoder.Value -> msg) -> Sub msg
 
 onKeyDownSubscription : Sub Msg
@@ -396,13 +355,13 @@ adjustViewStateForNode _ _ viewState = viewState
 
 -- Program setup.
 init : () -> (Model, Cmd Msg)
-init () = (initModel, portLoadState ())
+init () = (initModel, Memento.loadLatestState ())
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
   [ Sub.map MsgDrag (DragControl.subscriptions ())
   , Sub.map MsgResize (ResizeControl.subscriptions ())
-  , onLoadStateSubscription
+  , Sub.map MsgMemento (Memento.subscriptions ())
   , onKeyDownSubscription
   ] |> Sub.batch
 
@@ -411,6 +370,6 @@ main =
     Browser.element
       { init = init
       , view = view
-      , update = updateAndSave
+      , update = Memento.intercept update
       , subscriptions = subscriptions
       }

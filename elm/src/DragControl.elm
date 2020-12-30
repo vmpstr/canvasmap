@@ -59,7 +59,6 @@ update msg (appState, nodes) =
     MsgOnDragPointerDown data ->
       (appState, nodes, portOnDragPointerDown data)
 
-
 subscriptions: () -> Sub Msg
 subscriptions () =
   [ onDragStartSubscription
@@ -82,8 +81,8 @@ adjustInitialViewState { action, drag } view =
     dragId = Maybe.map .dragId drag
   in
   { view
-  | viewBeacons = viewBeacons
-  , dragId = dragId
+    | viewBeacons = viewBeacons
+    , dragId = dragId
   }
 
 adjustViewStateForNode : Int -> Node -> ViewState -> ViewState
