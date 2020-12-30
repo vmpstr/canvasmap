@@ -116,5 +116,5 @@ viewNodeContents node viewState =
             ]
             []
         ]
-    , Html.map MapMsg.MsgResize (ResizeControl.ewResizer node.id)
+    , ResizeControl.ewResizer MsgResize node.id
     ]

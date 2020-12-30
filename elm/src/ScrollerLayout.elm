@@ -92,7 +92,7 @@ viewNodeContents node viewState childNodes tailBeacons =
       , div
           [ class "child_area" ] 
           (childNodes ++ tailBeacons)
-      , Html.map MapMsg.MsgResize (ResizeControl.ewResizer node.id)
-      , Html.map MapMsg.MsgResize (ResizeControl.nsResizer node.id)
-      , Html.map MapMsg.MsgResize (ResizeControl.nsewResizer node.id)
+      , ResizeControl.ewResizer MsgResize node.id
+      , ResizeControl.nsResizer MsgResize node.id
+      , ResizeControl.nsewResizer MsgResize node.id
       ]

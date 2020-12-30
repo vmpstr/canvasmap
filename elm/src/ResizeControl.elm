@@ -36,26 +36,29 @@ type Msg
   | MsgOnResizeEnd
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
 
-ewResizer : Id -> Html Msg 
-ewResizer id =
-  div
-    [ class "ew_resizer"
-    , custom "pointerdown" (onEwResizePointerDown id)
-    ] []
+ewResizer : (Msg -> msg) -> Id -> Html msg 
+ewResizer wrapMsg id =
+  Html.map wrapMsg <|
+    div
+      [ class "ew_resizer"
+      , custom "pointerdown" (onEwResizePointerDown id)
+      ] []
 
-nsResizer : Id -> Html Msg 
-nsResizer id =
-  div
-    [ class "ns_resizer"
-    , custom "pointerdown" (onNsResizePointerDown id)
-    ] []
+nsResizer : (Msg -> msg) -> Id -> Html msg 
+nsResizer wrapMsg id =
+  Html.map wrapMsg <|
+    div
+      [ class "ns_resizer"
+      , custom "pointerdown" (onNsResizePointerDown id)
+      ] []
 
-nsewResizer : Id -> Html Msg 
-nsewResizer id =
-  div
-    [ class "nsew_resizer"
-    , custom "pointerdown" (onNsewResizePointerDown id)
-    ] []
+nsewResizer : (Msg -> msg) -> Id -> Html msg 
+nsewResizer wrapMsg id =
+  Html.map wrapMsg <|
+    div
+      [ class "nsew_resizer"
+      , custom "pointerdown" (onNsewResizePointerDown id)
+      ] []
 
 onChildEdgeHeightChangedAttribute : (Msg -> msg) -> Id -> Attribute msg
 onChildEdgeHeightChangedAttribute wrapMsg id =
