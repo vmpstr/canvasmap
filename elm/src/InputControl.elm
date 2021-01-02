@@ -7,15 +7,22 @@ import Browser.Events exposing (onKeyDown)
 import MapModel exposing (State)
 import NodeControl
 import Node exposing (Children(..))
+import EventUtils exposing (Key)
+import AnnotationControl
 
 type Msg
   = MsgNoop
   | MsgMapKeyDown Key
   | MsgNode NodeControl.Msg
+  | MsgAnnotation AnnotationControl.Msg
 
 subscriptions : () -> Sub Msg
 subscriptions () =
   onKeyDownSubscription
+
+wrapCmd : (msg -> Msg) -> (State, Children, Cmd msg) -> (State, Children, Cmd Msg)
+wrapCmd wrapMsg (state, children, cmd) =
+  (state, children, Cmd.map wrapMsg cmd)
 
 update : Msg -> (State, Children) -> (State, Children, Cmd Msg)
 update msg (state, children) =
@@ -23,22 +30,18 @@ update msg (state, children) =
     MsgNoop -> (state, children, Cmd.none)
     MsgMapKeyDown key -> processKey key state children
     MsgNode nodeMsg ->
-      let 
-        (newState, newChildren, cmd) =
-          NodeControl.update nodeMsg (state, children)
-      in
-      (newState, newChildren, Cmd.map MsgNode cmd)
+      wrapCmd MsgNode (NodeControl.update nodeMsg (state, children))
+    MsgAnnotation annotationMsg ->
+      wrapCmd MsgAnnotation (AnnotationControl.update annotationMsg (state, children))
 
 processKey : Key -> State -> Children -> (State, Children, Cmd Msg)
 processKey key state children =
-  let
-    (newState, newChildren, cmd) =
-      if NodeControl.handlesKey key.code state then
-        NodeControl.handleKey key.code state children
-      else
-        (state, children, Cmd.none)
-  in
-  (newState, newChildren, Cmd.map MsgNode cmd)
+  if NodeControl.handlesKey key state then
+    wrapCmd MsgNode (NodeControl.handleKey key state children)
+  else if AnnotationControl.handlesKey key state then
+    wrapCmd MsgAnnotation (AnnotationControl.handleKey key state children)
+  else
+    (state, children, Cmd.none)
 
 port portOnKeyDown : (Decoder.Value -> msg) -> Sub msg
 
@@ -47,9 +50,7 @@ onKeyDownSubscription =
   portOnKeyDown
     (Decoder.decodeValue keyDecoder >> toMsgOrNoop MsgMapKeyDown MsgNoop)
 
-type alias Key =
-  { code : String }
-
+-- TODO: Need to decode shift/ctrl/etc
 keyDecoder : Decoder Key
 keyDecoder =
   succeed Key

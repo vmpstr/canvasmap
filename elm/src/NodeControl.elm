@@ -24,6 +24,7 @@ import Html exposing (Attribute)
 import Html.Attributes
 import Html.Events exposing (custom, on)
 import Memento
+import EventUtils exposing (Key)
 
 type alias OnLabelChangedData =
   { targetId : Id
@@ -113,20 +114,21 @@ update msg (state, children) =
       in
       (newState, newChildren, cmd)
 
-handlesKey : String -> State -> Bool
+handlesKey : Key -> State -> Bool
 handlesKey key state =
-  if key == "Backspace" || key == "Delete" then
+  -- TODO: Compress this a bit into an unconditional statement
+  if key.code == "Backspace" || key.code == "Delete" then
     True
-  else if key == "Tab" && state.action == UserAction.Idle then
+  else if key.code == "Tab" && state.action == UserAction.Idle then
     True
-  else if key == "Enter" && state.action == UserAction.Idle then
+  else if key.code == "Enter" && state.action == UserAction.Idle then
     True
   else
     False
 
-handleKey : String -> State -> Children -> (State, Children, Cmd Msg)
+handleKey : Key -> State -> Children -> (State, Children, Cmd Msg)
 handleKey key state children =
-  if key == "Backspace" || key == "Delete" then
+  if key.code == "Backspace" || key.code == "Delete" then
     case state.selected of
        Just id ->
         -- We need to use memento force here so that we save state without
@@ -134,14 +136,14 @@ handleKey key state children =
         Memento.force update (MsgDeleteNode id) (state, children)
        Nothing ->
         (state, children, Cmd.none)
-  else if key == "Tab" && state.action == UserAction.Idle then
+  else if key.code == "Tab" && state.action == UserAction.Idle then
     case state.selected
           |> Maybe.andThen (pathToFirstChildOfId children) of
       Just path ->
         update (MsgNewNode path (NodeUtils.newNode children)) (state, children)
       Nothing ->
         (state, children, Cmd.none)
-  else if key == "Enter" && state.action == UserAction.Idle then
+  else if key.code == "Enter" && state.action == UserAction.Idle then
     case state.selected
           |> Maybe.andThen (pathToNextSiblingOfId children) of
       Just path ->

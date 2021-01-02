@@ -24,6 +24,7 @@ import MapModel exposing (Model, State)
 import InputControl
 import NodeControl
 import Layout
+import ViewStack
 
 
 initModel : Model
@@ -34,8 +35,26 @@ initModel =
       , drag = Nothing
       , editing = Nothing
       , selected = Nothing
+      , annotation = Nothing
+      , viewStack = [ ViewStack.Map ]
       }
   }
+
+viewForState : Model -> ViewStack.Type -> Html Msg
+viewForState model viewStack =
+  case viewStack of
+    ViewStack.Map -> Layout.view model
+    ViewStack.Annotation -> div [] [] 
+
+view : Model -> Html Msg
+view model =
+  div
+    [ class "app" ]
+    (List.foldr
+      (\viewStack list -> ((viewForState model viewStack) :: list))
+      []
+      model.state.viewStack
+    )
 
 moduleUpdate
   : (msg -> (State, Children) -> (State, Children, Cmd msg))
@@ -85,7 +104,7 @@ main : Program () Model Msg
 main =
     Browser.element
       { init = init
-      , view = Layout.view
+      , view = view
       , update = Memento.intercept update
       , subscriptions = subscriptions
       }

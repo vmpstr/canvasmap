@@ -21,11 +21,6 @@ import TreeSpec
 import UserAction
 import Utils exposing (toMsgOrNoop)
 
-
-{- TODO:
- - Add a separate resize user state, so that memento can pick this up.
--}
-
 type Msg
   = MsgNoop
   | MsgOnEwResizePointerDown OnPointerDownPortData

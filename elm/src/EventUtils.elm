@@ -7,3 +7,5 @@ type alias OnPointerDownPortData =
   , y : Float
   }
 
+type alias Key =
+  { code : String }
