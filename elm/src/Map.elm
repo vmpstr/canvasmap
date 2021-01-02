@@ -25,6 +25,8 @@ import InputControl
 import NodeControl
 import Layout
 import ViewStack
+import AnnotationControl
+import AnnotationView
 
 
 initModel : Model
@@ -43,14 +45,14 @@ initModel =
 viewForState : Model -> ViewStack.Type -> Html Msg
 viewForState model viewStack =
   case viewStack of
-    ViewStack.Map -> Layout.view model
-    ViewStack.Annotation -> div [] [] 
+    ViewStack.Map -> Layout.view identity model
+    ViewStack.Annotation -> AnnotationView.view MsgAnnotation model
 
 view : Model -> Html Msg
 view model =
   div
     [ class "app" ]
-    (List.foldr
+    (List.foldl
       (\viewStack list -> ((viewForState model viewStack) :: list))
       []
       model.state.viewStack
@@ -85,6 +87,8 @@ update msg model =
       moduleUpdate InputControl.update MsgInput inputMsg model
     MsgNode nodeMsg ->
       moduleUpdate NodeControl.update MsgNode nodeMsg model
+    MsgAnnotation annotationMsg ->
+      moduleUpdate AnnotationControl.update MsgAnnotation annotationMsg model
 
 
 -- Program setup.

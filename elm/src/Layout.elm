@@ -13,8 +13,8 @@ import Utils
 import TreeLayout
 import ScrollerLayout
 
-view : Model -> Html Msg
-view model =
+view : (Msg -> msg) -> Model -> Html msg
+view wrapMsg model =
   let
       nodes = childList model.nodes
       viewState = getInitialViewState model.state
@@ -24,12 +24,13 @@ view model =
           (DragControl.getDragNode model.state nodes
             |> Maybe.Extra.toList)
   in
-  div
-    [ class "map"
-    , NodeControl.onAddNewNodeAttribute MsgNode model.nodes
-    , NodeControl.onDeselectAttribute MsgNode
-    ]
-    (childrenViewList ++ dragViewList)
+  Html.map wrapMsg <|
+    div
+      [ class "map"
+      , NodeControl.onAddNewNodeAttribute MsgNode model.nodes
+      , NodeControl.onDeselectAttribute MsgNode
+      ]
+      (childrenViewList ++ dragViewList)
 
 viewDragNode : Node -> Html Msg
 viewDragNode node =

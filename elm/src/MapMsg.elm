@@ -6,6 +6,7 @@ import Memento
 import Tree
 import InputControl
 import NodeControl
+import AnnotationControl
 
 type Msg
   = MsgNoop
@@ -14,3 +15,4 @@ type Msg
   | MsgMemento Memento.Msg
   | MsgInput InputControl.Msg
   | MsgNode NodeControl.Msg
+  | MsgAnnotation AnnotationControl.Msg
