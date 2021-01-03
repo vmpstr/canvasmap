@@ -1,12 +1,11 @@
 module NodeUtils exposing (..)
 
 import Geometry
-import Json.Decode as Decoder exposing (Decoder, succeed, fail, string, float, nullable, bool)
+import Json.Decode as Decoder exposing (Decoder, succeed, fail, string, float, nullable, bool, list)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import Json.Encode as Encode
 import Node exposing (..)
 import TreeSpec
-
 
 -- General helpers
 attributePrefix : String
@@ -31,6 +30,7 @@ newNode children =
   , nodeType = NodeTypeTree
   , maxWidth = Nothing
   , maxHeight = Nothing
+  , annotations = []
   }
 
 -- Decoders
@@ -62,6 +62,11 @@ nodeTypeDecoder =
   in
   string |> Decoder.andThen stringToNodeType
 
+annotationDecoder : Decoder Annotation
+annotationDecoder =
+  succeed Annotation
+    |> required "url" string
+
 nodeDecoder : Decoder Node
 nodeDecoder =
   succeed Node
@@ -73,6 +78,7 @@ nodeDecoder =
     |> required "nodeType" nodeTypeDecoder
     |> optional "maxWidth" (nullable float) Nothing
     |> optional "maxHeight" (nullable float) Nothing
+    |> optional "annotations" (list annotationDecoder) []
 
 nodesDecoder : Decoder Children
 nodesDecoder =
@@ -94,6 +100,7 @@ type alias FlatNode =
   , shift : Bool
   , maxWidth : Maybe Float
   , maxHeight : Maybe Float
+  , annotations : List Annotation
   }
 
 flatNodeToNode : FlatNode -> Node
@@ -109,6 +116,7 @@ flatNodeToNode f =
   , nodeType = nodeType
   , maxWidth = f.maxWidth
   , maxHeight = f.maxHeight
+  , annotations = f.annotations
   }
 
 nodeFromClickDecoder : Children -> Decoder Node
@@ -123,7 +131,8 @@ nodeFromClickDecoder children =
         |> hardcoded (Children []) -- children
         |> required "shiftKey" bool -- shift
         |> hardcoded Nothing -- maxWidth
-        |> hardcoded Nothing)) -- maxHeight
+        |> hardcoded Nothing -- maxHeight
+        |> hardcoded [])) -- annotations
 
 -- Encoders
 encodeId : Id -> Encode.Value
@@ -142,6 +151,11 @@ dimensionToEncodeList name mvalue =
     Just value -> [(name, Encode.float value)]
     Nothing -> []
 
+encodeAnnotation : Annotation -> Encode.Value
+encodeAnnotation annotation =
+  Encode.object
+    ([ ("url", Encode.string annotation.url) ])
+
 encodeNode : Node -> Encode.Value
 encodeNode node =
   Encode.object
@@ -150,6 +164,7 @@ encodeNode node =
     , ("position", Geometry.encodeVector node.position)
     , ("children", encodeNodes node.children)
     , ("nodeType", encodeNodeType node.nodeType)
+    , ("annotations", Encode.list encodeAnnotation node.annotations)
     ] ++
     (dimensionToEncodeList "maxWidth" node.maxWidth) ++
     (dimensionToEncodeList "maxHeight" node.maxHeight))

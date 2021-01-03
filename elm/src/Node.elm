@@ -4,6 +4,7 @@ module Node exposing
   , Id
   , Node
   , NodeType(..)
+  , Annotation
   )
 
 import Geometry exposing (Vector)
@@ -20,6 +21,10 @@ type NodeType
   = NodeTypeTree
   | NodeTypeScroller
 
+type alias Annotation =
+  { url : String
+  }
+
 type alias Node =
   { id : Id
   , label : String
@@ -29,4 +34,5 @@ type alias Node =
   , nodeType : NodeType
   , maxWidth : Maybe Float
   , maxHeight : Maybe Float
+  , annotations : List Annotation
   }

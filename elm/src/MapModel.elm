@@ -4,6 +4,7 @@ import DragControl
 import UserAction
 import Node exposing (Id, Children(..))
 import ViewStack
+import AnnotationControl
 
 type alias Model =
   { nodes : Children
@@ -16,6 +17,6 @@ type alias State =
   , drag : Maybe DragControl.State
   , editing : Maybe Id
   , selected : Maybe Id
-  , annotation : Maybe Id
+  , annotation : Maybe AnnotationControl.State
   , viewStack : List (ViewStack.Type)
   }
