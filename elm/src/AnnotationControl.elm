@@ -5,9 +5,18 @@ import EventUtils exposing (Key)
 import Node exposing (Children, Id)
 import UserAction
 import ViewStack
+import Html exposing (Attribute)
+import Html.Events exposing (custom)
+import MsgUtils
+import Json.Decode as Decoder exposing (Decoder, succeed)
 
 type Msg
   = MsgNoop
+  | MsgEndAnnotations
+
+endAnnotationsAttribute : Attribute Msg
+endAnnotationsAttribute =
+  custom "click" onEndAnnotationsClickDecoder
 
 startAnnotations : Id -> State -> Children -> (State, Children, Cmd Msg)
 startAnnotations id state children =
@@ -52,4 +61,10 @@ handleKey key state children =
 
 update : Msg -> (State, Children) -> (State, Children, Cmd Msg)
 update msg (state, children) =
-  (state, children, Cmd.none)
+  case msg of
+    MsgNoop -> (state, children, Cmd.none)
+    MsgEndAnnotations -> endAnnotations state children
+
+onEndAnnotationsClickDecoder : Decoder (MsgUtils.MsgWithEventOptions Msg)
+onEndAnnotationsClickDecoder =
+  Decoder.map MsgUtils.andStopPropagation (succeed MsgEndAnnotations)

@@ -8,6 +8,7 @@ for parity:
 
 for replacement:
 - github auto populate
+- zoom scroll wheel / pinch?
 
 other:
 - error system (e.g. when memento fails to load or parse)
