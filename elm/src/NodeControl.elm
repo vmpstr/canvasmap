@@ -25,6 +25,8 @@ import Html.Attributes
 import Html.Events exposing (custom, on)
 import Memento
 import EventUtils exposing (Key)
+import Task
+import Utils
 
 type alias OnLabelChangedData =
   { targetId : Id
@@ -35,7 +37,7 @@ type Msg
   = MsgNoop
   | MsgOnLabelChanged OnLabelChangedData
   | MsgEditLabel Id
-  | MsgNewNode Tree.Path Node
+  | MsgNewNode (Tree.Path, Node)
   | MsgSelectNode (Maybe Id)
   | MsgDeleteNode Id
 
@@ -87,13 +89,14 @@ update msg (state, children) =
       in
       (newState, newChildren, Cmd.none)
 
-    MsgNewNode path node ->
+    MsgNewNode (path, node) ->
       let 
+        insertedChildren = insertChild children path node
         (selectState, selectCmd) = selectNode state (Just node.id)
         (newState, newChildren, editCmd) =
           update
             (MsgEditLabel node.id)
-            (selectState, children)
+            (selectState, insertedChildren)
       in
       (newState, newChildren, [ selectCmd, editCmd ] |> Cmd.batch)
 
@@ -112,7 +115,7 @@ update msg (state, children) =
             (state, Cmd.none)
         newChildren = removeChild children id
       in
-      (newState, newChildren, cmd)
+      Memento.force (newState, newChildren, cmd)
 
 handlesKey : Key -> State -> Bool
 handlesKey key state =
@@ -128,30 +131,24 @@ handlesKey key state =
 
 handleKey : Key -> State -> Children -> (State, Children, Cmd Msg)
 handleKey key state children =
-  if key.code == "Backspace" || key.code == "Delete" then
-    case state.selected of
-       Just id ->
-        -- We need to use memento force here so that we save state without
-        -- the user action changing.
-        Memento.force update (MsgDeleteNode id) (state, children)
-       Nothing ->
-        (state, children, Cmd.none)
-  else if key.code == "Tab" && state.action == UserAction.Idle then
-    case state.selected
-          |> Maybe.andThen (pathToFirstChildOfId children) of
-      Just path ->
-        update (MsgNewNode path (NodeUtils.newNode children)) (state, children)
-      Nothing ->
-        (state, children, Cmd.none)
-  else if key.code == "Enter" && state.action == UserAction.Idle then
-    case state.selected
-          |> Maybe.andThen (pathToNextSiblingOfId children) of
-      Just path ->
-        update (MsgNewNode path (NodeUtils.newNode children)) (state, children)
-      Nothing ->
-        (state, children, Cmd.none)
-  else
-    (state, children, Cmd.none)
+  let
+    cmd =
+      if key.code == "Backspace" || key.code == "Delete" then
+        case state.selected of
+          Just id -> (MsgDeleteNode id) |> Utils.msgToCmd
+          Nothing -> Cmd.none
+      else if key.code == "Tab" && state.action == UserAction.Idle then
+        case state.selected |> Maybe.andThen (pathToFirstChildOfId children) of
+          Just path -> MsgNewNode (path, (NodeUtils.newNode children)) |> Utils.msgToCmd
+          Nothing -> Cmd.none
+      else if key.code == "Enter" && state.action == UserAction.Idle then
+        case state.selected |> Maybe.andThen (pathToNextSiblingOfId children) of
+          Just path -> MsgNewNode (path, (NodeUtils.newNode children)) |> Utils.msgToCmd
+          Nothing -> Cmd.none
+      else
+        Cmd.none
+  in
+  (state, children, cmd)
 
 pathToNextSiblingOfId : Children -> Id -> Maybe Tree.Path
 pathToNextSiblingOfId (Children nodes) id =
@@ -240,6 +237,6 @@ onEditLabelClickDecoder targetId =
 
 onAddNewNodeClickDecoder : Children -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onAddNewNodeClickDecoder children =
-  Decoder.map (MsgNewNode (Tree.AtIndex 0) >> MsgUtils.andStopPropagation)
+  Decoder.map (Tuple.pair (Tree.AtIndex 0) >> MsgNewNode >> MsgUtils.andStopPropagation)
     (nodeFromClickDecoder children)
     

@@ -5,7 +5,10 @@ module Utils exposing
   , listApply
   , maybeArray
   , asPx
+  , msgToCmd
   )
+
+import Task
 
 maybeJust : Bool -> a -> Maybe a
 maybeJust condition data =
@@ -20,6 +23,10 @@ maybeCmd condition cmd =
     cmd ()
   else
     Cmd.none
+
+msgToCmd : a -> Cmd a
+msgToCmd msg =
+  Task.succeed msg |> Task.perform identity
 
 toMsgOrNoop : (data -> msg) -> msg -> Result err data -> msg
 toMsgOrNoop toMsg noop result =

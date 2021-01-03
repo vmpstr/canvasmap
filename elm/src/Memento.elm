@@ -21,25 +21,19 @@ port portLoadState : () -> Cmd msg
 loadLatestState : () -> Cmd msg
 loadLatestState = portLoadState
 
-force : (msg -> (State, Children) -> (State, Children, Cmd msg)) -> msg -> (State, Children) -> (State, Children, Cmd msg)
-force updater msg (state, children) =
+force : (State, Children, Cmd msg) -> (State, Children, Cmd msg)
+force (state, children, cmd) =
   let
-    (newState, newChildren, cmd) = updater msg (state, children)
-    saveCmd = encodeNodes newChildren |> portSaveState
+    saveCmd = encodeNodes children |> portSaveState
   in
-  (newState, newChildren, [cmd, saveCmd] |> Cmd.batch)
+  (state, children, [cmd, saveCmd] |> Cmd.batch)
 
 intercept : (msg -> Model -> (Model, Cmd msg)) -> msg -> Model -> (Model, Cmd msg)
 intercept updater msg model =
   let
     (newModel, cmd) = updater msg model
-    isDelete = False
     saveCmd =
-      -- The reason we save isDelete is that there is no action change
-      -- when this happens. Create, for example, comes with an automatic
-      -- label edit which causes a state change.
-      -- TODO: Make this more elegant somehow (remove not isdelete?)
-      if (not isDelete) && model.state.action == newModel.state.action then
+      if model.state.action == newModel.state.action then
         Cmd.none
       else
         encodeNodes newModel.nodes |> portSaveState
