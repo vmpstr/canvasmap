@@ -1,15 +1,15 @@
 module TreeSpec exposing (findNode, moveNode, nodeAtById, updateNode, removeNode, addNode, findMaxId, updateNodeById)
 
-import Node exposing (Node, Id, Children(..), childList)
+import Node exposing (Node, NodeId, Children(..), childList)
 import Tree
 
-findNode : List Node -> Id -> Maybe Tree.Path
+findNode : List Node -> NodeId -> Maybe Tree.Path
 findNode = Tree.findNode childList
 
 moveNode : List Node -> Tree.Path -> Tree.Path -> List Node
 moveNode = Tree.moveNode Children childList
 
-nodeAtById : List Node -> Id -> Maybe Node
+nodeAtById : List Node -> NodeId -> Maybe Node
 nodeAtById = Tree.nodeAtById childList
 
 updateNode : List Node -> Tree.Path -> (Node -> Node) -> List Node
@@ -31,7 +31,7 @@ findMaxId (Children nodes) =
       )
     )
 
-updateNodeById : List Node -> Id -> (Node -> Node) -> List Node
+updateNodeById : List Node -> NodeId -> (Node -> Node) -> List Node
 updateNodeById nodes id updater =
   case findNode nodes id of
     Just path -> updateNode nodes path updater

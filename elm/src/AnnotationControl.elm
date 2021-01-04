@@ -1,7 +1,7 @@
 module AnnotationControl exposing (..)
 
 import EventUtils exposing (Key)
-import Node exposing (Children, Id)
+import Node exposing (Children, NodeId)
 import UserAction
 import ViewStack
 import Html exposing (Attribute)
@@ -14,7 +14,7 @@ type Msg
   | MsgEndAnnotations
 
 type alias State =
-  { nodeId : Id
+  { nodeId : NodeId
   }
 
 type alias AppState a =
@@ -22,14 +22,14 @@ type alias AppState a =
     | action : UserAction.Action
     , annotation : Maybe State
     , viewStack : List (ViewStack.Type)
-    , selected : Maybe Id
+    , selected : Maybe NodeId
   }
 
 endAnnotationsAttribute : Attribute Msg
 endAnnotationsAttribute =
   custom "click" onEndAnnotationsClickDecoder
 
-getStateForNode : Children -> Id -> State
+getStateForNode : Children -> NodeId -> State
 getStateForNode children id =
   { nodeId = id }
 
@@ -37,7 +37,7 @@ setStateForNode : Children -> State -> Children
 setStateForNode children state =
   children
 
-startAnnotations : Id -> AppState a -> Children -> (AppState a, Children, Cmd Msg)
+startAnnotations : NodeId -> AppState a -> Children -> (AppState a, Children, Cmd Msg)
 startAnnotations id state children =
   let
     newState =

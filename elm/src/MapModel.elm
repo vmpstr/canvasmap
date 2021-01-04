@@ -2,7 +2,7 @@ module MapModel exposing (..)
 
 import DragControl
 import UserAction
-import Node exposing (Id, Children(..))
+import Node exposing (NodeId, Children(..))
 import ViewStack
 import AnnotationControl
 
@@ -15,8 +15,8 @@ type alias Model =
 type alias State =
   { action : UserAction.Action
   , drag : Maybe DragControl.State
-  , editing : Maybe Id
-  , selected : Maybe Id
+  , editing : Maybe NodeId
+  , selected : Maybe NodeId
   , annotation : Maybe AnnotationControl.State
   , viewStack : List (ViewStack.Type)
   }

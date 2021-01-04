@@ -11,11 +11,11 @@ import TreeSpec
 attributePrefix : String
 attributePrefix = "n"
 
-idToAttribute : Id -> String
+idToAttribute : NodeId -> String
 idToAttribute id =
   attributePrefix ++ String.fromInt id
 
-idToShadowAttribute : Id -> String
+idToShadowAttribute : NodeId -> String
 idToShadowAttribute id =
   "shadow-" ++ idToAttribute id
 
@@ -34,7 +34,7 @@ newNode children =
   }
 
 -- Decoders
-decodeId : String -> Decoder Id
+decodeId : String -> Decoder NodeId
 decodeId str =
   if String.startsWith attributePrefix str then
     case String.dropLeft (String.length attributePrefix) str |> String.toInt of
@@ -45,7 +45,7 @@ decodeId str =
   else
     fail ("Invalid id " ++ str)
 
-idAttributeDecoder : Decoder Id
+idAttributeDecoder : Decoder NodeId
 idAttributeDecoder =
   string |> Decoder.andThen decodeId
 
@@ -135,7 +135,7 @@ nodeFromClickDecoder children =
         |> hardcoded [])) -- annotations
 
 -- Encoders
-encodeId : Id -> Encode.Value
+encodeId : NodeId -> Encode.Value
 encodeId id =
   Encode.int id
 

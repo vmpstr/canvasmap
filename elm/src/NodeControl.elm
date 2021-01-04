@@ -11,7 +11,7 @@ port module NodeControl exposing
   , handleKey
   )
 
-import Node exposing (Id, Node, Children(..), childList)
+import Node exposing (NodeId, Node, Children(..), childList)
 import MapModel exposing (State)
 import Tree
 import NodeUtils exposing (idToAttribute, nodeFromClickDecoder)
@@ -29,34 +29,34 @@ import Task
 import Utils
 
 type alias OnLabelChangedData =
-  { targetId : Id
+  { targetId : NodeId
   , label : String
   }
 
 type Msg
   = MsgNoop
   | MsgOnLabelChanged OnLabelChangedData
-  | MsgEditLabel Id
+  | MsgEditLabel NodeId
   | MsgNewNode (Tree.Path, Node)
-  | MsgSelectNode (Maybe Id)
-  | MsgDeleteNode Id
+  | MsgSelectNode (Maybe NodeId)
+  | MsgDeleteNode NodeId
 
 onDeselectAttribute : (Msg -> msg) -> Attribute msg
 onDeselectAttribute wrapMsg =
   Html.Attributes.map wrapMsg <|
     custom "click" (onSelectClickDecoder Nothing)
 
-onSelectAttribute : (Msg -> msg) -> Id -> Attribute msg
+onSelectAttribute : (Msg -> msg) -> NodeId -> Attribute msg
 onSelectAttribute wrapMsg id =
   Html.Attributes.map wrapMsg <|
     custom "click" (onSelectClickDecoder (Just id))
 
-onEditLabelAttribute : (Msg -> msg) -> Id -> Attribute msg
+onEditLabelAttribute : (Msg -> msg) -> NodeId -> Attribute msg
 onEditLabelAttribute wrapMsg id =
   Html.Attributes.map wrapMsg <|
     custom "dblclick" (onEditLabelClickDecoder id)
 
-onLabelChangedAttribute : (Msg -> msg) -> Id -> Attribute msg
+onLabelChangedAttribute : (Msg -> msg) -> NodeId -> Attribute msg
 onLabelChangedAttribute wrapMsg id =
   Html.Attributes.map wrapMsg <|
     on "labelchanged" (onLabelChangedDecoder id)
@@ -150,7 +150,7 @@ handleKey key state children =
   in
   (state, children, cmd)
 
-pathToNextSiblingOfId : Children -> Id -> Maybe Tree.Path
+pathToNextSiblingOfId : Children -> NodeId -> Maybe Tree.Path
 pathToNextSiblingOfId (Children nodes) id =
   case TreeSpec.findNode nodes id of
     Just path ->
@@ -161,7 +161,7 @@ pathToNextSiblingOfId (Children nodes) id =
     Nothing ->
       Nothing
 
-pathToFirstChildOfId : Children -> Id -> Maybe Tree.Path
+pathToFirstChildOfId : Children -> NodeId -> Maybe Tree.Path
 pathToFirstChildOfId (Children nodes) id =
   case TreeSpec.findNode nodes id of
     Just path ->
@@ -169,7 +169,7 @@ pathToFirstChildOfId (Children nodes) id =
     Nothing ->
       Nothing
 
-selectNode : State -> Maybe Id -> (State, Cmd Msg)
+selectNode : State -> Maybe NodeId -> (State, Cmd Msg)
 selectNode state id =
   let
     cmd =
@@ -186,7 +186,7 @@ insertChild : Children -> Tree.Path -> Node -> Children
 insertChild (Children nodes) path node =
   Children (TreeSpec.addNode nodes path node)
 
-removeChild : Children -> Id -> Children
+removeChild : Children -> NodeId -> Children
 removeChild (Children nodes) id =
   let
     mpath = TreeSpec.findNode nodes id
@@ -198,7 +198,7 @@ removeChild (Children nodes) id =
       Children nodes
 
 
-applyLabelChange : Children -> Id -> String -> Children
+applyLabelChange : Children -> NodeId -> String -> Children
 applyLabelChange (Children nodes) targetId label =
   let updater node = { node | label = label } in
   case TreeSpec.findNode nodes targetId of
@@ -211,26 +211,26 @@ endEditLabelState : State -> State
 endEditLabelState state =
   { state | action = UserAction.Idle, drag = Nothing, editing = Nothing }
 
-applyEditLabelState : State -> Id -> State
+applyEditLabelState : State -> NodeId -> State
 applyEditLabelState state id =
   { state | action = UserAction.Editing, drag = Nothing, editing = Just id }
 
 subscriptions : () -> Sub Msg
 subscriptions () = Sub.none
 
-onLabelChangedDecoder : Id -> Decoder Msg
+onLabelChangedDecoder : NodeId -> Decoder Msg
 onLabelChangedDecoder targetId =
   Decoder.map MsgOnLabelChanged
     (succeed OnLabelChangedData
       |> hardcoded targetId
       |> required "detail" (field "label" string))
 
-onSelectClickDecoder : Maybe Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
+onSelectClickDecoder : Maybe NodeId -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onSelectClickDecoder targetId =
   Decoder.map (MsgSelectNode >> MsgUtils.andStopPropagation)
     (succeed targetId)
 
-onEditLabelClickDecoder : Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
+onEditLabelClickDecoder : NodeId -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onEditLabelClickDecoder targetId =
   Decoder.map (MsgEditLabel >> MsgUtils.andStopPropagation)
     (succeed targetId)

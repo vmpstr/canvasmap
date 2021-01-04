@@ -10,7 +10,7 @@ import Json.Encode as Encode
 import MapMsg exposing (..)
 import MapView exposing (ViewState)
 import Maybe.Extra
-import Node exposing (Node, Children(..), childList, Id, NodeType(..))
+import Node exposing (Node, Children(..), childList, NodeId, NodeType(..))
 import NodeUtils exposing (idToAttribute, nodesDecoder, encodeNodes)
 import ResizeControl
 import ScrollerLayout

@@ -7,7 +7,7 @@ import Html.Events exposing (on, custom)
 import MapMsg exposing (Msg(..))
 import MapMsg exposing (Msg)
 import MapView exposing (ViewState)
-import Node exposing (Node, Children(..), childList, Id, NodeType(..))
+import Node exposing (Node, Children(..), childList, NodeId, NodeType(..))
 import NodeUtils exposing (idToAttribute, idToShadowAttribute)
 import ResizeControl
 import Utils exposing (asPx)

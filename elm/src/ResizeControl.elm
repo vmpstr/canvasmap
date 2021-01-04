@@ -15,7 +15,7 @@ import Html.Events exposing (custom, on)
 import Json.Decode as Decoder exposing (Decoder, succeed, nullable, float, string, field)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import MsgUtils
-import Node exposing (Id, Children(..))
+import Node exposing (NodeId, Children(..))
 import NodeUtils exposing (idAttributeDecoder, idToAttribute)
 import TreeSpec
 import UserAction
@@ -31,7 +31,7 @@ type Msg
   | MsgOnResizeEnd
   | MsgOnChildEdgeHeightChanged OnChildEdgeHeightChangedData
 
-ewResizer : (Msg -> msg) -> Id -> Html msg 
+ewResizer : (Msg -> msg) -> NodeId -> Html msg 
 ewResizer wrapMsg id =
   Html.map wrapMsg <|
     div
@@ -39,7 +39,7 @@ ewResizer wrapMsg id =
       , custom "pointerdown" (onEwResizePointerDown id)
       ] []
 
-nsResizer : (Msg -> msg) -> Id -> Html msg 
+nsResizer : (Msg -> msg) -> NodeId -> Html msg 
 nsResizer wrapMsg id =
   Html.map wrapMsg <|
     div
@@ -47,7 +47,7 @@ nsResizer wrapMsg id =
       , custom "pointerdown" (onNsResizePointerDown id)
       ] []
 
-nsewResizer : (Msg -> msg) -> Id -> Html msg 
+nsewResizer : (Msg -> msg) -> NodeId -> Html msg 
 nsewResizer wrapMsg id =
   Html.map wrapMsg <|
     div
@@ -55,7 +55,7 @@ nsewResizer wrapMsg id =
       , custom "pointerdown" (onNsewResizePointerDown id)
       ] []
 
-onChildEdgeHeightChangedAttribute : (Msg -> msg) -> Id -> Attribute msg
+onChildEdgeHeightChangedAttribute : (Msg -> msg) -> NodeId -> Attribute msg
 onChildEdgeHeightChangedAttribute wrapMsg id =
   Html.Attributes.map wrapMsg <|
     on "childedgeheightchanged" (onChildEdgeHeightChangedDecoder id)
@@ -144,11 +144,11 @@ type alias AppState a =
   }
 
 type alias OnMaxDimensionChangedData =
-  { targetId : Id
+  { targetId : NodeId
   , value: Maybe Float
   }
 
-onEwResizePointerDown : Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
+onEwResizePointerDown : NodeId -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onEwResizePointerDown targetId =
   Decoder.map (MsgOnEwResizePointerDown >> MsgUtils.andStopPropagation)
     (succeed OnPointerDownPortData
@@ -157,7 +157,7 @@ onEwResizePointerDown targetId =
       |> required "clientX" float
       |> required "clientY" float)
 
-onNsResizePointerDown : Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
+onNsResizePointerDown : NodeId -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onNsResizePointerDown targetId =
   Decoder.map (MsgOnNsResizePointerDown >> MsgUtils.andStopPropagation)
     (succeed OnPointerDownPortData
@@ -166,7 +166,7 @@ onNsResizePointerDown targetId =
       |> required "clientX" float
       |> required "clientY" float)
 
-onNsewResizePointerDown : Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
+onNsewResizePointerDown : NodeId -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onNsewResizePointerDown targetId =
   Decoder.map (MsgOnNsewResizePointerDown >> MsgUtils.andStopPropagation)
     (succeed OnPointerDownPortData
@@ -206,7 +206,7 @@ endResize appState =
     appState
 
 type alias OnChildEdgeHeightChangedData =
-  { targetId : Id
+  { targetId : NodeId
   , height: Float
   }
 
@@ -219,7 +219,7 @@ applyChildEdgeHeightChange (Children nodes) { targetId, height } =
     Nothing ->
       Children nodes
 
-onChildEdgeHeightChangedDecoder : Id -> Decoder Msg
+onChildEdgeHeightChangedDecoder : NodeId -> Decoder Msg
 onChildEdgeHeightChangedDecoder targetId =
   Decoder.map MsgOnChildEdgeHeightChanged
     (succeed OnChildEdgeHeightChangedData

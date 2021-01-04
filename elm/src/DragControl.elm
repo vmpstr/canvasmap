@@ -18,7 +18,7 @@ import Json.Decode as Decoder exposing (Decoder, succeed, float, list, string)
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import MapView exposing (ViewState)
 import MsgUtils
-import Node exposing (Children(..), Node, Id, childList)
+import Node exposing (Children(..), Node, NodeId, childList)
 import NodeUtils exposing (idAttributeDecoder, idToShadowAttribute, idToAttribute)
 import Tree exposing (Path(..), pathDecoder, isSubpath)
 import TreeSpec
@@ -42,7 +42,7 @@ type Msg
   | MsgOnDragStop
 
 type alias State =
-  { dragId : Id
+  { dragId : NodeId
   }
 
 update : Msg -> (AppState a, Children) -> (AppState a, Children, Cmd Msg)
@@ -114,7 +114,7 @@ type alias AppState a =
   }
 
 type alias OnDragData =
-  { targetId : Id
+  { targetId : NodeId
   , dx : Float
   , dy : Float
   , geometry : Geometry
@@ -217,7 +217,7 @@ stopDrag : AppState a -> AppState a
 stopDrag appState =
   { appState | action = UserAction.Idle, drag = Nothing }
 
-setNodePosition : List Node -> Id -> Vector -> (Bool, List Node)
+setNodePosition : List Node -> NodeId -> Vector -> (Bool, List Node)
 setNodePosition nodes id position =
   case TreeSpec.findNode nodes id of
     Just path ->
@@ -316,11 +316,11 @@ onDragDecoder =
     |> optional "dy" float 0
     |> required "geometry" geometryDecoder
 
-onDragAttribute : Id -> Attribute Msg
+onDragAttribute : NodeId -> Attribute Msg
 onDragAttribute id =
   custom "pointerdown" (onDragPointerDownDecoder id)
 
-onDragPointerDownDecoder : Id -> Decoder (MsgUtils.MsgWithEventOptions Msg)
+onDragPointerDownDecoder : NodeId -> Decoder (MsgUtils.MsgWithEventOptions Msg)
 onDragPointerDownDecoder targetId =
   Decoder.map (MsgOnDragPointerDown >> MsgUtils.andStopPropagation)
     (succeed OnPointerDownPortData

@@ -1,16 +1,16 @@
 module MapView exposing (ViewState, defaultViewState)
 
-import Node exposing (Id)
+import Node exposing (NodeId)
 
 type alias ViewState =
   { viewBeacons : Bool
-  , dragId : Maybe Id
-  , editId : Maybe Id
+  , dragId : Maybe NodeId
+  , editId : Maybe NodeId
   , headBeaconPath : String
   , tailBeaconPath : String
   , shadow : Bool
   , htmlNodeId : String
-  , selected : Maybe Id
+  , selected : Maybe NodeId
   , showParentEdge : Bool
   }
 

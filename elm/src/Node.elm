@@ -1,7 +1,7 @@
 module Node exposing
   (Children(..)
   , childList
-  , Id
+  , NodeId
   , Node
   , NodeType(..)
   , Annotation
@@ -15,7 +15,7 @@ childList : Children -> List Node
 childList (Children nodes) =
   nodes
 
-type alias Id = Int
+type alias NodeId = Int
 
 type NodeType
   = NodeTypeTree
@@ -26,7 +26,7 @@ type alias Annotation =
   }
 
 type alias Node =
-  { id : Id
+  { id : NodeId
   , label : String
   , position : Vector
   , childEdgeHeight: Float
