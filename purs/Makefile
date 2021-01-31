@@ -1,9 +1,9 @@
-build:
-	spago bundle-app --main Main --to output/app.js
-	parcel build index.html --target "browser"
-
 compile:
-	spago build
+	spago bundle-app --main Main --to output/app.js
 
 watch:
 	spago build --watch
+
+deploy: compile
+	parcel build index.html --target "browser"
+
