@@ -1,6 +1,6 @@
 module App.Environment where
 
-import App.Logging as Log
+import Capabilities.Logging as Log
 import Data.Unit (Unit)
 
 type Environment =

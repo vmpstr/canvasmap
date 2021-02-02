@@ -9,6 +9,7 @@ import Data.Newtype (class Newtype, unwrap)
 newtype AppM a = AppM (ReaderT Environment Aff a)
 
 -- Instances:
+-- Newtype for wrap/unwrap
 derive instance appMNewtype :: Newtype (AppM a) _
 
 -- Functionality.
