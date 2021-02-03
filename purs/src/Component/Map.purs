@@ -1,6 +1,7 @@
 module Component.Map where
 
 import App.Monad (AppM)
+import Capabilities.Logging as Log
 import App.Data.Map as Map
 
 import Data.Maybe (Maybe(..))
@@ -9,6 +10,7 @@ import Data.Show (show)
 import Data.Semiring ((+))
 import Data.Ring ((-))
 import Data.Unit (Unit)
+import Control.Bind (discard)
 
 import Halogen as H
 import Halogen.HTML as HH
@@ -31,6 +33,14 @@ mkComponent _ =
       , HH.button [ HE.onClick \_ -> Just Increment ] [ HH.text "+" ]
       ]
 
-  handleAction = case _ of
-    Increment -> H.modify_ \state -> state + 1
-    Decrement -> H.modify_ \state -> state - 1
+  handleAction :: forall s o. Action -> H.HalogenM Int Action s o AppM Unit
+  handleAction action = do
+    Log.log Log.Warning "finally"
+    case action of
+      Increment -> do
+        Log.log Log.Info "incrementing"
+        H.modify_ \state -> state + 1
+      Decrement -> do
+        Log.log Log.Error "decrementing"
+        H.modify_ \state -> state - 1
+    Log.log Log.Debug "ok done"
