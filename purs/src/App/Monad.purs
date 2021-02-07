@@ -10,15 +10,14 @@ import Effect.Aff.Class (class MonadAff)
 import Data.Newtype (class Newtype, unwrap)
 import Data.Functor (class Functor)
 import Control.Apply (class Apply)
-import Control.Applicative (class Applicative, pure)
+import Control.Applicative (class Applicative, when)
 import Control.Bind (class Bind, bind)
 import Control.Monad (class Monad)
 import Effect.Class.Console as Console
 import Effect.Class (class MonadEffect, liftEffect)
 import Type.Equality as TE
 import Data.Ord ((<=))
-import Data.Function (($))
-import Data.Unit (unit)
+import Data.Function (($), (#))
 
 -- AppM monad: ReaderT pattern with environment and Aff base monad.
 newtype AppM a = AppM (ReaderT Environment Aff a)
@@ -42,10 +41,10 @@ instance appMMonadAsk :: TE.TypeEquals e Environment => MonadAsk e AppM where
 instance appMLogger :: Logger AppM where
   log level s = do
     env <- ask
-    if env.logLevel <= level then
-      liftEffect $ Console.log $ formatLog level s
-    else
-      pure unit
+    when (env.logLevel <= level) $
+      formatLog level s
+      # Console.log
+      # liftEffect
 
 -- Functionality.
 runAppM :: forall a. AppM a -> Environment -> Aff a
