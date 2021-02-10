@@ -1,12 +1,12 @@
 module App.Data.NodeImpl.ScrollerNode where
 
-import Data.Maybe (Maybe(..))
-import Data.Unit (unit)
 import Data.Show (class Show, show)
 import Data.Semigroup ((<>))
 
 import App.Data.NodeCommon (NodeId, NodePosition)
 import App.Data.NodeClass (class LayoutNode)
+
+import Halogen.HTML as HH
 
 newtype ScrollerNodeImpl = ScrollerNodeImpl
   { id :: NodeId
@@ -16,7 +16,7 @@ newtype ScrollerNodeImpl = ScrollerNodeImpl
   }
 
 instance scrollerNodeLayoutNode :: LayoutNode ScrollerNodeImpl where
-  render _ = Just unit
+  render _ _ _ = HH.div_ []
 
 instance scrollerNodeShow :: Show ScrollerNodeImpl where
   show (ScrollerNodeImpl n)

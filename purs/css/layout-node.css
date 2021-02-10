@@ -1,0 +1,13 @@
+.node {
+  box-sizing: border-box;
+  contain: layout;
+}
+
+.root {
+  will-change: transform;
+}
+
+.child {
+  margin-top: 5px;
+  max-width: max-content;
+}

@@ -5,5 +5,5 @@ watch:
 	spago build --watch
 
 deploy: compile
-	parcel build index.html --target "browser"
+	parcel build --public-url . index.html --target "browser"
 

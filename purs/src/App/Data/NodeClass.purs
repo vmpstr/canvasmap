@@ -1,7 +1,15 @@
 module App.Data.NodeClass where
 
-import Data.Maybe (Maybe)
-import Data.Unit (Unit)
+import App.Data.Map.Action as MapAction
+import App.Data.NodeCommon (NodeId)
+import App.Data.Map.ViewState (ViewState)
+
+import Halogen.HTML as HH
 
 class LayoutNode n where
-  render :: n -> Maybe Unit
+  render ::
+    forall slots
+    .  (ViewState -> NodeId -> Array (HH.HTML slots MapAction.Action))
+    -> ViewState
+    -> n
+    -> HH.HTML slots MapAction.Action
