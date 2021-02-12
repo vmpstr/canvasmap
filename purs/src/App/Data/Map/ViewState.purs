@@ -1,6 +1,9 @@
 module App.Data.Map.ViewState where
 
+import App.Data.NodeCommon (NodeId)
+
 import Data.Eq (class Eq)
+import Data.Maybe (Maybe)
 
 data ParentState
   = NoParent
@@ -13,11 +16,5 @@ type ViewState =
   { viewBeacons :: Boolean
   , shadow :: Boolean
   , parentState :: ParentState
-  }
-
-initialViewState :: ViewState
-initialViewState =
-  { viewBeacons: false
-  , shadow: false
-  , parentState: NoParent
+  , selected :: Maybe NodeId
   }

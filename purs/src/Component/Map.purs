@@ -2,7 +2,7 @@ module Component.Map where
 
 import App.Data.Map.Action as MapAction
 import App.Data.Map.State as MapState
-import App.Data.Map.ViewState (initialViewState, ViewState)
+import App.Data.Map.ViewState (ViewState)
 import App.Data.Node (Node, NodeId, errorNode)
 import App.Data.NodeClass (render)
 import App.Monad (AppM)
@@ -25,7 +25,7 @@ import Halogen.HTML.Properties as HP
 renderMap :: forall slots. MapState.State -> HH.HTML slots MapAction.Action
 renderMap state =
   let
-    viewState = initialViewState
+    viewState = MapState.toInitialViewState state
     noParent :: NodeId -> Boolean
     noParent nodeId =
       (lookup nodeId state.relations.parents) == Nothing

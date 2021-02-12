@@ -1,0 +1,33 @@
+.parent_edge {
+  border-bottom: 1px solid rgb(50, 50, 50);
+  border-left: 1px solid rgb(50, 50, 50);
+  box-sizing: border-box;
+  position: absolute;
+  right: 100%;
+  top: 0;
+  height: 50%;
+  width: 13px;
+  border-radius: 0 0 0 50%;
+}
+
+.contents_container {
+  align-items: center;
+  border-radius: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 1;
+  flex-wrap: nowrap;
+  padding: 10px;
+  width: 100%;
+}
+
+.child_edge {
+  position: absolute;
+  box-sizing: border-box;
+  top: 0;
+  left: 12px;
+  width: 0;
+  border-left: 1px solid rgb(50, 50, 50);
+}
+
