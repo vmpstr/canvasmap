@@ -2,6 +2,7 @@ module App.Data.NodeImpl.ScrollerNode where
 
 import Data.Show (class Show, show)
 import Data.Semigroup ((<>))
+import Data.Maybe (Maybe(..))
 
 import App.Data.NodeCommon (NodeId, NodePosition)
 import App.Data.NodeClass (class LayoutNode)
@@ -12,7 +13,8 @@ newtype ScrollerNodeImpl = ScrollerNodeImpl
   { id :: NodeId
   , label :: String
   , position :: NodePosition
-  , maxWidth :: Number
+  , maxWidth :: Maybe Number
+  , maxHeight :: Maybe Number
   }
 
 instance scrollerNodeLayoutNode :: LayoutNode ScrollerNodeImpl where
@@ -22,3 +24,12 @@ instance scrollerNodeShow :: Show ScrollerNodeImpl where
   show (ScrollerNodeImpl n)
     =  "  Id: " <> show n.id <> "\n"
     <> "  Label: " <> n.label  <> "\n"
+
+construct :: NodeId -> NodePosition -> ScrollerNodeImpl 
+construct id position = ScrollerNodeImpl
+  { id: id
+  , label: "New Task"
+  , position: position
+  , maxWidth: Nothing
+  , maxHeight: Nothing
+  }

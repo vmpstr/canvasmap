@@ -27,6 +27,7 @@ type State =
       }
   , selected :: Maybe NodeId
   , mode :: Mode
+  , maxId :: NodeId
   }
 
 initialState :: forall input. input -> State
@@ -38,6 +39,7 @@ initialState _ =
       }
   , selected: Nothing
   , mode: Idle
+  , maxId: (NodeId 1)
   }
 
 toInitialViewState :: State -> ViewState

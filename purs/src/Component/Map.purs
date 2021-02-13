@@ -4,9 +4,11 @@ import App.Data.Map.Action as MapAction
 import App.Data.Map.State as MapState
 import App.Data.Map.ViewState (ViewState)
 import App.Data.Node (Node, NodeId, errorNode)
+import App.Data.NodeCommon (NodePath(..), nextId)
 import App.Data.NodeClass (render)
 import App.Monad (AppM)
 import Capabilities.Logging as Log
+import App.Control.Node as NodeControl
 
 import Control.Bind (discard)
 import Data.Eq ((==))
@@ -19,8 +21,12 @@ import Data.Unit (Unit, unit)
 import Data.Semigroup ((<>))
 import Data.Show (show)
 import Control.Applicative (pure)
+import Data.Tuple (Tuple(..))
+import Data.Int (toNumber)
+import Data.Ring ((-))
 
 import Web.Event.Event (stopPropagation)
+import Web.UIEvent.MouseEvent (clientX, clientY)
 
 import Halogen as H
 import Halogen.HTML as HH
@@ -55,6 +61,7 @@ renderMap state =
   HH.div
     [ HP.class_ (HH.ClassName "map")
     , HE.onClick \_ -> Just $ MapAction.Select Nothing
+    , HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (clientX e) (clientY e)
     ]
     (map (render renderChildren viewState) rootNodes)
 
@@ -70,7 +77,17 @@ handleAction action = do
       H.liftEffect $ stopPropagation event
       handleAction nextAction
     MapAction.Select selection -> do
-      H.modify_ \s -> s { selected = selection }
+      H.modify_ _ { selected = selection }
+    MapAction.NewTopNode x y -> do
+      let
+        x' = toNumber x - 40.0
+        y' = toNumber y - 20.0
+      H.modify_ \state ->
+        let
+          id = nextId state.maxId
+          state' = NodeControl.newNode id (Top $ Tuple x' y') state
+        in
+        state' { maxId = id, selected = Just id }
 
 mkComponent ::
   forall query input output.

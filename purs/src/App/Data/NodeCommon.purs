@@ -6,6 +6,8 @@ import Data.Show (class Show, show)
 import Control.Bind (discard)
 import Data.Function (($))
 import Data.Semigroup ((<>))
+import Data.Tuple (Tuple)
+import Data.Semiring ((+))
 
 import CSS.Stylesheet (CSS)
 import CSS.Display as CSSDisplay
@@ -16,6 +18,9 @@ newtype NodeId = NodeId Int
 derive newtype instance nodeIdEq :: Eq NodeId
 derive newtype instance nodeIdOrd :: Ord NodeId
 derive newtype instance nodeIdShow :: Show NodeId
+
+nextId :: NodeId -> NodeId
+nextId (NodeId n) = NodeId $ n + 1
 
 nodeAttributePrefix :: String
 nodeAttributePrefix = "n"
@@ -37,3 +42,8 @@ positionToCSS = case _ of
   Static  ->
     do
       CSSDisplay.position CSSDisplay.static
+
+data NodePath
+  = Top (Tuple Number Number)
+  | NextSibling NodeId
+  | FirstChild NodeId

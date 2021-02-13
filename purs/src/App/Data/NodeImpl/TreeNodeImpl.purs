@@ -95,3 +95,11 @@ instance treeNodeShow :: Show TreeNodeImpl where
   show (TreeNodeImpl details)
     =  "  Id: " <> show details.id <> "\n"
     <> "  Label: " <> details.label  <> "\n"
+
+construct :: NodeId -> NodePosition -> TreeNodeImpl 
+construct id position = TreeNodeImpl
+  { id: id
+  , label: "New Task"
+  , position: position
+  , maxWidth: Nothing
+  }

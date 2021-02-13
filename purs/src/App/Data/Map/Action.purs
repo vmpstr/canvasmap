@@ -12,9 +12,11 @@ data Action
   = Noop 
   | StopPropagation Event Action
   | Select (Maybe NodeId)
+  | NewTopNode Int Int
 
 instance actionShow :: Show Action where
   show Noop = "Noop"
   show (StopPropagation event action) = "StopPropagation & " <> show action
   show (Select maybeId) = "Select " <> show maybeId
+  show (NewTopNode x y) = "NewTopNode " <> show x <> " " <> show y
 

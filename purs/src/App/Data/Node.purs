@@ -1,7 +1,9 @@
-module App.Data.Node (module App.Data.NodeCommon, Node(..), errorNode) where
+module App.Data.Node (module App.Data.NodeCommon, Node(..), errorNode, NodeType(..), constructNode) where
 
 import App.Data.NodeClass (class LayoutNode, render)
 import App.Data.NodeImpl.ScrollerNode (ScrollerNodeImpl)
+import App.Data.NodeImpl.ScrollerNode as ScrollerNodeImpl
+import App.Data.NodeImpl.TreeNode as TreeNodeImpl
 import App.Data.NodeImpl.TreeNode (TreeNodeImpl(..))
 import App.Data.NodeCommon
 
@@ -34,3 +36,10 @@ errorNode id =
     , maxWidth: Nothing
     }
 
+data NodeType 
+  = TreeNodeType
+  | ScrollerNodeType
+
+constructNode :: NodeType -> NodeId -> NodePosition -> Node
+constructNode TreeNodeType id position = TreeNode $ TreeNodeImpl.construct id position
+constructNode ScrollerNodeType id position = ScrollerNode $ ScrollerNodeImpl.construct id position
