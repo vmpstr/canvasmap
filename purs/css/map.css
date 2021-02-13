@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'Lato', sans-serif;
+  font-size: 15px;
+  user-select: none;
+  height: 100vh;
+}
+
+.map {
+  background: lightblue;
+  contain: layout;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}

@@ -10,9 +10,14 @@ import Data.Map as Map
 import Data.Function (($))
 import Data.Maybe (Maybe(..))
 
+-- TODO(vmpstr): Move this to a separate file
 data Mode
   = Idle
-  | Drag
+  | Drag NodeId
+
+isDrag :: Mode -> Boolean
+isDrag (Drag _) = true
+isDrag _ = false
 
 type State =
   { nodes :: Map NodeId Node
@@ -34,10 +39,6 @@ initialState _ =
   , selected: Nothing
   , mode: Idle
   }
-
-isDrag :: Mode -> Boolean
-isDrag Drag = true
-isDrag _ = false
 
 toInitialViewState :: State -> ViewState
 toInitialViewState state =

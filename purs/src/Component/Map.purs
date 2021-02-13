@@ -15,11 +15,16 @@ import Data.Functor (map)
 import Data.List (toUnfoldable)
 import Data.Map (values, lookup, filterKeys)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Unit (Unit)
+import Data.Unit (Unit, unit)
+import Data.Semigroup ((<>))
+import Data.Show (show)
+import Control.Applicative (pure)
+
+import Web.Event.Event (stopPropagation)
 
 import Halogen as H
 import Halogen.HTML as HH
---import Halogen.HT ML.Events as HE
+import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 renderMap :: forall slots. MapState.State -> HH.HTML slots MapAction.Action
@@ -48,7 +53,9 @@ renderMap state =
 
   in
   HH.div
-    [ HP.class_ (HH.ClassName "map") ]
+    [ HP.class_ (HH.ClassName "map")
+    , HE.onClick \_ -> Just $ MapAction.Select Nothing
+    ]
     (map (render renderChildren viewState) rootNodes)
 
 handleAction ::
@@ -56,13 +63,14 @@ handleAction ::
   MapAction.Action
   -> H.HalogenM MapState.State MapAction.Action s o AppM Unit
 handleAction action = do
-  Log.log Log.Warning "finally"
+  Log.log Log.Info ("handling action: " <> show action)
   case action of
-    MapAction.Increment -> do
-      Log.log Log.Info "incrementing"
-    MapAction.Decrement -> do
-      Log.log Log.Error "decrementing"
-  Log.log Log.Debug "ok done"
+    MapAction.Noop -> pure unit
+    MapAction.StopPropagation event nextAction -> do
+      H.liftEffect $ stopPropagation event
+      handleAction nextAction
+    MapAction.Select selection -> do
+      H.modify_ \s -> s { selected = selection }
 
 mkComponent ::
   forall query input output.

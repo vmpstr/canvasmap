@@ -14,10 +14,12 @@ import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
 import Data.Functor (map)
 import Data.Array (filter)
+import Web.UIEvent.MouseEvent (toEvent)
 
 import Halogen.HTML as HH
 import Halogen.HTML.CSS as HC
 import Halogen.HTML.Properties as HP
+import Halogen.HTML.Events as HE
 
 newtype TreeNodeImpl = TreeNodeImpl
   { id :: NodeId
@@ -45,7 +47,14 @@ renderContents viewState (TreeNodeImpl details) =
   HH.div
     [ HP.classes classes ]
     [ HH.div
-        [ HP.class_ $ HH.ClassName "contents_container" ]
+        [ HP.class_ $ HH.ClassName "contents_container"
+        , HE.onClick
+            \mouseEvent -> Just $
+              MapAction.StopPropagation
+                (toEvent mouseEvent)
+                (MapAction.Select $ Just details.id)
+
+        ]
         [ HH.div 
             [ HP.class_ $ HH.ClassName "node_label" ]
             [ HH.text details.label ]
