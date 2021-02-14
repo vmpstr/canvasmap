@@ -1,19 +1,15 @@
 module App.Data.NodeImpl.TreeNode where
 
+import App.Prelude
 import App.Data.Map.ViewState as ViewState
 import App.Data.Map.Action as MapAction
 import App.Data.NodeClass (class LayoutNode)
 import App.Data.NodeCommon (NodeId, NodePosition, nodeIdToAttribute, positionToCSS)
 
-import Data.Eq ((==), (/=))
-import Data.Function (($))
-import Data.Maybe (Maybe(..))
-import Data.Semigroup ((<>))
-import Data.Show (class Show, show)
+import Data.Array (filter)
 import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
-import Data.Functor (map)
-import Data.Array (filter)
+
 import Web.UIEvent.MouseEvent (toEvent)
 
 import Halogen.HTML as HH

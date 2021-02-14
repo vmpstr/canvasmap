@@ -1,16 +1,20 @@
 module App.Data.Node (module App.Data.NodeCommon, Node(..), errorNode, NodeType(..), constructNode) where
 
+import App.Prelude
 import App.Data.NodeClass (class LayoutNode, render)
 import App.Data.NodeImpl.ScrollerNode (ScrollerNodeImpl)
 import App.Data.NodeImpl.ScrollerNode as ScrollerNodeImpl
 import App.Data.NodeImpl.TreeNode as TreeNodeImpl
 import App.Data.NodeImpl.TreeNode (TreeNodeImpl(..))
-import App.Data.NodeCommon
-
-import Data.Semigroup ((<>))
-import Data.Show (class Show, show)
-import Data.Maybe (Maybe(..))
-import Data.Function (($))
+import App.Data.NodeCommon (
+    NodeId(..)
+  , NodePath(..)
+  , NodePosition(..)
+  , nextId
+  , nodeAttributePrefix
+  , nodeIdToAttribute
+  , positionToCSS
+  )
 
 data Node
   = TreeNode TreeNodeImpl

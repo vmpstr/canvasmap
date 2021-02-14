@@ -1,13 +1,7 @@
 module App.Data.NodeCommon where
 
-import Data.Eq (class Eq)
-import Data.Ord (class Ord)
-import Data.Show (class Show, show)
-import Control.Bind (discard)
-import Data.Function (($))
-import Data.Semigroup ((<>))
+import App.Prelude
 import Data.Tuple (Tuple)
-import Data.Semiring ((+))
 
 import CSS.Stylesheet (CSS)
 import CSS.Display as CSSDisplay

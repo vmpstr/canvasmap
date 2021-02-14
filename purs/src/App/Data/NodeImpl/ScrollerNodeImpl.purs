@@ -1,9 +1,6 @@
 module App.Data.NodeImpl.ScrollerNode where
 
-import Data.Show (class Show, show)
-import Data.Semigroup ((<>))
-import Data.Maybe (Maybe(..))
-
+import App.Prelude
 import App.Data.NodeCommon (NodeId, NodePosition)
 import App.Data.NodeClass (class LayoutNode)
 

@@ -1,10 +1,7 @@
 module Capabilities.Logging where
 
-import Data.Unit (Unit)
+import App.Prelude
 import Control.Monad (class Monad)
-import Data.Monoid ((<>))
-import Data.Eq (class Eq)
-import Data.Ord (class Ord)
 
 import Halogen (HalogenM, lift)
 

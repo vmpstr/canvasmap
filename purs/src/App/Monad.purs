@@ -1,10 +1,11 @@
 module App.Monad where
 
+import App.Prelude
+import App.Environment (Environment)
 import Capabilities.Logging (class Logger, formatLog)
 
 import Control.Monad.Reader.Trans (ReaderT, runReaderT)
 import Control.Monad.Reader.Class (class MonadAsk, asks, ask)
-import App.Environment (Environment)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
 import Data.Newtype (class Newtype, unwrap)
@@ -16,8 +17,6 @@ import Control.Monad (class Monad)
 import Effect.Class.Console as Console
 import Effect.Class (class MonadEffect, liftEffect)
 import Type.Equality as TE
-import Data.Ord ((<=))
-import Data.Function (($), (#))
 
 -- AppM monad: ReaderT pattern with environment and Aff base monad.
 newtype AppM a = AppM (ReaderT Environment Aff a)

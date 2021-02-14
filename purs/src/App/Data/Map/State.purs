@@ -1,14 +1,13 @@
 module App.Data.Map.State where
 
+import App.Prelude
 import App.Data.Node (Node(..), NodeId(..), NodePosition(..))
-import App.Data.NodeImpl.TreeNode
+import App.Data.NodeImpl.TreeNode (TreeNodeImpl(..))
 import App.Data.Map.ViewState (ViewState, ParentState(..))
 
 import Data.List (List)
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Function (($))
-import Data.Maybe (Maybe(..))
 
 -- TODO(vmpstr): Move this to a separate file
 data Mode

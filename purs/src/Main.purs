@@ -1,12 +1,10 @@
 module Main where
 
+import App.Prelude
 import App.Environment (mkEnvironment)
 import App.Monad (runAppM)
 import Component.Map as CMap
 
-import Data.Unit (unit, Unit)
-import Control.Bind (bind)
-import Data.Function (flip)
 import Effect (Effect)
 
 import Halogen as H
