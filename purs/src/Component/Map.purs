@@ -1,5 +1,6 @@
 module Component.Map where
 
+import App.Prelude
 import App.Data.Map.Action as MapAction
 import App.Data.Map.State as MapState
 import App.Data.Map.ViewState (ViewState)
@@ -10,20 +11,10 @@ import App.Monad (AppM)
 import Capabilities.Logging as Log
 import App.Control.Node as NodeControl
 
-import Control.Bind (discard)
-import Data.Eq ((==))
-import Data.Function (($))
-import Data.Functor (map)
 import Data.List (toUnfoldable)
 import Data.Map (values, lookup, filterKeys)
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Unit (Unit, unit)
-import Data.Semigroup ((<>))
-import Data.Show (show)
-import Control.Applicative (pure)
 import Data.Tuple (Tuple(..))
 import Data.Int (toNumber)
-import Data.Ring ((-))
 
 import Web.Event.Event (stopPropagation)
 import Web.UIEvent.MouseEvent (clientX, clientY)
@@ -61,29 +52,37 @@ renderMap state =
   HH.div
     [ HP.class_ (HH.ClassName "map")
     , HE.onClick \_ -> Just $ MapAction.Select Nothing
+    , HE.onMouseUp \_ -> Just MapAction.MouseUp
     , HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (clientX e) (clientY e)
     ]
     (map (render renderChildren viewState) rootNodes)
 
+{-
+- EventSource for ResizeObserver-like behavior
+- Slots for label edits
+-}
 handleAction ::
   forall s o.
   MapAction.Action
   -> H.HalogenM MapState.State MapAction.Action s o AppM Unit
 handleAction action = do
-  Log.log Log.Info ("handling action: " <> show action)
+  Log.log Log.Info $ "handling action: " <> show action
   case action of
     MapAction.Noop -> pure unit
+    MapAction.MouseUp -> do
+      state <- H.get
+      when (MapState.isDrag state.mode) $
+        H.modify_ _ { mode = MapState.Idle }
     MapAction.StopPropagation event nextAction -> do
       H.liftEffect $ stopPropagation event
       handleAction nextAction
     MapAction.Select selection -> do
       H.modify_ _ { selected = selection }
     MapAction.NewTopNode x y -> do
-      let
-        x' = toNumber x - 40.0
-        y' = toNumber y - 20.0
       H.modify_ \state ->
         let
+          x' = toNumber x - 40.0
+          y' = toNumber y - 20.0
           id = nextId state.maxId
           state' = NodeControl.newNode id (Top $ Tuple x' y') state
         in
