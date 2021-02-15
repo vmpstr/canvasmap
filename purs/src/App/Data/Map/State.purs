@@ -4,19 +4,11 @@ import App.Prelude
 import App.Data.Node (Node(..), NodeId(..), NodePosition(..))
 import App.Data.NodeImpl.TreeNode (TreeNodeImpl(..))
 import App.Data.Map.ViewState (ViewState, ParentState(..))
+import App.Data.Map.Mode (Mode(..), isDrag)
 
 import Data.List (List)
 import Data.Map (Map)
 import Data.Map as Map
-
--- TODO(vmpstr): Move this to a separate file
-data Mode
-  = Idle
-  | Drag NodeId
-
-isDrag :: Mode -> Boolean
-isDrag (Drag _) = true
-isDrag _ = false
 
 type State =
   { nodes :: Map NodeId Node

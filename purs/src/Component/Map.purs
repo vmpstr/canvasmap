@@ -1,6 +1,7 @@
 module Component.Map where
 
 import App.Prelude
+import App.Data.Map.Mode as MapMode
 import App.Data.Map.Action as MapAction
 import App.Data.Map.State as MapState
 import App.Data.Map.ViewState (ViewState)
@@ -14,15 +15,21 @@ import App.Control.Node as NodeControl
 import Data.List (toUnfoldable)
 import Data.Map (values, lookup, filterKeys)
 import Data.Tuple (Tuple(..))
+import Data.Tuple as Tuple
 import Data.Int (toNumber)
+import Data.Array (filter)
 
-import Web.Event.Event (stopPropagation)
+import Web.Event.Event (stopPropagation, preventDefault)
 import Web.UIEvent.MouseEvent (clientX, clientY)
 
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+
+filterBySecond :: forall a. Array (Tuple a Boolean) -> Array a
+filterBySecond input =
+  map Tuple.fst $ filter Tuple.snd input
 
 renderMap :: forall slots. MapState.State -> HH.HTML slots MapAction.Action
 renderMap state =
@@ -48,13 +55,18 @@ renderMap state =
     renderChildren localViewState nodeId =
       map (render renderChildren localViewState) (getChildren nodeId)
 
+    attributes =
+      [ HP.class_ (HH.ClassName "map")
+      , HE.onClick \_ -> Just $ MapAction.Select Nothing
+      , HE.onMouseUp \_ -> Just MapAction.MouseUp
+      , HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (clientX e) (clientY e)
+      ] <> filterBySecond
+            [ Tuple (HE.onMouseMove \_ -> Just MapAction.MouseMove) (MapMode.isDrag state.mode)
+            ]
+
   in
   HH.div
-    [ HP.class_ (HH.ClassName "map")
-    , HE.onClick \_ -> Just $ MapAction.Select Nothing
-    , HE.onMouseUp \_ -> Just MapAction.MouseUp
-    , HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (clientX e) (clientY e)
-    ]
+    attributes
     (map (render renderChildren viewState) rootNodes)
 
 {-
@@ -66,15 +78,21 @@ handleAction ::
   MapAction.Action
   -> H.HalogenM MapState.State MapAction.Action s o AppM Unit
 handleAction action = do
-  Log.log Log.Info $ "handling action: " <> show action
+  Log.log Log.Debug $ "handling action: " <> show action
   case action of
     MapAction.Noop -> pure unit
+    MapAction.MouseDown id ->
+      H.modify_ _ { mode = MapMode.Drag id }
+    MapAction.MouseMove -> pure unit
     MapAction.MouseUp -> do
       state <- H.get
-      when (MapState.isDrag state.mode) $
-        H.modify_ _ { mode = MapState.Idle }
+      when (MapMode.isDrag state.mode) $
+        H.modify_ _ { mode = MapMode.Idle }
     MapAction.StopPropagation event nextAction -> do
       H.liftEffect $ stopPropagation event
+      handleAction nextAction
+    MapAction.PreventDefault event nextAction -> do
+      H.liftEffect $ preventDefault event
       handleAction nextAction
     MapAction.Select selection -> do
       H.modify_ _ { selected = selection }

@@ -49,7 +49,11 @@ renderContents viewState (TreeNodeImpl details) =
               MapAction.StopPropagation
                 (toEvent mouseEvent)
                 (MapAction.Select $ Just details.id)
-
+        , HE.onMouseDown
+            \mouseEvent -> Just $
+              MapAction.StopPropagation
+                (toEvent mouseEvent)
+                (MapAction.MouseDown details.id)
         ]
         [ HH.div 
             [ HP.class_ $ HH.ClassName "node_label" ]
