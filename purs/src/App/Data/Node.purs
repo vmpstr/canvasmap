@@ -1,4 +1,4 @@
-module App.Data.Node (module App.Data.NodeCommon, Node(..), errorNode, NodeType(..), constructNode) where
+module App.Data.Node where
 
 import App.Prelude
 import App.Data.NodeClass (class LayoutNode, render)
@@ -6,15 +6,7 @@ import App.Data.NodeImpl.ScrollerNode (ScrollerNodeImpl)
 import App.Data.NodeImpl.ScrollerNode as ScrollerNodeImpl
 import App.Data.NodeImpl.TreeNode as TreeNodeImpl
 import App.Data.NodeImpl.TreeNode (TreeNodeImpl(..))
-import App.Data.NodeCommon (
-    NodeId(..)
-  , NodePath(..)
-  , NodePosition(..)
-  , nextId
-  , nodeAttributePrefix
-  , nodeIdToAttribute
-  , positionToCSS
-  )
+import App.Data.NodeCommon (NodeId, NodePosition(..))
 
 data Node
   = TreeNode TreeNodeImpl
@@ -47,3 +39,15 @@ data NodeType
 constructNode :: NodeType -> NodeId -> NodePosition -> Node
 constructNode TreeNodeType id position = TreeNode $ TreeNodeImpl.construct id position
 constructNode ScrollerNodeType id position = ScrollerNode $ ScrollerNodeImpl.construct id position
+
+setPosition :: Node -> NodePosition -> Node
+setPosition node position =
+  case node of
+    TreeNode impl -> TreeNode $ TreeNodeImpl.setPosition impl position
+    ScrollerNode impl -> ScrollerNode $ ScrollerNodeImpl.setPosition impl position
+
+moveAbsolutePosition :: Node -> Number -> Number -> Node
+moveAbsolutePosition node dx dy =
+  case node of
+    TreeNode impl -> TreeNode $ TreeNodeImpl.moveAbsolutePosition impl dx dy
+    ScrollerNode impl -> ScrollerNode $ ScrollerNodeImpl.moveAbsolutePosition impl dx dy

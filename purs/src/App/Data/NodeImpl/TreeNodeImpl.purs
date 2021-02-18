@@ -4,7 +4,7 @@ import App.Prelude
 import App.Data.Map.ViewState as ViewState
 import App.Data.Map.Action as MapAction
 import App.Data.NodeClass (class LayoutNode)
-import App.Data.NodeCommon (NodeId, NodePosition, nodeIdToAttribute, positionToCSS)
+import App.Data.NodeCommon (NodeId, NodePosition(..), nodeIdToAttribute, positionToCSS)
 
 import Data.Array (filter)
 import Data.Tuple (Tuple(..))
@@ -53,7 +53,7 @@ renderContents viewState (TreeNodeImpl details) =
             \mouseEvent -> Just $
               MapAction.StopPropagation
                 (toEvent mouseEvent)
-                (MapAction.MouseDown details.id)
+                (MapAction.MouseDown mouseEvent details.id)
         ]
         [ HH.div 
             [ HP.class_ $ HH.ClassName "node_label" ]
@@ -103,3 +103,13 @@ construct id position = TreeNodeImpl
   , position: position
   , maxWidth: Nothing
   }
+
+setPosition :: TreeNodeImpl -> NodePosition -> TreeNodeImpl
+setPosition (TreeNodeImpl details) position =
+  TreeNodeImpl $ details { position = position }
+
+moveAbsolutePosition :: TreeNodeImpl -> Number -> Number -> TreeNodeImpl
+moveAbsolutePosition impl@(TreeNodeImpl details) dx dy =
+  case details.position of
+    Absolute p -> TreeNodeImpl $ details { position = Absolute { x: p.x + dx, y: p.y + dy } }
+    _ -> impl

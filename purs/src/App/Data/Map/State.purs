@@ -1,7 +1,8 @@
 module App.Data.Map.State where
 
 import App.Prelude
-import App.Data.Node (Node(..), NodeId(..), NodePosition(..))
+import App.Data.Node (Node(..))
+import App.Data.NodeCommon (NodeId(..), NodePosition(..))
 import App.Data.NodeImpl.TreeNode (TreeNodeImpl(..))
 import App.Data.Map.ViewState (ViewState, ParentState(..))
 import App.Data.Map.Mode (Mode(..), isDrag)

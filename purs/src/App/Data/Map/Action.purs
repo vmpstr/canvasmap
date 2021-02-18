@@ -4,6 +4,7 @@ import App.Prelude
 import App.Data.NodeCommon (NodeId)
 
 import Web.Event.Event (Event)
+import Web.UIEvent.MouseEvent (MouseEvent)
 
 data Action
   = Noop 
@@ -11,17 +12,17 @@ data Action
   | PreventDefault Event Action
   | Select (Maybe NodeId)
   | NewTopNode Int Int
-  | MouseUp
-  | MouseDown NodeId
-  | MouseMove
+  | MouseUp MouseEvent
+  | MouseDown MouseEvent NodeId
+  | MouseMove MouseEvent
 
 instance actionShow :: Show Action where
   show Noop = "Noop"
-  show (StopPropagation event action) = "StopPropagation & " <> show action
-  show (PreventDefault event action) = "PreventDefault & " <> show action
+  show (StopPropagation _ action) = "StopPropagation & " <> show action
+  show (PreventDefault _ action) = "PreventDefault & " <> show action
   show (Select maybeId) = "Select " <> show maybeId
   show (NewTopNode x y) = "NewTopNode " <> show x <> " " <> show y
-  show MouseUp = "MouseUp"
-  show (MouseDown id) = "MouseDown " <> show id
-  show MouseMove = "MouseMove"
+  show (MouseUp _) = "MouseUp"
+  show (MouseDown _ id) = "MouseDown " <> show id
+  show (MouseMove _) = "MouseMove"
 
