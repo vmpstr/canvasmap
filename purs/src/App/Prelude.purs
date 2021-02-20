@@ -13,3 +13,4 @@ import Control.Applicative (pure, when) as X
 import Data.Ring ((-)) as X
 import Data.Semiring ((+)) as X
 import Data.Int (toNumber) as X
+import Data.HeytingAlgebra ((&&), (||)) as X

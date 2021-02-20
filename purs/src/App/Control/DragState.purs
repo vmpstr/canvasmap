@@ -13,6 +13,8 @@ instance showDragMode :: Show DragMode where
   show (Hooked n _ _) = "Hooked " <> show n
   show Dragging = "Dragging"
 
+derive instance eqDragMode :: Eq DragMode
+
 type State =
   { nodeId :: NodeId
   , lastMouseX :: Number

@@ -4,9 +4,9 @@ import App.Prelude
 import App.Data.Map.ViewState as ViewState
 import App.Data.Map.Action as MapAction
 import App.Data.NodeClass (class LayoutNode)
-import App.Data.NodeCommon (NodeId, NodePosition(..), nodeIdToAttribute, positionToCSS)
+import App.Data.NodeCommon (NodeId, NodePosition(..), positionToCSS)
 
-import Data.Array (filter)
+import Data.Array (filter, (:))
 import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
 
@@ -62,23 +62,48 @@ renderContents viewState (TreeNodeImpl details) =
     ]
 
 instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
-  render renderChildren viewState impl@(TreeNodeImpl details) =
+  render renderChildren parentState impl@(TreeNodeImpl details) =
     let
+      viewState =
+        if parentState.dragged == Just details.id then
+          parentState { viewBeacons = false }
+        else
+          parentState
+
       childViewState = viewState { parentState = ViewState.ShowParentEdge }
       classes = filterBySecond
         [ Tuple (HH.ClassName "node") true
         , Tuple (HH.ClassName "root") (viewState.parentState == ViewState.NoParent)
         , Tuple (HH.ClassName "child") (viewState.parentState /= ViewState.NoParent)
+        , Tuple (HH.ClassName "dragged") (viewState.dragged == Just details.id)
         ]
       parentEdge =
         if viewState.parentState == ViewState.ShowParentEdge then
           HH.div [ HP.class_ $ HH.ClassName "parent_edge" ] []
         else
           HH.div_ []
+
+      nsBeacon =
+        if viewState.viewBeacons && viewState.parentState /= ViewState.NoParent then
+          HH.div
+            [ HP.class_ $ HH.ClassName "beacon"
+            , HP.attr (HH.AttrName "path") ("ns-" <> show details.id)
+            ] []
+        else
+          HH.div_ []
+
+      fcBeacon =
+        if viewState.viewBeacons then
+          HH.div
+            [ HP.class_ $ HH.ClassName "beacon"
+            , HP.attr (HH.AttrName "path") ("fc-" <> show details.id)
+            ] []
+        else
+          HH.div_ []
+
     in
     HH.div
-      [ HP.id_ $ nodeIdToAttribute details.id
-      , HP.classes classes
+      [ HP.classes classes
       , HC.style $ positionToCSS details.position
       ]
       [ renderContents viewState impl 
@@ -87,8 +112,9 @@ instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
           [ HP.class_ $ HH.ClassName "child_holder" ]
           [ HH.div [ HP.class_ $ HH.ClassName "child_edge" ] []
           , HH.div [ HP.class_ $ HH.ClassName "child_area" ]
-              (renderChildren childViewState details.id)
+              $ fcBeacon : renderChildren childViewState details.id
           ]
+      , nsBeacon
       ]
 
 instance treeNodeShow :: Show TreeNodeImpl where

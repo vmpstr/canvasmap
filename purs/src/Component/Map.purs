@@ -64,7 +64,7 @@ renderMap state =
       , HE.onMouseUp \event -> Just $ MapAction.MouseUp event
       , HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (clientX e) (clientY e)
       ] <> filterBySecond
-            [ Tuple (HE.onMouseMove \event -> Just $ MapAction.MouseMove event) (MapMode.isDrag state.mode)
+            [ Tuple (HE.onMouseMove \event -> Just $ MapAction.MouseMove event) (MapMode.isHookedToDrag state.mode)
             ]
 
   in
@@ -117,11 +117,11 @@ handleAction action = do
       H.modify_ $ const $ DragControl.onMouseDown state mouseEvent id xoffset yoffset
     MapAction.MouseMove mouseEvent -> do
       state <- H.get
-      when (MapMode.isDrag state.mode) $
+      when (MapMode.isHookedToDrag state.mode) $
         H.modify_ $ const $ DragControl.onMouseMove state mouseEvent
     MapAction.MouseUp mouseEvent -> do
       state <- H.get
-      when (MapMode.isDrag state.mode) $
+      when (MapMode.isHookedToDrag state.mode) $
         H.modify_ $ const $ DragControl.onMouseUp state mouseEvent
     MapAction.StopPropagation event nextAction -> do
       H.liftEffect $ stopPropagation event

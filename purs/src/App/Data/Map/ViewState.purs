@@ -12,7 +12,7 @@ derive instance parentStateEq :: Eq ParentState
 
 type ViewState =
   { viewBeacons :: Boolean
-  , shadow :: Boolean
+  , dragged :: Maybe NodeId
   , parentState :: ParentState
   , selected :: Maybe NodeId
   }
