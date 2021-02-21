@@ -19,7 +19,7 @@ import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
 import Data.Int (toNumber, fromString)
 import Data.Array (filter, catMaybes, (!!))
-import Data.Traversable (sequence)
+import Data.Traversable (sequence, traverse_)
 import Data.String (split, Pattern(..))
 import Control.Bind (join, (>>=))
 
@@ -135,6 +135,7 @@ getBeaconRects :: HTMLElement -> Effect (Array Beacon)
 getBeaconRects htmlRoot = do -- Effect
   beaconCollection <- getElementsByClassName "beacon" $ toElement htmlRoot
   beacons <- toArray beaconCollection
+  -- I feel like traverse may help here somehow.
   let elements = catMaybes $ map fromElement beacons
   map catMaybes $ sequence $ map elementToBeacon elements
 
@@ -161,12 +162,10 @@ handleAction action = do -- HalogenM
       H.modify_ $ const $ DragControl.onMouseDown state mouseEvent id xoffset yoffset
     MapAction.MouseMove mouseEvent -> do
       state <- H.get
-      mhtmlMap <- H.getHTMLElementRef (H.RefLabel "main-map")
-      case mhtmlMap of
-        Nothing -> pure unit
-        Just htmlMap -> do
-          beacons <- H.liftEffect $ getBeaconRects htmlMap
-          Log.log Log.Debug $ show beacons
+      -- Extra logging.
+      H.getHTMLElementRef (H.RefLabel "main-map") >>= traverse_ \htmlMap -> do
+        beacons <- H.liftEffect $ getBeaconRects htmlMap
+        Log.log Log.Debug $ show beacons
       when (MapMode.isHookedToDrag state.mode) $
         H.modify_ $ const $ DragControl.onMouseMove state mouseEvent
     MapAction.MouseUp mouseEvent -> do
