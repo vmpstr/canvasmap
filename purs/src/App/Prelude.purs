@@ -11,6 +11,8 @@ import Data.Semigroup ((<>)) as X
 import Data.Show (class Show, show) as X
 import Control.Applicative (pure, when) as X
 import Data.Ring ((-)) as X
-import Data.Semiring ((+)) as X
+import Data.Semiring ((+), (*)) as X
 import Data.Int (toNumber) as X
 import Data.HeytingAlgebra ((&&), (||)) as X
+import Data.Generic.Rep (class Generic) as X
+import Data.Generic.Rep.Show (genericShow) as X

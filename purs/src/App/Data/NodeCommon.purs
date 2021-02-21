@@ -41,3 +41,7 @@ data NodePath
   = Top (Tuple Number Number)
   | NextSibling NodeId
   | FirstChild NodeId
+
+derive instance genericNodePath :: Generic (NodePath) _
+instance showNodePath :: Show NodePath where
+  show = genericShow

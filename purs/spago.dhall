@@ -9,6 +9,7 @@ You can edit this file as you like.
   , "effect"
   , "halogen"
   , "halogen-css"
+  , "maybe"
   , "psci-support"
   , "transformers"
   ]

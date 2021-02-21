@@ -8,7 +8,7 @@ import App.Data.Map.Action as MapAction
 import App.Data.Map.State as MapState
 import App.Data.Map.ViewState (ViewState)
 import App.Data.Node (Node, errorNode)
-import App.Data.NodeCommon (NodeId, NodePath(..), nextId)
+import App.Data.NodeCommon (NodeId(..), NodePath(..), nextId)
 import App.Data.NodeClass (render)
 import App.Monad (AppM)
 import Capabilities.Logging as Log
@@ -17,13 +17,18 @@ import Data.List (toUnfoldable)
 import Data.Map (values, lookup, filterKeys)
 import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
-import Data.Int (toNumber)
-import Data.Array (filter)
+import Data.Int (toNumber, fromString)
+import Data.Array (filter, catMaybes, (!!))
+import Data.Traversable (sequence)
+import Data.String (split, Pattern(..))
+import Control.Bind (join, (>>=))
 
 import Effect (Effect)
 import Web.Event.Event (stopPropagation, preventDefault, target)
 import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent)
-import Web.HTML.HTMLElement (DOMRect, fromEventTarget, getBoundingClientRect)
+import Web.HTML.HTMLElement (toElement, DOMRect, fromEventTarget, getBoundingClientRect, fromElement, HTMLElement)
+import Web.DOM.Element (getAttribute, Element, getElementsByClassName)
+import Web.DOM.HTMLCollection (toArray)
 
 import Halogen as H
 import Halogen.HTML as HH
@@ -59,7 +64,8 @@ renderMap state =
       map (render renderChildren localViewState) (getChildren nodeId)
 
     attributes =
-      [ HP.class_ (HH.ClassName "map")
+      [ HP.ref (H.RefLabel "main-map")
+      , HP.class_ (HH.ClassName "map")
       , HE.onClick \_ -> Just $ MapAction.Select Nothing
       , HE.onMouseUp \event -> Just $ MapAction.MouseUp event
       , HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (clientX e) (clientY e)
@@ -85,14 +91,52 @@ emptyDOMRect =
 getEventTargetRect :: MouseEvent -> Effect DOMRect
 getEventTargetRect mouseEvent =
   let
-    htmlElement = do
+    mhtmlElement = do -- Maybe
       targetElement <- target $ toEvent mouseEvent
       fromEventTarget targetElement
   in
-  case htmlElement of
-    Just element -> getBoundingClientRect element
+  case mhtmlElement of
+    Just htmlElement -> getBoundingClientRect htmlElement
     Nothing -> pure emptyDOMRect
 
+newtype Beacon = Beacon
+  { path :: NodePath
+  , x :: Number
+  , y :: Number
+  }
+
+derive newtype instance showBeacon :: Show Beacon
+
+beaconPathToNodePath :: String -> Maybe NodePath
+beaconPathToNodePath s = do -- Maybe
+  let parts = split (Pattern "-") s
+  pathType <- parts !! 0
+  nodeId <- map NodeId (parts !! 1 >>= fromString)
+  case pathType of
+    "ns" -> pure $ NextSibling nodeId
+    "fc" -> pure $ FirstChild nodeId
+    _ -> Nothing
+  
+parseBeaconPath :: Element -> Effect (Maybe NodePath)
+parseBeaconPath element = do -- Effect
+  mpathAttribute <- getAttribute "path" element
+  pure $ join $ map beaconPathToNodePath mpathAttribute
+
+elementToBeacon :: HTMLElement -> Effect (Maybe Beacon)
+elementToBeacon htmlElement = do -- Effect
+  domRect <- getBoundingClientRect htmlElement
+  let x = domRect.left + 0.5 * domRect.width
+  let y = domRect.top + 0.5 * domRect.height
+  mpath <- parseBeaconPath $ toElement htmlElement
+  pure $ map (\path -> Beacon { x, y, path}) mpath
+
+
+getBeaconRects :: HTMLElement -> Effect (Array Beacon)
+getBeaconRects htmlRoot = do -- Effect
+  beaconCollection <- getElementsByClassName "beacon" $ toElement htmlRoot
+  beacons <- toArray beaconCollection
+  let elements = catMaybes $ map fromElement beacons
+  map catMaybes $ sequence $ map elementToBeacon elements
 
 {-
 - EventSource for ResizeObserver-like behavior
@@ -102,7 +146,7 @@ handleAction ::
   forall s o.
   MapAction.Action
   -> H.HalogenM MapState.State MapAction.Action s o AppM Unit
-handleAction action = do
+handleAction action = do -- HalogenM
   Log.log Log.Debug $ "handling action: " <> show action
   --s <- H.get
   --Log.log Log.Debug $ "state.mode " <> show s.mode
@@ -117,6 +161,12 @@ handleAction action = do
       H.modify_ $ const $ DragControl.onMouseDown state mouseEvent id xoffset yoffset
     MapAction.MouseMove mouseEvent -> do
       state <- H.get
+      mhtmlMap <- H.getHTMLElementRef (H.RefLabel "main-map")
+      case mhtmlMap of
+        Nothing -> pure unit
+        Just htmlMap -> do
+          beacons <- H.liftEffect $ getBeaconRects htmlMap
+          Log.log Log.Debug $ show beacons
       when (MapMode.isHookedToDrag state.mode) $
         H.modify_ $ const $ DragControl.onMouseMove state mouseEvent
     MapAction.MouseUp mouseEvent -> do
