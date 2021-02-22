@@ -19,7 +19,7 @@ import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
 import Data.Int (toNumber, fromString)
 import Data.Array (filter, catMaybes, (!!))
-import Data.Traversable (sequence, traverse_)
+import Data.Traversable (traverse_, traverse)
 import Data.String (split, Pattern(..))
 import Control.Bind (join, (>>=))
 
@@ -134,10 +134,10 @@ elementToBeacon htmlElement = do -- Effect
 getBeaconRects :: HTMLElement -> Effect (Array Beacon)
 getBeaconRects htmlRoot = do -- Effect
   beaconCollection <- getElementsByClassName "beacon" $ toElement htmlRoot
-  beacons <- toArray beaconCollection
-  -- I feel like traverse may help here somehow.
-  let elements = catMaybes $ map fromElement beacons
-  map catMaybes $ sequence $ map elementToBeacon elements
+  beaconElementArray <- toArray beaconCollection
+  map catMaybes $
+    traverse (map join) $
+    map (traverse elementToBeacon <<< fromElement) beaconElementArray
 
 {-
 - EventSource for ResizeObserver-like behavior
