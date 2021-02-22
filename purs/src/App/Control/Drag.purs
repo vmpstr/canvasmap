@@ -1,6 +1,7 @@
 module App.Control.Drag where
 
 import App.Prelude
+import App.Data.Beacon (Beacon)
 import App.Data.Map.State as MapState
 import App.Data.Map.Mode as Mode
 import App.Data.NodeCommon (NodeId, NodePosition(..))
@@ -52,8 +53,8 @@ moveNodePosition state id dx dy =
         state.nodes
     }
 
-onMouseMove :: MapState.State -> MouseEvent -> MapState.State
-onMouseMove state event = fromMaybe state do
+onMouseMove :: MapState.State -> MouseEvent -> Array Beacon -> MapState.State
+onMouseMove state event beacons = fromMaybe state do
   startingDragState <- getDragState state
   let dragData = DragState.toDragData startingDragState event
   let dragState =

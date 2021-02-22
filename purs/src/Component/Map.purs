@@ -1,6 +1,7 @@
 module Component.Map where
 
 import App.Prelude
+import App.Data.Beacon (Beacon(..))
 import App.Control.Drag as DragControl
 import App.Control.Node as NodeControl
 import App.Data.Map.Mode as MapMode
@@ -19,7 +20,7 @@ import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
 import Data.Int (toNumber, fromString)
 import Data.Array (filter, catMaybes, (!!))
-import Data.Traversable (traverse_, traverse)
+import Data.Traversable (traverse)
 import Data.String (split, Pattern(..))
 import Control.Bind (join, (>>=))
 
@@ -99,14 +100,6 @@ getEventTargetRect mouseEvent =
     Just htmlElement -> getBoundingClientRect htmlElement
     Nothing -> pure emptyDOMRect
 
-newtype Beacon = Beacon
-  { path :: NodePath
-  , x :: Number
-  , y :: Number
-  }
-
-derive newtype instance showBeacon :: Show Beacon
-
 beaconPathToNodePath :: String -> Maybe NodePath
 beaconPathToNodePath s = do -- Maybe
   let parts = split (Pattern "-") s
@@ -162,12 +155,13 @@ handleAction action = do -- HalogenM
       H.modify_ $ const $ DragControl.onMouseDown state mouseEvent id xoffset yoffset
     MapAction.MouseMove mouseEvent -> do
       state <- H.get
-      -- Extra logging.
-      H.getHTMLElementRef (H.RefLabel "main-map") >>= traverse_ \htmlMap -> do
-        beacons <- H.liftEffect $ getBeaconRects htmlMap
-        Log.log Log.Debug $ show beacons
+      mhtmlMap <- H.getHTMLElementRef (H.RefLabel "main-map") 
+      beacons <-
+        H.liftEffect $ case mhtmlMap of
+          Just htmlMap -> getBeaconRects htmlMap
+          Nothing -> pure []
       when (MapMode.isHookedToDrag state.mode) $
-        H.modify_ $ const $ DragControl.onMouseMove state mouseEvent
+        H.modify_ $ const $ DragControl.onMouseMove state mouseEvent beacons
     MapAction.MouseUp mouseEvent -> do
       state <- H.get
       when (MapMode.isHookedToDrag state.mode) $
