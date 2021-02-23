@@ -1,7 +1,7 @@
 module App.Control.DragState where
 
 import App.Prelude
-import App.Data.NodeCommon (NodeId)
+import App.Data.NodeCommon (NodeId, NodePath)
 
 import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY)
 
@@ -20,6 +20,7 @@ type State =
   , lastMouseX :: Number
   , lastMouseY :: Number
   , state :: DragMode
+  , closestBeacon :: Maybe NodePath
   }
 
 type DragData =

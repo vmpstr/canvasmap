@@ -42,6 +42,8 @@ data NodePath
   | NextSibling NodeId
   | FirstChild NodeId
 
+derive instance eqNodePath :: Eq NodePath
+
 derive instance genericNodePath :: Generic (NodePath) _
 instance showNodePath :: Show NodePath where
   show = genericShow

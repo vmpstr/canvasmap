@@ -69,3 +69,7 @@
   margin: -3px;
   background: orange;
 }
+
+.beacon.closest {
+  background: green;
+}

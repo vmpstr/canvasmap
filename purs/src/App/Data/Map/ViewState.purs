@@ -1,7 +1,7 @@
 module App.Data.Map.ViewState where
 
 import App.Prelude
-import App.Data.NodeCommon (NodeId)
+import App.Data.NodeCommon (NodeId, NodePath)
 
 data ParentState
   = NoParent
@@ -15,4 +15,5 @@ type ViewState =
   , dragged :: Maybe NodeId
   , parentState :: ParentState
   , selected :: Maybe NodeId
+  , closestBeacon :: Maybe NodePath
   }

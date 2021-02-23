@@ -4,7 +4,7 @@ import App.Prelude
 import App.Data.Map.ViewState as ViewState
 import App.Data.Map.Action as MapAction
 import App.Data.NodeClass (class LayoutNode)
-import App.Data.NodeCommon (NodeId, NodePosition(..), positionToCSS)
+import App.Data.NodeCommon (NodeId, NodePosition(..), positionToCSS, NodePath(..))
 
 import Data.Array (filter, (:))
 import Data.Tuple (Tuple(..))
@@ -27,6 +27,35 @@ newtype TreeNodeImpl = TreeNodeImpl
 filterBySecond :: forall a. Array (Tuple a Boolean) -> Array a
 filterBySecond input =
   map Tuple.fst $ filter Tuple.snd input
+
+
+renderBeacon :: forall slots. String -> Boolean -> HH.HTML slots MapAction.Action
+renderBeacon path closest =
+  let
+    classes = filterBySecond
+      [ Tuple (HH.ClassName "beacon") true
+      , Tuple (HH.ClassName "closest") closest
+      ]
+  in
+  HH.div
+    [ HP.classes classes
+    , HP.attr (HH.AttrName "path") path
+    ] []
+
+renderNSBeacon :: forall slots. ViewState.ViewState -> NodeId -> HH.HTML slots MapAction.Action
+renderNSBeacon viewState id =
+  if viewState.viewBeacons && viewState.parentState /= ViewState.NoParent then
+    renderBeacon ("ns-" <> show id) (viewState.closestBeacon == (Just $ NextSibling id))
+  else
+    HH.div_ []
+
+renderFCBeacon :: forall slots. ViewState.ViewState -> NodeId -> HH.HTML slots MapAction.Action
+renderFCBeacon viewState id =
+  if viewState.viewBeacons then
+    renderBeacon ("fc-" <> show id) (viewState.closestBeacon == (Just $ FirstChild id))
+  else
+    HH.div_ []
+
 
 renderContents ::
   forall slots
@@ -83,24 +112,8 @@ instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
         else
           HH.div_ []
 
-      nsBeacon =
-        if viewState.viewBeacons && viewState.parentState /= ViewState.NoParent then
-          HH.div
-            [ HP.class_ $ HH.ClassName "beacon"
-            , HP.attr (HH.AttrName "path") ("ns-" <> show details.id)
-            ] []
-        else
-          HH.div_ []
-
-      fcBeacon =
-        if viewState.viewBeacons then
-          HH.div
-            [ HP.class_ $ HH.ClassName "beacon"
-            , HP.attr (HH.AttrName "path") ("fc-" <> show details.id)
-            ] []
-        else
-          HH.div_ []
-
+      nsBeacon = renderNSBeacon viewState details.id
+      fcBeacon = renderFCBeacon viewState details.id
     in
     HH.div
       [ HP.classes classes

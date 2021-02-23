@@ -1,12 +1,14 @@
 module App.Control.Drag where
 
 import App.Prelude
-import App.Data.Beacon (Beacon)
+import App.Data.Beacon (Beacon(..))
 import App.Data.Map.State as MapState
 import App.Data.Map.Mode as Mode
-import App.Data.NodeCommon (NodeId, NodePosition(..))
+import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath)
 import App.Control.DragState as DragState
 import App.Data.Node as Node
+
+import Data.Array (head)
 
 import Data.Map as Map
 
@@ -20,6 +22,7 @@ onMouseDown state event id xoffset yoffset =
       , lastMouseX: toNumber $ clientX event
       , lastMouseY: toNumber $ clientY event
       , state: DragState.Hooked 0.0 xoffset yoffset
+      , closestBeacon: Nothing
       }
   in
   state { mode = Mode.Drag dragState }
@@ -53,14 +56,22 @@ moveNodePosition state id dx dy =
         state.nodes
     }
 
+extractBeaconPath :: Beacon -> NodePath
+extractBeaconPath (Beacon details) = details.path
+
+findClosestBeacon :: Array Beacon -> Number -> Number -> Maybe NodePath
+findClosestBeacon beacons x y =
+  map extractBeaconPath $ head beacons
+
 onMouseMove :: MapState.State -> MouseEvent -> Array Beacon -> MapState.State
 onMouseMove state event beacons = fromMaybe state do
   startingDragState <- getDragState state
   let dragData = DragState.toDragData startingDragState event
   let dragState =
         startingDragState
-          { lastMouseX = startingDragState.lastMouseX + dragData.dx
-          , lastMouseY = startingDragState.lastMouseY + dragData.dy
+          { lastMouseX = dragData.x
+          , lastMouseY = dragData.y
+          , closestBeacon = findClosestBeacon beacons dragData.x dragData.y
           }
 
   case dragState.state of
