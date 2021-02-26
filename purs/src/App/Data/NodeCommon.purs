@@ -4,9 +4,9 @@ import App.Prelude
 import Data.Tuple (Tuple)
 
 import CSS.Stylesheet (CSS)
-import CSS.Display as CSSDisplay
-import CSS.Geometry as CSSGeometry
-import CSS.Size as CSSSize
+import CSS.Display (position, absolute, static) as CSS
+import CSS.Geometry (left, top) as CSS
+import CSS.Size (px) as CSS
 
 newtype NodeId = NodeId Int
 derive newtype instance nodeIdEq :: Eq NodeId
@@ -16,26 +16,18 @@ derive newtype instance nodeIdShow :: Show NodeId
 nextId :: NodeId -> NodeId
 nextId (NodeId n) = NodeId $ n + 1
 
-nodeAttributePrefix :: String
-nodeAttributePrefix = "n"
-
-nodeIdToAttribute :: NodeId -> String
-nodeIdToAttribute n = nodeAttributePrefix <> show n
-
 data NodePosition
   = Absolute { x :: Number, y :: Number }
   | Static
 
 positionToCSS :: NodePosition -> CSS
 positionToCSS = case _ of
-  Absolute position ->
-    do
-      CSSDisplay.position CSSDisplay.absolute
-      CSSGeometry.left $ CSSSize.px position.x
-      CSSGeometry.top $ CSSSize.px position.y
-  Static  ->
-    do
-      CSSDisplay.position CSSDisplay.static
+  Absolute position -> do -- StyleM
+    CSS.position CSS.absolute
+    CSS.left $ CSS.px position.x
+    CSS.top $ CSS.px position.y
+  Static -> do -- StyleM
+    CSS.position CSS.static
 
 data NodePath
   = Top (Tuple Number Number)

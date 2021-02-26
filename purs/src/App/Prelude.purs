@@ -12,9 +12,10 @@ import Data.Generic.Rep.Show (genericShow) as X
 import Data.HeytingAlgebra ((&&), (||)) as X
 import Data.Int (toNumber) as X
 import Data.Maybe (Maybe(..), fromMaybe) as X
-import Data.Ord (class Ord, (<), (>), (<=), (>=), abs) as X
+import Data.Ord (class Ord, (<), (>), (<=), (>=), abs, compare) as X
 import Data.Ring ((-)) as X
 import Data.Semigroup ((<>)) as X
 import Data.Semiring ((+), (*)) as X
 import Data.Show (class Show, show) as X
 import Data.Unit (Unit, unit) as X
+import Data.Tuple (Tuple(..)) as X

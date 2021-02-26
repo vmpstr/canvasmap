@@ -4,11 +4,13 @@ import App.Prelude
 import App.Data.Beacon (Beacon(..))
 import App.Data.Map.State as MapState
 import App.Data.Map.Mode as Mode
-import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath)
+import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath(..))
 import App.Control.DragState as DragState
 import App.Data.Node as Node
 
-import Data.Array (head)
+import Data.Array (head, sortBy)
+import Data.List (filter, fromFoldable, (:), elemIndex, insertAt)
+import Math as Math
 
 import Data.Map as Map
 
@@ -39,10 +41,18 @@ setDragState mstate dstate =
 
 setNodePosition :: MapState.State -> NodeId -> Number -> Number -> MapState.State
 setNodePosition state id x y =
-  -- need to also promote to top level child
   state
     { nodes = Map.update
         (\node -> Just $ Node.setPosition node (Absolute { x, y }))
+        id
+        state.nodes
+    }
+
+resetNodePosition :: MapState.State -> NodeId -> MapState.State
+resetNodePosition state id =
+  state
+    { nodes = Map.update
+        (\node -> Just $ Node.setPosition node Static)
         id
         state.nodes
     }
@@ -56,39 +66,106 @@ moveNodePosition state id dx dy =
         state.nodes
     }
 
-extractBeaconPath :: Beacon -> NodePath
-extractBeaconPath (Beacon details) = details.path
+type DistanceBeacon =
+  { distance :: Number
+  , path :: NodePath
+  }
+
+computeBeaconDistance :: Number -> Number -> Beacon -> DistanceBeacon
+computeBeaconDistance x y (Beacon details) =
+  let
+    dx = details.x - x
+    dy = details.y - y
+  in
+  { distance: Math.sqrt $ dx * dx + dy * dy
+  , path: details.path
+  }
 
 findClosestBeacon :: Array Beacon -> Number -> Number -> Maybe NodePath
 findClosestBeacon beacons x y =
-  map extractBeaconPath $ head beacons
+  let
+    distanceBeacons = map (computeBeaconDistance x y) beacons
+    sorted = sortBy (\a b -> compare a.distance b.distance) distanceBeacons
+  in
+  case head sorted of
+    Just beacon | beacon.distance < 50.0 -> Just beacon.path
+    _ -> Nothing
 
 onMouseMove :: MapState.State -> MouseEvent -> Array Beacon -> MapState.State
-onMouseMove state event beacons = fromMaybe state do
+onMouseMove state event beacons = fromMaybe state do -- Maybe
   startingDragState <- getDragState state
   let dragData = DragState.toDragData startingDragState event
   let dragState =
         startingDragState
           { lastMouseX = dragData.x
           , lastMouseY = dragData.y
+          -- TODO(vmpstr): Move hooked xo/yo to dragState, and add them to these coords.
           , closestBeacon = findClosestBeacon beacons dragData.x dragData.y
           }
 
   case dragState.state of
-    DragState.Hooked n xo yo -> do
+    DragState.Hooked n xo yo -> do -- Maybe
       let n' = n + (abs dragData.dx) + (abs dragData.dy)
-      if n' > 10.0 then do
+      if n' > 10.0 then do -- Maybe
         let state' = setDragState state $ dragState { state = DragState.Dragging }
-        pure $ setNodePosition state' dragState.nodeId (dragData.x + xo) (dragData.y + yo)
+        pure $ setNodePath state' dragState.nodeId $ Top $ Tuple (dragData.x + xo) (dragData.y + yo)
       else
         pure $ setDragState state $ dragState { state = DragState.Hooked n' xo yo }
-    DragState.Dragging -> do
+    DragState.Dragging -> do -- Maybe
       let state' = setDragState state dragState
       pure $ moveNodePosition state' dragState.nodeId dragData.dx dragData.dy
 
+-- TODO(vmpstr): This needs a refactor badly.
+setNodePath :: MapState.State -> NodeId -> NodePath -> MapState.State
+setNodePath state nodeId path =
+  case path of
+    Top (Tuple x y) ->
+      let
+        children = state.relations.children
+        parents = state.relations.parents
+        removeChild = Just <<< filter (_ /= nodeId) 
+        state' = fromMaybe state do -- Maybe
+          parentId <- Map.lookup nodeId parents
+          let parents' = Map.delete nodeId parents
+          let children' = Map.update removeChild parentId children
+          pure state { relations { parents = parents', children = children' }}
+      in
+      setNodePosition state' nodeId x y
+    FirstChild parentId ->
+      let
+        state' = setNodePath state nodeId (Top $ Tuple 0.0 0.0)
+        parents' = Map.insert nodeId parentId state'.relations.parents
+        childList =
+          nodeId : (fromMaybe
+                      (fromFoldable []) $
+                      Map.lookup parentId state'.relations.children)
+        children' = Map.insert parentId childList state'.relations.children
+        state'' = state' { relations { parents = parents', children = children' }}
+      in
+      resetNodePosition state'' nodeId
+    NextSibling siblingId ->
+      let
+        state' = setNodePath state nodeId (Top $ Tuple 0.0 0.0)
+        children = state'.relations.children
+        parents = state'.relations.parents
+        Tuple parents' children' = fromMaybe (Tuple parents children) do
+          parentId <- Map.lookup siblingId parents
+          childList <- Map.lookup parentId children
+          siblingIndex <- elemIndex siblingId childList
+          childList' <- insertAt (siblingIndex + 1) nodeId childList
+          let parents' = Map.insert nodeId parentId parents
+          let children' = Map.insert parentId childList' children
+          pure $ Tuple parents' children'
+        state'' = state' { relations { parents = parents', children = children' }}
+      in
+      resetNodePosition state'' nodeId
+
 onMouseUp :: MapState.State -> MouseEvent -> MapState.State
 onMouseUp state event =
-  if Mode.isDrag state.mode then
-    state { mode = Mode.Idle }
+  if Mode.isHookedToDrag state.mode then
+    let state' = state { mode = Mode.Idle } in
+    case Mode.getClosestBeacon state.mode, Mode.getDragNodeId state.mode of
+      Just path, Just nodeId -> setNodePath state' nodeId path
+      _, _ -> state'
   else
     state
