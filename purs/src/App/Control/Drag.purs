@@ -148,7 +148,7 @@ setNodePath state nodeId path =
         state' = setNodePath state nodeId (Top $ Tuple 0.0 0.0)
         children = state'.relations.children
         parents = state'.relations.parents
-        Tuple parents' children' = fromMaybe (Tuple parents children) do
+        Tuple parents' children' = fromMaybe (Tuple parents children) do -- Maybe
           parentId <- Map.lookup siblingId parents
           childList <- Map.lookup parentId children
           siblingIndex <- elemIndex siblingId childList
