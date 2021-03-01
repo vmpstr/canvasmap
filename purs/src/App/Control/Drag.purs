@@ -23,7 +23,9 @@ onMouseDown state event id xoffset yoffset =
       { nodeId: id
       , lastMouseX: toNumber $ clientX event
       , lastMouseY: toNumber $ clientY event
-      , state: DragState.Hooked 0.0 xoffset yoffset
+      , nodeXOffset : xoffset
+      , nodeYOffset : yoffset
+      , state: DragState.Hooked 0.0
       , closestBeacon: Nothing
       }
   in
@@ -95,25 +97,26 @@ onMouseMove :: MapState.State -> MouseEvent -> Array Beacon -> MapState.State
 onMouseMove state event beacons = fromMaybe state do -- Maybe
   startingDragState <- getDragState state
   let dragData = DragState.toDragData startingDragState event
+  let xo = startingDragState.nodeXOffset
+  let yo = startingDragState.nodeYOffset
   let dragState =
         startingDragState
           { lastMouseX = dragData.x
           , lastMouseY = dragData.y
-          -- TODO(vmpstr): Move hooked xo/yo to dragState, and add them to these coords.
-          , closestBeacon = findClosestBeacon beacons dragData.x dragData.y
+          , closestBeacon = findClosestBeacon beacons (dragData.x + xo) (dragData.y + yo)
           }
 
-  case dragState.state of
-    DragState.Hooked n xo yo -> do -- Maybe
-      let n' = n + (abs dragData.dx) + (abs dragData.dy)
-      if n' > 10.0 then do -- Maybe
-        let state' = setDragState state $ dragState { state = DragState.Dragging }
-        pure $ setNodePath state' dragState.nodeId $ Top $ Tuple (dragData.x + xo) (dragData.y + yo)
+  pure $ case dragState.state of
+    DragState.Hooked n ->
+      let n' = n + (abs dragData.dx) + (abs dragData.dy) in
+      if n' > 10.0 then
+        let state' = setDragState state $ dragState { state = DragState.Dragging } in
+        setNodePath state' dragState.nodeId $ Top $ Tuple (dragData.x + xo) (dragData.y + yo)
       else
-        pure $ setDragState state $ dragState { state = DragState.Hooked n' xo yo }
-    DragState.Dragging -> do -- Maybe
-      let state' = setDragState state dragState
-      pure $ moveNodePosition state' dragState.nodeId dragData.dx dragData.dy
+        setDragState state $ dragState { state = DragState.Hooked n' }
+    DragState.Dragging ->
+      let state' = setDragState state dragState in
+      moveNodePosition state' dragState.nodeId dragData.dx dragData.dy
 
 -- TODO(vmpstr): This needs a refactor badly.
 setNodePath :: MapState.State -> NodeId -> NodePath -> MapState.State

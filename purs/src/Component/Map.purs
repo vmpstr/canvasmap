@@ -19,7 +19,7 @@ import Data.Map (values, lookup, filterKeys)
 import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
 import Data.Int (toNumber, fromString)
-import Data.Array (filter, catMaybes, (!!))
+import Data.Array (filter, catMaybes, (!!), unsnoc, snoc)
 import Data.Traversable (traverse)
 import Data.String (split, Pattern(..))
 import Control.Bind (join, (>>=))
@@ -62,7 +62,12 @@ renderMap state =
 
     renderChildren :: ViewState -> NodeId -> Array (HH.HTML slots MapAction.Action)
     renderChildren localViewState nodeId =
-      map (render renderChildren localViewState) (getChildren nodeId)
+      case unsnoc $ getChildren nodeId of
+        Just { init, last } ->
+          snoc
+            (map (render renderChildren localViewState { haveNextSibling = true }) init)
+            (render renderChildren localViewState { haveNextSibling = false } last)
+        Nothing -> []
 
     attributes =
       [ HP.ref (H.RefLabel "main-map")

@@ -6,11 +6,11 @@ import App.Data.NodeCommon (NodeId, NodePath)
 import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY)
 
 data DragMode
-  = Hooked Number Number Number
+  = Hooked Number
   | Dragging
 
 instance showDragMode :: Show DragMode where
-  show (Hooked n _ _) = "Hooked " <> show n
+  show (Hooked n) = "Hooked " <> show n
   show Dragging = "Dragging"
 
 derive instance eqDragMode :: Eq DragMode
@@ -19,6 +19,8 @@ type State =
   { nodeId :: NodeId
   , lastMouseX :: Number
   , lastMouseY :: Number
+  , nodeXOffset :: Number
+  , nodeYOffset :: Number
   , state :: DragMode
   , closestBeacon :: Maybe NodePath
   }

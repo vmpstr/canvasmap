@@ -114,19 +114,28 @@ instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
 
       nsBeacon = renderNSBeacon viewState details.id
       fcBeacon = renderFCBeacon viewState details.id
+      siblingRail =
+        if viewState.haveNextSibling then
+          HH.div [ HP.class_ $ HH.ClassName "sibling_rail" ] []
+        else
+          HH.div_ []
     in
     HH.div
       [ HP.classes classes
       , HC.style $ positionToCSS details.position
       ]
-      [ renderContents viewState impl 
-      , parentEdge
+      [ HH.div 
+          [ HP.class_ $ HH.ClassName "position_capture" ]
+          [ renderContents viewState impl 
+          , parentEdge
+          ]
       , HH.div
           [ HP.class_ $ HH.ClassName "child_holder" ]
           [ HH.div [ HP.class_ $ HH.ClassName "child_edge" ] []
           , HH.div [ HP.class_ $ HH.ClassName "child_area" ]
               $ fcBeacon : renderChildren childViewState details.id
           ]
+      , siblingRail
       , nsBeacon
       ]
 

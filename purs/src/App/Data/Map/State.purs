@@ -41,4 +41,5 @@ toInitialViewState state =
   , parentState: NoParent
   , selected: state.selected
   , closestBeacon: getClosestBeacon state.mode
+  , haveNextSibling: false
   }

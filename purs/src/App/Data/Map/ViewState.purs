@@ -16,4 +16,5 @@ type ViewState =
   , parentState :: ParentState
   , selected :: Maybe NodeId
   , closestBeacon :: Maybe NodePath
+  , haveNextSibling :: Boolean
   }

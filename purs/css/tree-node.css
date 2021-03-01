@@ -4,8 +4,8 @@
   box-sizing: border-box;
   position: absolute;
   right: 100%;
-  top: 0;
-  height: 50%;
+  top: -5px; /* this is margin spread of children */
+  height: calc(50% + 5px); /* margin again */
   width: 13px;
   border-radius: 0 0 0 50%;
 }
@@ -22,12 +22,18 @@
   width: 100%;
 }
 
-.child_edge {
+.sibling_rail {
   position: absolute;
   box-sizing: border-box;
-  top: 0;
-  left: 12px;
+  left: -13px;
+  top: -5px;
+  bottom: 0px;
   width: 0;
   border-left: 1px solid rgb(50, 50, 50);
+}
+
+.position_capture {
+  position: relative;
+  width: max-content;
 }
 
