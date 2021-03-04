@@ -58,10 +58,10 @@ renderFCBeacon viewState id =
 
 
 renderContents ::
-  forall slots
+  forall slots m
   .  ViewState.ViewState
   -> TreeNodeImpl
-  -> HH.HTML slots MapAction.Action
+  -> HH.ComponentHTML MapAction.Action slots m
 renderContents viewState (TreeNodeImpl details) =
   let
     classes = filterBySecond

@@ -8,8 +8,8 @@ import Halogen.HTML as HH
 
 class LayoutNode n where
   render ::
-    forall slots
-    .  (ViewState -> NodeId -> Array (HH.HTML slots MapAction.Action))
+    forall slots m
+    .  (ViewState -> NodeId -> Array (HH.ComponentHTML MapAction.Action slots m))
     -> ViewState
     -> n
-    -> HH.HTML slots MapAction.Action
+    -> HH.ComponentHTML MapAction.Action slots m

@@ -11,7 +11,6 @@ import App.Data.Map.ViewState (ViewState)
 import App.Data.Node (Node, errorNode)
 import App.Data.NodeCommon (NodeId(..), NodePath(..), nextId)
 import App.Data.NodeClass (render)
-import App.Monad (AppM)
 import Capabilities.Logging as Log
 
 import Data.List (toUnfoldable)
@@ -40,7 +39,7 @@ filterBySecond :: forall a. Array (Tuple a Boolean) -> Array a
 filterBySecond input =
   map Tuple.fst $ filter Tuple.snd input
 
-renderMap :: forall slots. MapState.State -> HH.HTML slots MapAction.Action
+renderMap :: forall slots m. MapState.State -> HH.ComponentHTML MapAction.Action slots m
 renderMap state =
   let
     viewState = MapState.toInitialViewState state
@@ -60,7 +59,7 @@ renderMap state =
         Nothing -> []
         Just children -> toUnfoldable $ map toNode children
 
-    renderChildren :: ViewState -> NodeId -> Array (HH.HTML slots MapAction.Action)
+    renderChildren :: ViewState -> NodeId -> Array (HH.ComponentHTML MapAction.Action slots m)
     renderChildren localViewState nodeId =
       case unsnoc $ getChildren nodeId of
         Just { init, last } ->
@@ -137,23 +136,17 @@ getBeaconRects htmlRoot = do -- Effect
     traverse (map join) $
     map (traverse elementToBeacon <<< fromElement) beaconElementArray
 
-{-
-- EventSource for ResizeObserver-like behavior
-- Slots for label edits
--}
 handleAction ::
-  forall s o.
-  MapAction.Action
-  -> H.HalogenM MapState.State MapAction.Action s o AppM Unit
+  forall s o m.
+  Log.Logger m => MonadAff m =>
+  MapAction.Action -> H.HalogenM MapState.State MapAction.Action s o m Unit
 handleAction action = do -- HalogenM
-  Log.log Log.Debug $ "handling action: " <> show action
-  --s <- H.get
-  --Log.log Log.Debug $ "state.mode " <> show s.mode
+  -- Log.log Log.Debug $ "handling action: " <> show action
   case action of
     MapAction.Noop -> pure unit
     MapAction.MouseDown mouseEvent id -> do
       state <- H.get
-      domRect <- H.liftEffect $ getEventTargetRect mouseEvent
+      domRect <- liftEffect $ getEventTargetRect mouseEvent
       let
         xoffset = domRect.left - (toNumber $ clientX mouseEvent)
         yoffset = domRect.top - (toNumber $ clientY mouseEvent)
@@ -162,7 +155,7 @@ handleAction action = do -- HalogenM
       state <- H.get
       mhtmlMap <- H.getHTMLElementRef (H.RefLabel "main-map") 
       beacons <-
-        H.liftEffect $ case mhtmlMap of
+        liftEffect $ case mhtmlMap of
           Just htmlMap -> getBeaconRects htmlMap
           Nothing -> pure []
       when (MapMode.isHookedToDrag state.mode) $
@@ -172,10 +165,10 @@ handleAction action = do -- HalogenM
       when (MapMode.isHookedToDrag state.mode) $
         H.modify_ $ const $ DragControl.onMouseUp state mouseEvent
     MapAction.StopPropagation event nextAction -> do
-      H.liftEffect $ stopPropagation event
+      liftEffect $ stopPropagation event
       handleAction nextAction
     MapAction.PreventDefault event nextAction -> do
-      H.liftEffect $ preventDefault event
+      liftEffect $ preventDefault event
       handleAction nextAction
     MapAction.Select selection -> do
       H.modify_ _ { selected = selection }
@@ -190,9 +183,9 @@ handleAction action = do -- HalogenM
         state' { maxId = id, selected = Just id }
 
 mkComponent ::
-  forall query input output.
-  Unit
-  -> H.Component HH.HTML query input output AppM
+  forall q i o m.
+  Log.Logger m => MonadAff m =>
+  Unit -> H.Component HH.HTML q i o m
 mkComponent _ =
   H.mkComponent
     { initialState: MapState.initialState
