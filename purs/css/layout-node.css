@@ -73,3 +73,7 @@
 .beacon.closest {
   background: green;
 }
+
+.label-editor {
+  position: absolute;
+}

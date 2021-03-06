@@ -17,4 +17,6 @@ type ViewState =
   , selected :: Maybe NodeId
   , closestBeacon :: Maybe NodePath
   , haveNextSibling :: Boolean
+  , reactsToMouse :: Boolean
+  , editing :: Maybe NodeId
   }

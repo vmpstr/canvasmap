@@ -5,7 +5,7 @@ import App.Data.Node (Node(..))
 import App.Data.NodeCommon (NodeId(..), NodePosition(..))
 import App.Data.NodeImpl.TreeNode (TreeNodeImpl(..))
 import App.Data.Map.ViewState (ViewState, ParentState(..))
-import App.Data.Map.Mode (Mode(..), isDrag, getDragNodeId, getClosestBeacon)
+import App.Data.Map.Mode (Mode(..), isDrag, getDragNodeId, getClosestBeacon, reactsToMouse, getEditNodeId)
 
 import Data.List (List)
 import Data.Map (Map)
@@ -42,4 +42,6 @@ toInitialViewState state =
   , selected: state.selected
   , closestBeacon: getClosestBeacon state.mode
   , haveNextSibling: false
+  , reactsToMouse: reactsToMouse state.mode
+  , editing: getEditNodeId state.mode
   }

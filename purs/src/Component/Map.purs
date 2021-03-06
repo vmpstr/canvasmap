@@ -73,11 +73,11 @@ renderMap state =
     attributes =
       [ HP.ref (H.RefLabel "main-map")
       , HP.class_ (HH.ClassName "map")
-      , HE.onClick \_ -> Just $ MapAction.Select Nothing
-      , HE.onMouseUp \event -> Just $ MapAction.MouseUp event
-      , HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (clientX e) (clientY e)
       ] <> filterBySecond
             [ Tuple (HE.onMouseMove \event -> Just $ MapAction.MouseMove event) (MapMode.isHookedToDrag state.mode)
+            , Tuple (HE.onClick \_ -> Just $ MapAction.Select Nothing) viewState.reactsToMouse
+            , Tuple (HE.onMouseUp \event -> Just $ MapAction.MouseUp event) (viewState.reactsToMouse || MapMode.isHookedToDrag state.mode)
+            , Tuple (HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (clientX e) (clientY e)) viewState.reactsToMouse
             ]
 
   in
@@ -143,7 +143,7 @@ handleAction ::
   Log.Logger m => MonadAff m =>
   MapAction.Action -> H.HalogenM MapState.State MapAction.Action s o m Unit
 handleAction action = do -- HalogenM
-  -- Log.log Log.Debug $ "handling action: " <> show action
+  Log.log Log.Debug $ "handling action: " <> show action
   case action of
     MapAction.Noop -> pure unit
     MapAction.MouseDown mouseEvent id -> do
@@ -183,6 +183,9 @@ handleAction action = do -- HalogenM
           state' = NodeControl.newNode id (Top $ Tuple x' y') state
         in
         state' { maxId = id, selected = Just id }
+    MapAction.EditLabel id -> do
+      H.modify_ \state ->
+        state { mode = MapMode.Editing id }
 
 mkComponent ::
   forall q i o m.

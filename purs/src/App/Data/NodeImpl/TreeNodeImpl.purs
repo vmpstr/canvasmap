@@ -73,30 +73,52 @@ renderContents viewState (TreeNodeImpl details) =
       , Tuple (HH.ClassName "selected") (viewState.selected == Just details.id)
       ]
 
-    label =
-      if false then -- "Are we editing this?"
+    labelEditor =
+      if viewState.editing == Just details.id then -- "Are we editing this?"
         HH.slot Slots._labelEditor details.id (LabelEditor.mkComponent unit) details.label (\_ -> Nothing)
       else
-        HH.div 
-          [ HP.class_ $ HH.ClassName "node_label" ]
-          [ HH.text details.label ]
+        HH.div_ []
+
+    containerProps = filterBySecond
+      [ Tuple (HP.class_ $ HH.ClassName "contents_container") true
+      , Tuple
+          (HE.onClick
+            \mouseEvent ->
+              let
+                event = toEvent mouseEvent
+                selectAction = MapAction.Select $ Just details.id
+              in
+              Just $ MapAction.StopPropagation event selectAction
+          ) viewState.reactsToMouse
+      , Tuple
+          (HE.onMouseDown
+            \mouseEvent ->
+              let
+                event = toEvent mouseEvent
+                mouseDownAction = MapAction.MouseDown mouseEvent details.id
+              in
+              Just $ MapAction.StopPropagation event mouseDownAction
+          ) viewState.reactsToMouse
+      , Tuple
+          (HE.onDoubleClick
+            \mouseEvent ->
+              let
+                event = toEvent mouseEvent
+                editAction = MapAction.EditLabel details.id
+              in
+              Just $ MapAction.StopPropagation event editAction
+          ) viewState.reactsToMouse
+      ]
   in
   HH.div
-    [ HP.classes classes ]
+    [ HP.classes classes ] -- selection_container
     [ HH.div
-        [ HP.class_ $ HH.ClassName "contents_container"
-        , HE.onClick
-            \mouseEvent -> Just $
-              MapAction.StopPropagation
-                (toEvent mouseEvent)
-                (MapAction.Select $ Just details.id)
-        , HE.onMouseDown
-            \mouseEvent -> Just $
-              MapAction.StopPropagation
-                (toEvent mouseEvent)
-                (MapAction.MouseDown mouseEvent details.id)
+        containerProps -- contents_container
+        [ labelEditor
+        , HH.div 
+            [ HP.class_ $ HH.ClassName "node_label" ] -- pointer-events: none.
+            [ HH.text details.label ]
         ]
-        [ label ]
     ]
 
 instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where

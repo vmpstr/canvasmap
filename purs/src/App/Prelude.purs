@@ -1,16 +1,17 @@
 module App.Prelude (module X) where
 
 import Control.Applicative (pure, when) as X
-import Control.Bind (bind, discard) as X
+import Control.Bind (bind, discard, (>>=)) as X
 import Control.Category (identity) as X
 import Control.Semigroupoid ((<<<)) as X
 
 import Data.Eq (class Eq, (==), (/=)) as X
 import Data.Function (($), (#), flip, const) as X
+import Data.Foldable (traverse_) as X
 import Data.Functor (map) as X
 import Data.Generic.Rep (class Generic) as X
 import Data.Generic.Rep.Show (genericShow) as X
-import Data.HeytingAlgebra ((&&), (||)) as X
+import Data.HeytingAlgebra ((&&), (||), not) as X
 import Data.Int (toNumber) as X
 import Data.Maybe (Maybe(..), fromMaybe) as X
 import Data.Ord (class Ord, (<), (>), (<=), (>=), abs, compare) as X

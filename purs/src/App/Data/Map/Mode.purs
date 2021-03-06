@@ -7,6 +7,7 @@ import App.Data.NodeCommon (NodeId, NodePath)
 data Mode
   = Idle
   | Drag Drag.State
+  | Editing NodeId
 
 isHookedToDrag :: Mode -> Boolean
 isHookedToDrag (Drag _) = true
@@ -25,6 +26,16 @@ getClosestBeacon :: Mode -> Maybe NodePath
 getClosestBeacon (Drag state) = state.closestBeacon
 getClosestBeacon _ = Nothing
 
+reactsToMouse :: Mode -> Boolean
+reactsToMouse Idle = true
+reactsToMouse mode@(Drag state) = isHookedToDrag mode && not isDrag mode
+reactsToMouse _ = false
+
+getEditNodeId :: Mode -> Maybe NodeId
+getEditNodeId (Editing id) = Just id
+getEditNodeId _ = Nothing
+
 instance modeShow :: Show Mode where
   show Idle = "Idle"
   show (Drag dragState) = "Drag (" <> show dragState.state <> ")"
+  show (Editing nodeId) = "Editing (" <> show nodeId <> ")"
