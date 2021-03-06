@@ -6,6 +6,9 @@ import App.Data.Map.Action as MapAction
 import App.Data.NodeClass (class LayoutNode)
 import App.Data.NodeCommon (NodeId, NodePosition(..), positionToCSS, NodePath(..))
 
+import Component.Slots as Slots
+import Component.LabelEditor as LabelEditor
+
 import Data.Array (filter, (:))
 import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
@@ -58,16 +61,25 @@ renderFCBeacon viewState id =
 
 
 renderContents ::
-  forall slots m
-  .  ViewState.ViewState
+  forall m.
+  MonadAff m =>
+   ViewState.ViewState
   -> TreeNodeImpl
-  -> HH.ComponentHTML MapAction.Action slots m
+  -> HH.ComponentHTML MapAction.Action Slots.Slots m
 renderContents viewState (TreeNodeImpl details) =
   let
     classes = filterBySecond
       [ Tuple (HH.ClassName "selection_container") true
       , Tuple (HH.ClassName "selected") (viewState.selected == Just details.id)
       ]
+
+    label =
+      if false then -- "Are we editing this?"
+        HH.slot Slots._labelEditor details.id (LabelEditor.mkComponent unit) details.label (\_ -> Nothing)
+      else
+        HH.div 
+          [ HP.class_ $ HH.ClassName "node_label" ]
+          [ HH.text details.label ]
   in
   HH.div
     [ HP.classes classes ]
@@ -84,10 +96,7 @@ renderContents viewState (TreeNodeImpl details) =
                 (toEvent mouseEvent)
                 (MapAction.MouseDown mouseEvent details.id)
         ]
-        [ HH.div 
-            [ HP.class_ $ HH.ClassName "node_label" ]
-            [ HH.text details.label ]
-        ]
+        [ label ]
     ]
 
 instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where

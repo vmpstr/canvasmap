@@ -13,6 +13,8 @@ import App.Data.NodeCommon (NodeId(..), NodePath(..), nextId)
 import App.Data.NodeClass (render)
 import Capabilities.Logging as Log
 
+import Component.Slots as Slots
+
 import Data.List (toUnfoldable)
 import Data.Map (values, lookup, filterKeys)
 import Data.Tuple (Tuple(..))
@@ -39,7 +41,7 @@ filterBySecond :: forall a. Array (Tuple a Boolean) -> Array a
 filterBySecond input =
   map Tuple.fst $ filter Tuple.snd input
 
-renderMap :: forall slots m. MapState.State -> HH.ComponentHTML MapAction.Action slots m
+renderMap :: forall m. MonadAff m => MapState.State -> HH.ComponentHTML MapAction.Action Slots.Slots m
 renderMap state =
   let
     viewState = MapState.toInitialViewState state
@@ -59,7 +61,7 @@ renderMap state =
         Nothing -> []
         Just children -> toUnfoldable $ map toNode children
 
-    renderChildren :: ViewState -> NodeId -> Array (HH.ComponentHTML MapAction.Action slots m)
+    renderChildren :: ViewState -> NodeId -> Array (HH.ComponentHTML MapAction.Action Slots.Slots m)
     renderChildren localViewState nodeId =
       case unsnoc $ getChildren nodeId of
         Just { init, last } ->

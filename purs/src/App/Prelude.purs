@@ -20,6 +20,8 @@ import Data.Semiring ((+), (*)) as X
 import Data.Show (class Show, show) as X
 import Data.Unit (Unit, unit) as X
 import Data.Tuple (Tuple(..)) as X
+import Data.Void (Void) as X
 import Data.Symbol (SProxy(..)) as X
 import Effect.Aff.Class (class MonadAff) as X
 import Effect.Class (liftEffect) as X
+import Type.Proxy (Proxy(..)) as X

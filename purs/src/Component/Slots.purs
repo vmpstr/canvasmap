@@ -2,13 +2,13 @@ module Component.Slots where
 
 import App.Prelude
 import Halogen as H
+import App.Data.NodeCommon (NodeId)
 
-data LabelEditorQuery a = SetLabel String a
-data LabelEditorMessage = NewLabel String
+import Component.LabelEditor as LabelEditor
 
 type Slots =
-  ( labelEditor :: H.Slot LabelEditorQuery LabelEditorMessage Int )
+  ( labelEditor :: forall query. H.Slot query LabelEditor.Input NodeId )
 
-_labelEditor :: SProxy "labelEditor"
-_labelEditor = SProxy 
+_labelEditor = SProxy :: SProxy "labelEditor"
 
+ 

@@ -1,7 +1,7 @@
 module Component.LabelEditor where
 
 import App.Prelude
-import Effect.Aff (Aff)
+import Effect.Aff.Class (class MonadAff)
 
 import Data.Array (reverse)
 import Data.String.CodeUnits (fromCharArray, toCharArray)
@@ -20,8 +20,9 @@ type Output = String
 type Slots = ()
 
 mkComponent ::
-  forall query.
-  Unit -> H.Component HH.HTML query Input Output Aff
+  forall q m.
+  MonadAff m =>
+  Unit -> H.Component HH.HTML q Input Output m
 mkComponent _ =
   H.mkComponent
     { initialState
@@ -38,8 +39,14 @@ initialState = identity
 receive :: Input -> Maybe Action
 receive _ = Nothing
 
-render :: State -> HH.ComponentHTML Action Slots Aff
+render ::
+  forall m.
+  MonadAff m =>
+  State -> HH.ComponentHTML Action Slots m
 render label = HH.div_ [ HH.text (fromCharArray $ reverse $ toCharArray label)]
 
-handleAction :: Action -> H.HalogenM State Action Slots Output Aff Unit
+handleAction ::
+  forall m.
+  MonadAff m =>
+  Action -> H.HalogenM State Action Slots Output m Unit
 handleAction _ = pure unit
