@@ -40,3 +40,7 @@ moveAbsolutePosition impl@(ScrollerNodeImpl details) dx dy =
   case details.position of
     Absolute p -> ScrollerNodeImpl $ details { position = Absolute { x: p.x + dx, y: p.y + dy } }
     _ -> impl
+
+setLabel :: ScrollerNodeImpl -> String -> ScrollerNodeImpl
+setLabel (ScrollerNodeImpl details) value =
+  ScrollerNodeImpl details { label = value }

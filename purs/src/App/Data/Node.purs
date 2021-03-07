@@ -51,3 +51,9 @@ moveAbsolutePosition node dx dy =
   case node of
     TreeNode impl -> TreeNode $ TreeNodeImpl.moveAbsolutePosition impl dx dy
     ScrollerNode impl -> ScrollerNode $ ScrollerNodeImpl.moveAbsolutePosition impl dx dy
+
+setLabel :: Node -> String -> Node
+setLabel node value =
+  case node of
+    TreeNode impl -> TreeNode $ TreeNodeImpl.setLabel impl value
+    ScrollerNode impl -> ScrollerNode $ ScrollerNodeImpl.setLabel impl value

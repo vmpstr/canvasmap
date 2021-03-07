@@ -75,7 +75,7 @@ renderContents viewState (TreeNodeImpl details) =
 
     labelEditor =
       if viewState.editing == Just details.id then -- "Are we editing this?"
-        HH.slot Slots._labelEditor details.id (LabelEditor.mkComponent unit) details.label (\_ -> Nothing)
+        HH.slot Slots._labelEditor details.id (LabelEditor.mkComponent unit) details.label (\result -> Just $ MapAction.FinishEdit details.id result)
       else
         HH.div_ []
 
@@ -192,3 +192,7 @@ moveAbsolutePosition impl@(TreeNodeImpl details) dx dy =
   case details.position of
     Absolute p -> TreeNodeImpl $ details { position = Absolute { x: p.x + dx, y: p.y + dy } }
     _ -> impl
+
+setLabel :: TreeNodeImpl -> String -> TreeNodeImpl
+setLabel (TreeNodeImpl details) value =
+  TreeNodeImpl details { label = value }

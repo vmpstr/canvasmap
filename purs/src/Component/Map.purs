@@ -8,7 +8,7 @@ import App.Data.Map.Mode as MapMode
 import App.Data.Map.Action as MapAction
 import App.Data.Map.State as MapState
 import App.Data.Map.ViewState (ViewState)
-import App.Data.Node (Node, errorNode)
+import App.Data.Node (Node, errorNode, setLabel)
 import App.Data.NodeCommon (NodeId(..), NodePath(..), nextId)
 import App.Data.NodeClass (render)
 import Capabilities.Logging as Log
@@ -16,7 +16,7 @@ import Capabilities.Logging as Log
 import Component.Slots as Slots
 
 import Data.List (toUnfoldable)
-import Data.Map (values, lookup, filterKeys)
+import Data.Map (values, lookup, filterKeys, update)
 import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
 import Data.Int (toNumber, fromString)
@@ -186,6 +186,10 @@ handleAction action = do -- HalogenM
     MapAction.EditLabel id -> do
       H.modify_ \state ->
         state { mode = MapMode.Editing id }
+    MapAction.FinishEdit id value -> do
+      H.modify_ \state -> do
+        let nodes = update (\node -> Just $ setLabel node value) id state.nodes
+        state { nodes = nodes, mode = MapMode.Idle }
 
 mkComponent ::
   forall q i o m.

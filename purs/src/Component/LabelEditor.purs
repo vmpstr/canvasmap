@@ -13,9 +13,9 @@ import Web.HTML.HTMLInputElement as Input
 import Web.HTML.HTMLElement (focus)
 
 data Action
-  = ValueChanged String
-  | Finished String
-  | Initialize
+  = Initialize
+  | Cancelled
+  | Finished
 
 type State = String
 type Input = String
@@ -57,6 +57,7 @@ render label =
       , HP.value label
       , HP.class_ $ H.ClassName "label-editor"
       , HP.ref inputRef
+      , HE.onBlur \_ -> Just Finished
       ]
   in
   HH.input attributes
@@ -71,4 +72,9 @@ handleAction  = case _ of
       liftEffect $ focus e
       Input.fromHTMLElement e # traverse_ \input -> do
         liftEffect $ Input.select input
-  _ -> pure unit
+  Cancelled -> pure unit
+  Finished -> do
+    H.getHTMLElementRef inputRef >>= traverse_ \e -> do
+      Input.fromHTMLElement e # traverse_ \input -> do
+        value <- liftEffect $ Input.value input
+        H.raise value

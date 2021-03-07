@@ -16,6 +16,7 @@ data Action
   | MouseDown MouseEvent NodeId
   | MouseMove MouseEvent
   | EditLabel NodeId
+  | FinishEdit NodeId String
 
 instance actionShow :: Show Action where
   show Noop = "Noop"
@@ -27,4 +28,5 @@ instance actionShow :: Show Action where
   show (MouseDown _ id) = "MouseDown " <> show id
   show (MouseMove _) = "MouseMove"
   show (EditLabel id) = "EditLabel " <> show id
+  show (FinishEdit id value) = "FinishEdit " <> show id <> " " <> value
 
