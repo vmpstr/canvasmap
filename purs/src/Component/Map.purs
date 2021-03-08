@@ -28,14 +28,20 @@ import Control.Bind (join, (>>=))
 import Effect (Effect)
 import Web.Event.Event (stopPropagation, preventDefault, target)
 import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent)
+import Web.UIEvent.KeyboardEvent as KE
+import Web.UIEvent.KeyboardEvent.EventTypes as KET
 import Web.HTML.HTMLElement (toElement, DOMRect, fromEventTarget, getBoundingClientRect, fromElement, HTMLElement)
 import Web.DOM.Element (getAttribute, Element, getElementsByClassName)
 import Web.DOM.HTMLCollection (toArray)
+import Web.HTML (window)
+import Web.HTML.Window (document)
+import Web.HTML.HTMLDocument as HTMLDocument
 
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Halogen.Query.EventSource (eventListenerEventSource)
 
 filterBySecond :: forall a. Array (Tuple a Boolean) -> Array a
 filterBySecond input =
@@ -146,6 +152,13 @@ handleAction action = do -- HalogenM
   Log.log Log.Debug $ "handling action: " <> show action
   case action of
     MapAction.Noop -> pure unit
+    MapAction.Initialize -> do
+      document <- liftEffect $ document =<< window
+      void $ H.subscribe $
+        eventListenerEventSource
+          KET.keydown
+          (HTMLDocument.toEventTarget document)
+          \event -> map MapAction.HandleMapKeyPress $ KE.fromEvent event
     MapAction.MouseDown mouseEvent id -> do
       state <- H.get
       domRect <- liftEffect $ getEventTargetRect mouseEvent
@@ -190,6 +203,16 @@ handleAction action = do -- HalogenM
       H.modify_ \state -> do
         let nodes = update (\node -> Just $ setLabel node value) id state.nodes
         state { nodes = nodes, mode = MapMode.Idle }
+    MapAction.HandleMapKeyPress ke
+      | KE.code ke == "Tab" -> do
+        state <- H.get
+        state.selected # traverse_ \id ->
+          Log.log Log.Debug $ "Add child of " <> show id
+      | KE.code ke == "Enter" -> do
+        state <- H.get
+        state.selected # traverse_ \id ->
+          Log.log Log.Debug $ "Add next sibling of " <> show id
+      | otherwise -> pure unit
 
 mkComponent ::
   forall q i o m.
@@ -199,5 +222,5 @@ mkComponent _ =
   H.mkComponent
     { initialState: MapState.initialState
     , render: renderMap
-    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction, initialize = Just MapAction.Initialize }
     }

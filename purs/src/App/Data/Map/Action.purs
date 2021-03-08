@@ -5,9 +5,11 @@ import App.Data.NodeCommon (NodeId)
 
 import Web.Event.Event (Event)
 import Web.UIEvent.MouseEvent (MouseEvent)
+import Web.UIEvent.KeyboardEvent (KeyboardEvent, code)
 
 data Action
   = Noop 
+  | Initialize
   | StopPropagation Event Action
   | PreventDefault Event Action
   | Select (Maybe NodeId)
@@ -17,9 +19,11 @@ data Action
   | MouseMove MouseEvent
   | EditLabel NodeId
   | FinishEdit NodeId String
+  | HandleMapKeyPress KeyboardEvent
 
 instance actionShow :: Show Action where
   show Noop = "Noop"
+  show Initialize = "Initialize"
   show (StopPropagation _ action) = "StopPropagation & " <> show action
   show (PreventDefault _ action) = "PreventDefault & " <> show action
   show (Select maybeId) = "Select " <> show maybeId
@@ -29,4 +33,4 @@ instance actionShow :: Show Action where
   show (MouseMove _) = "MouseMove"
   show (EditLabel id) = "EditLabel " <> show id
   show (FinishEdit id value) = "FinishEdit " <> show id <> " " <> value
-
+  show (HandleMapKeyPress ke) = "HandleKeyPress '" <> code ke <> "'"
