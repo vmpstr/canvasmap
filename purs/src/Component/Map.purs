@@ -205,13 +205,21 @@ handleAction action = do -- HalogenM
         state { nodes = nodes, mode = MapMode.Idle }
     MapAction.HandleMapKeyPress ke
       | KE.code ke == "Tab" -> do
+        liftEffect $ preventDefault $ KE.toEvent ke
         state <- H.get
         state.selected # traverse_ \id ->
-          Log.log Log.Debug $ "Add child of " <> show id
+          H.modify_ \_ -> do
+            let newId = nextId state.maxId
+            let state' = NodeControl.newNode newId (FirstChild id) state
+            state' { maxId = newId, selected = Just newId, mode = MapMode.Editing newId }
       | KE.code ke == "Enter" -> do
+        liftEffect $ preventDefault $ KE.toEvent ke
         state <- H.get
         state.selected # traverse_ \id ->
-          Log.log Log.Debug $ "Add next sibling of " <> show id
+          H.modify_ \_ -> do
+            let newId = nextId state.maxId
+            let state' = NodeControl.newNode newId (NextSibling id) state
+            state' { maxId = newId, selected = Just newId, mode = MapMode.Editing newId }
       | otherwise -> pure unit
 
 mkComponent ::
