@@ -138,6 +138,8 @@ setNodePath state nodeId path =
       let
         state' = setNodePath state nodeId (Top $ Tuple 0.0 0.0)
         parents' = Map.insert nodeId parentId state'.relations.parents
+        -- This is important not to do in a Maybe monad, since child list
+        -- does not have to exist if it is empty.
         childList =
           nodeId : (fromMaybe
                       (fromFoldable []) $
