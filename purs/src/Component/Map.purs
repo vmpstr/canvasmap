@@ -195,7 +195,7 @@ handleAction action = do -- HalogenM
           id = nextId state.maxId
           state' = NodeControl.newNode id (Top $ Tuple x' y') state
         in
-        state' { maxId = id, selected = Just id }
+        state' { maxId = id, selected = Just id, mode = MapMode.Editing id }
     MapAction.EditLabel id -> do
       H.modify_ \state ->
         state { mode = MapMode.Editing id }
