@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "elm-test": "^0.19.1-revision2",
-    "node-notifier": "^9.0.0"
+    "node-notifier": "^8.0.1"
   }
 }
