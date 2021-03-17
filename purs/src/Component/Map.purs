@@ -27,7 +27,7 @@ import Control.Bind (join, (>>=))
 
 import Effect (Effect)
 import Web.Event.Event (stopPropagation, preventDefault, target)
-import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent)
+import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent, shiftKey)
 import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
 import Web.HTML.HTMLElement (toElement, DOMRect, fromEventTarget, getBoundingClientRect, fromElement, HTMLElement)
@@ -83,7 +83,7 @@ renderMap state =
             [ Tuple (HE.onMouseMove \event -> Just $ MapAction.MouseMove event) (MapMode.isHookedToDrag state.mode)
             , Tuple (HE.onClick \_ -> Just $ MapAction.Select Nothing) viewState.reactsToMouse
             , Tuple (HE.onMouseUp \event -> Just $ MapAction.MouseUp event) (viewState.reactsToMouse || MapMode.isHookedToDrag state.mode)
-            , Tuple (HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (clientX e) (clientY e)) viewState.reactsToMouse
+            , Tuple (HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (shiftKey e) (clientX e) (clientY e)) viewState.reactsToMouse
             ]
 
   in
@@ -187,13 +187,13 @@ handleAction action = do -- HalogenM
       handleAction nextAction
     MapAction.Select selection -> do
       H.modify_ _ { selected = selection }
-    MapAction.NewTopNode x y -> do
+    MapAction.NewTopNode shift x y -> do
       H.modify_ \state ->
         let
           x' = toNumber x - 40.0
           y' = toNumber y - 20.0
           id = nextId state.maxId
-          state' = NodeControl.newNode id (Top $ Tuple x' y') state
+          state' = NodeControl.newNode id shift (Top $ Tuple x' y') state
         in
         state' { maxId = id, selected = Just id, mode = MapMode.Editing id }
     MapAction.EditLabel id -> do
@@ -210,7 +210,7 @@ handleAction action = do -- HalogenM
         state.selected # traverse_ \id ->
           H.modify_ \_ -> do
             let newId = nextId state.maxId
-            let state' = NodeControl.newNode newId (FirstChild id) state
+            let state' = NodeControl.newNode newId (KE.shiftKey ke) (FirstChild id) state
             state' { maxId = newId, selected = Just newId, mode = MapMode.Editing newId }
       | KE.code ke == "Enter" -> do
         liftEffect $ preventDefault $ KE.toEvent ke
@@ -218,7 +218,7 @@ handleAction action = do -- HalogenM
         state.selected # traverse_ \id ->
           H.modify_ \_ -> do
             let newId = nextId state.maxId
-            let state' = NodeControl.newNode newId (NextSibling id) state
+            let state' = NodeControl.newNode newId (KE.shiftKey ke) (NextSibling id) state
             state' { maxId = newId, selected = Just newId, mode = MapMode.Editing newId }
       | otherwise -> pure unit
 

@@ -32,6 +32,10 @@ filterBySecond :: forall a. Array (Tuple a Boolean) -> Array a
 filterBySecond input =
   map Tuple.fst $ filter Tuple.snd input
 
+maybeDiv :: forall s a. Boolean -> HH.HTML s a -> HH.HTML s a
+maybeDiv condition value =
+  if condition then value else HH.div_ []
+
 renderBeacon :: forall slots. String -> Boolean -> HH.HTML slots MapAction.Action
 renderBeacon path closest =
   let
@@ -47,18 +51,15 @@ renderBeacon path closest =
 
 renderNSBeacon :: forall slots. ViewState.ViewState -> NodeId -> HH.HTML slots MapAction.Action
 renderNSBeacon viewState id =
-  if viewState.viewBeacons && viewState.parentState /= ViewState.NoParent then
+  maybeDiv
+    (viewState.viewBeacons && viewState.parentState /= ViewState.NoParent) $
     renderBeacon ("ns-" <> show id) (viewState.closestBeacon == (Just $ NextSibling id))
-  else
-    HH.div_ []
 
 renderFCBeacon :: forall slots. ViewState.ViewState -> NodeId -> HH.HTML slots MapAction.Action
 renderFCBeacon viewState id =
-  if viewState.viewBeacons then
+  maybeDiv
+    viewState.viewBeacons $
     renderBeacon ("fc-" <> show id) (viewState.closestBeacon == (Just $ FirstChild id))
-  else
-    HH.div_ []
-
 
 renderContents ::
   forall m.
@@ -73,35 +74,35 @@ renderContents viewState (TreeNodeImpl details) =
       , CC.selected            /\ (viewState.selected == Just details.id)
       ]
 
-    labelEditor =
-      if viewState.editing == Just details.id then -- "Are we editing this?"
-        HH.slot Slots._labelEditor details.id (LabelEditor.mkComponent unit) details.label (\result -> Just $ MapAction.FinishEdit details.id result)
-      else
-        HH.div_ []
+    labelEditor = maybeDiv
+      (viewState.editing == Just details.id) $
+      HH.slot
+        Slots._labelEditor
+        details.id
+        (LabelEditor.mkComponent unit)
+        details.label
+        (\result -> Just $ MapAction.FinishEdit details.id result)
 
     containerProps = filterBySecond
       [ (HP.class_ CC.contents_container) /\ true
       , (HE.onClick
           \mouseEvent ->
-            let
-              event = toEvent mouseEvent
-              selectAction = MapAction.Select $ Just details.id
+            let event = toEvent mouseEvent
+                selectAction = MapAction.Select $ Just details.id
             in
             Just $ MapAction.StopPropagation event selectAction
         ) /\ viewState.reactsToMouse
       , (HE.onMouseDown
           \mouseEvent ->
-            let
-              event = toEvent mouseEvent
-              mouseDownAction = MapAction.MouseDown mouseEvent details.id
+            let event = toEvent mouseEvent
+                mouseDownAction = MapAction.MouseDown mouseEvent details.id
             in
             Just $ MapAction.StopPropagation event mouseDownAction
         ) /\ viewState.reactsToMouse
       , (HE.onDoubleClick
           \mouseEvent ->
-            let
-              event = toEvent mouseEvent
-              editAction = MapAction.EditLabel details.id
+            let event = toEvent mouseEvent
+                editAction = MapAction.EditLabel details.id
             in
             Just $ MapAction.StopPropagation event editAction
         ) /\ viewState.reactsToMouse
@@ -134,22 +135,18 @@ instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
         , CC.child   /\ (viewState.parentState /= ViewState.NoParent)
         , CC.dragged /\ (viewState.dragged == Just details.id)
         ]
-      parentEdge =
-        if viewState.parentState == ViewState.ShowParentEdge then
-          HH.div [ HP.class_ CC.parent_edge ] []
-        else
-          HH.div_ []
+      parentEdge = maybeDiv
+        (viewState.parentState == ViewState.ShowParentEdge) $
+        HH.div [ HP.class_ CC.parent_edge ] []
 
       nsBeacon = renderNSBeacon viewState details.id
       fcBeacon = renderFCBeacon viewState details.id
-      siblingRail =
-        if viewState.haveNextSibling then
-          HH.div [ HP.class_ CC.sibling_rail ] []
-        else
-          HH.div_ []
+      siblingRail = maybeDiv
+        (viewState.haveNextSibling && viewState.parentState == ViewState.ShowParentEdge) $
+        HH.div [ HP.class_ CC.sibling_rail ] []
     in
     HH.div
-      [ HP.classes classes
+      [ HP.classes classes -- node
       , HC.style $ positionToCSS details.position
       ]
       [ HH.div 
@@ -158,11 +155,8 @@ instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
           , parentEdge
           ]
       , HH.div
-          [ HP.class_ CC.child_holder ]
-          [ HH.div [ HP.class_ CC.child_edge ] []
-          , HH.div [ HP.class_ CC.child_area ]
-              $ fcBeacon : renderChildren childViewState details.id
-          ]
+          [ HP.class_ CC.child_area ]
+            $ fcBeacon : renderChildren childViewState details.id
       , siblingRail
       , nsBeacon
       ]

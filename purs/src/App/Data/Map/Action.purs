@@ -13,7 +13,7 @@ data Action
   | StopPropagation Event Action
   | PreventDefault Event Action
   | Select (Maybe NodeId)
-  | NewTopNode Int Int
+  | NewTopNode Boolean Int Int
   | MouseUp MouseEvent
   | MouseDown MouseEvent NodeId
   | MouseMove MouseEvent
@@ -27,7 +27,7 @@ instance actionShow :: Show Action where
   show (StopPropagation _ action) = "StopPropagation & " <> show action
   show (PreventDefault _ action) = "PreventDefault & " <> show action
   show (Select maybeId) = "Select " <> show maybeId
-  show (NewTopNode x y) = "NewTopNode " <> show x <> " " <> show y
+  show (NewTopNode shift x y) = "NewTopNode " <> show shift <> " " <> show x <> " " <> show y
   show (MouseUp _) = "MouseUp"
   show (MouseDown _ id) = "MouseDown " <> show id
   show (MouseMove _) = "MouseMove"

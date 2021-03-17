@@ -22,6 +22,7 @@
 .selection_container {
   position: relative;
   display: flex;
+  flex-direction: column;
   flex-shrink: 1;
   box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.5);
   background-color: rgb(195, 231, 240);
@@ -76,4 +77,16 @@
 
 .label-editor {
   position: absolute;
+}
+
+.parent_edge {
+  border-bottom: 1px solid rgb(50, 50, 50);
+  border-left: 1px solid rgb(50, 50, 50);
+  box-sizing: border-box;
+  position: absolute;
+  right: 100%;
+  top: -5px; /* this is margin spread of children */
+  height: 25px; /* 20 + margin again */
+  width: 13px;
+  border-radius: 0 0 0 50%;
 }

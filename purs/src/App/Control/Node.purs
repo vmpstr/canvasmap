@@ -10,17 +10,24 @@ import App.Data.Node (NodeType(..), constructNode)
 
 import Data.List (elemIndex, insertAt, (:), fromFoldable)
 
-newNode :: NodeId -> NodePath -> State -> State
-newNode id (Top (Tuple x y)) state =
+nodeType :: Boolean -> NodeType
+nodeType shift =
+  if shift then
+    ScrollerNodeType
+  else
+    TreeNodeType
+
+newNode :: NodeId -> Boolean -> NodePath -> State -> State
+newNode id shift (Top (Tuple x y)) state =
   let
     position = Absolute { x, y }
-    node = constructNode TreeNodeType id position
+    node = constructNode (nodeType shift) id position
     nodes = Map.insert id node state.nodes
   in
   state { nodes = nodes }
-newNode id (NextSibling siblingId) state =
+newNode id shift (NextSibling siblingId) state =
   let
-    node = constructNode TreeNodeType id Static
+    node = constructNode (nodeType shift) id Static
     nodes = Map.insert id node state.nodes
   in
   fromMaybe state do -- Maybe
@@ -31,9 +38,9 @@ newNode id (NextSibling siblingId) state =
     let parents = Map.insert id parentId state.relations.parents
     let children = Map.insert parentId childList' state.relations.children
     pure $ state { nodes = nodes, relations { parents = parents, children = children }}
-newNode id (FirstChild parentId) state =
+newNode id shift (FirstChild parentId) state =
   let
-    node = constructNode TreeNodeType id Static
+    node = constructNode (nodeType shift) id Static
     nodes = Map.insert id node state.nodes
     -- This is important not to do in a Maybe monad, since child list
     -- does not have to exist if it is empty.
