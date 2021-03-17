@@ -30,7 +30,7 @@ newNode id shift (NextSibling siblingId) state =
     node = constructNode (nodeType shift) id Static
     nodes = Map.insert id node state.nodes
   in
-  fromMaybe state do -- Maybe
+  fromMaybe' (\_ -> newNode id shift (FirstChild siblingId) state) do -- Maybe
     parentId <- Map.lookup siblingId state.relations.parents
     childList <- Map.lookup parentId state.relations.children
     siblingIndex <- elemIndex siblingId childList

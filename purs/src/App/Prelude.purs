@@ -14,7 +14,7 @@ import Data.Generic.Rep (class Generic) as X
 import Data.Generic.Rep.Show (genericShow) as X
 import Data.HeytingAlgebra ((&&), (||), not) as X
 import Data.Int (toNumber) as X
-import Data.Maybe (Maybe(..), fromMaybe) as X
+import Data.Maybe (Maybe(..), fromMaybe, fromMaybe') as X
 import Data.Ord (class Ord, (<), (>), (<=), (>=), abs, compare) as X
 import Data.Ring ((-)) as X
 import Data.Semigroup ((<>)) as X
