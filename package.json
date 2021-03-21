@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "elm-test": "^0.19.1-revision2",
+    "is-svg": "^4.3.1",
     "node-notifier": "^8.0.1"
   }
 }
