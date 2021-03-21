@@ -7,6 +7,8 @@ import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath(..), positionToCS
 import App.Data.NodeClass (class LayoutNode)
 import App.Data.CSSClasses as CC
 
+import App.Events.Node as NE
+
 import Component.Slots as Slots
 import Component.LabelEditor as LabelEditor
 
@@ -71,11 +73,6 @@ renderContents ::
   -> HH.ComponentHTML MapAction.Action Slots.Slots m
 renderContents viewState (ScrollerNodeImpl details) children =
   let
-    classes = filterBySecond
-      [ CC.selection_container /\ true
-      , CC.selected            /\ (viewState.selected == Just details.id)
-      ]
-
     labelEditor = maybeDiv
       (viewState.editing == Just details.id) $
       HH.slot
@@ -87,13 +84,8 @@ renderContents viewState (ScrollerNodeImpl details) children =
 
     containerProps = filterBySecond
       [ (HP.class_ CC.contents_container) /\ true
-      , (HE.onClick
-          \mouseEvent ->
-            let event = toEvent mouseEvent
-                selectAction = MapAction.Select $ Just details.id
-            in
-            Just $ MapAction.StopPropagation event selectAction
-        ) /\ viewState.reactsToMouse
+      , (NE.selectHandler MapAction.NodeAction (Just details.id)) /\ viewState.reactsToMouse
+      , (NE.editLabelHandler MapAction.NodeAction details.id) /\ viewState.reactsToMouse
       , (HE.onMouseDown
           \mouseEvent ->
             let event = toEvent mouseEvent
@@ -101,17 +93,15 @@ renderContents viewState (ScrollerNodeImpl details) children =
             in
             Just $ MapAction.StopPropagation event mouseDownAction
         ) /\ viewState.reactsToMouse
-      , (HE.onDoubleClick
-          \mouseEvent ->
-            let event = toEvent mouseEvent
-                editAction = MapAction.EditLabel details.id
-            in
-            Just $ MapAction.StopPropagation event editAction
-        ) /\ viewState.reactsToMouse
+      ]
+
+    props = HP.classes $ filterBySecond
+      [ CC.selection_container /\ true
+      , CC.selected            /\ (viewState.selected == Just details.id)
       ]
   in
   HH.div
-    [ HP.classes classes ] -- selection_container
+    [ props ]
     [ HH.div
         containerProps -- contents_container
         [ labelEditor

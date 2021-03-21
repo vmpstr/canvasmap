@@ -4,6 +4,7 @@ import App.Prelude
 import App.Data.Beacon (Beacon(..))
 import App.Control.Drag as DragControl
 import App.Control.Node as NodeControl
+import App.Events.Node as NE
 import App.Data.Map.Mode as MapMode
 import App.Data.Map.Action as MapAction
 import App.Data.Map.State as MapState
@@ -81,7 +82,7 @@ renderMap state =
       , HP.class_ (HH.ClassName "map")
       ] <> filterBySecond
             [ Tuple (HE.onMouseMove \event -> Just $ MapAction.MouseMove event) (MapMode.isHookedToDrag state.mode)
-            , Tuple (HE.onClick \_ -> Just $ MapAction.Select Nothing) viewState.reactsToMouse
+            , Tuple (NE.selectHandler MapAction.NodeAction Nothing) viewState.reactsToMouse
             , Tuple (HE.onMouseUp \event -> Just $ MapAction.MouseUp event) (viewState.reactsToMouse || MapMode.isHookedToDrag state.mode)
             , Tuple (HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (shiftKey e) (clientX e) (clientY e)) viewState.reactsToMouse
             ]
@@ -185,8 +186,6 @@ handleAction action = do -- HalogenM
     MapAction.PreventDefault event nextAction -> do
       liftEffect $ preventDefault event
       handleAction nextAction
-    MapAction.Select selection -> do
-      H.modify_ _ { selected = selection }
     MapAction.NewTopNode shift x y -> do
       H.modify_ \state ->
         let
@@ -196,9 +195,9 @@ handleAction action = do -- HalogenM
           state' = NodeControl.newNode id shift (Top $ Tuple x' y') state
         in
         state' { maxId = id, selected = Just id, mode = MapMode.Editing id }
-    MapAction.EditLabel id -> do
-      H.modify_ \state ->
-        state { mode = MapMode.Editing id }
+    MapAction.NodeAction nodeAction -> do
+      state <- H.get >>= NodeControl.handleAction nodeAction
+      H.modify_ $ const state
     MapAction.FinishEdit id value -> do
       H.modify_ \state -> do
         let nodes = update (\node -> Just $ setLabel node value) id state.nodes

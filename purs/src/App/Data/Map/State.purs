@@ -1,9 +1,8 @@
 module App.Data.Map.State where
 
 import App.Prelude
-import App.Data.Node (Node(..))
-import App.Data.NodeCommon (NodeId(..), NodePosition(..))
-import App.Data.NodeImpl.TreeNode (TreeNodeImpl(..))
+import App.Data.Node (Node)
+import App.Data.NodeCommon (NodeId(..))
 import App.Data.Map.ViewState (ViewState, ParentState(..))
 import App.Data.Map.Mode (Mode(..), isDrag, getDragNodeId, getClosestBeacon, reactsToMouse, getEditNodeId)
 
@@ -24,7 +23,7 @@ type State =
 
 initialState :: forall input. input -> State
 initialState _ = 
-  { nodes: Map.insert (NodeId 1) (TreeNode $ TreeNodeImpl { id: NodeId 1, label: "Test", maxWidth: Nothing, position: (Absolute { x: 10.0, y: 20.0 }) }) Map.empty
+  { nodes: Map.empty
   , relations:
       { children: Map.empty
       , parents: Map.empty

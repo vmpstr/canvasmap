@@ -7,6 +7,8 @@ import App.Data.NodeClass (class LayoutNode)
 import App.Data.NodeCommon (NodeId, NodePosition(..), positionToCSS, NodePath(..))
 import App.Data.CSSClasses as CC
 
+import App.Events.Node as NE
+
 import Component.Slots as Slots
 import Component.LabelEditor as LabelEditor
 
@@ -85,26 +87,14 @@ renderContents viewState (TreeNodeImpl details) =
 
     containerProps = filterBySecond
       [ (HP.class_ CC.contents_container) /\ true
-      , (HE.onClick
-          \mouseEvent ->
-            let event = toEvent mouseEvent
-                selectAction = MapAction.Select $ Just details.id
-            in
-            Just $ MapAction.StopPropagation event selectAction
-        ) /\ viewState.reactsToMouse
+      , (NE.selectHandler MapAction.NodeAction (Just details.id)) /\ viewState.reactsToMouse
+      , (NE.editLabelHandler MapAction.NodeAction details.id) /\ viewState.reactsToMouse
       , (HE.onMouseDown
           \mouseEvent ->
             let event = toEvent mouseEvent
                 mouseDownAction = MapAction.MouseDown mouseEvent details.id
             in
             Just $ MapAction.StopPropagation event mouseDownAction
-        ) /\ viewState.reactsToMouse
-      , (HE.onDoubleClick
-          \mouseEvent ->
-            let event = toEvent mouseEvent
-                editAction = MapAction.EditLabel details.id
-            in
-            Just $ MapAction.StopPropagation event editAction
         ) /\ viewState.reactsToMouse
       ]
   in

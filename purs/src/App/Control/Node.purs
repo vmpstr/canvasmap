@@ -1,14 +1,30 @@
 module App.Control.Node where
 
-import Data.Tuple (Tuple(..))
-import Data.Map as Map
-
 import App.Prelude
+import App.Control.NodeAction (Action(..))
 import App.Data.Map.State (State)
+import App.Data.Map.Mode as MapMode
 import App.Data.NodeCommon (NodePath(..), NodePosition(..), NodeId)
 import App.Data.Node (NodeType(..), constructNode)
 
 import Data.List (elemIndex, insertAt, (:), fromFoldable)
+import Data.Map as Map
+import Data.Tuple (Tuple(..))
+
+import Web.Event.Event (stopPropagation)
+
+import Effect.Class (class MonadEffect)
+
+handleAction :: forall m. MonadEffect m => Action -> State -> m State
+handleAction action state =
+  case action of
+    StopPropagation event next -> do
+      liftEffect $ stopPropagation event
+      handleAction next state
+    Select selection ->
+      pure $ state { selected = selection }
+    EditLabel id ->
+      pure $ state { mode = MapMode.Editing id }
 
 nodeType :: Boolean -> NodeType
 nodeType shift =
