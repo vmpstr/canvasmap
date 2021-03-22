@@ -1,7 +1,8 @@
 module App.Events.Node where
 
 import App.Prelude
-import App.Control.NodeAction (Action(..))
+import App.Control.NodeAction as NA
+import App.Control.DragAction as DA
 import App.Data.NodeCommon (NodeId)
 
 import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
@@ -9,20 +10,29 @@ import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 import Halogen.HTML.Properties as HP
 import Halogen.HTML.Events as HE
 
-selectHandler :: forall w r. (Action -> w) -> Maybe NodeId -> HP.IProp (onClick :: MouseEvent | r) w
+selectHandler :: forall w r. (NA.Action -> w) -> Maybe NodeId -> HP.IProp (onClick :: MouseEvent | r) w
 selectHandler wrap selection =
   HE.onClick
     \mouseEvent ->
       let event = toEvent mouseEvent
-          selectAction = Select selection
+          selectAction = NA.Select selection
       in
-      Just $ wrap $ StopPropagation event selectAction
+      Just $ wrap $ NA.StopPropagation event selectAction
 
-editLabelHandler :: forall w r. (Action -> w) -> NodeId -> HP.IProp (onDoubleClick :: MouseEvent | r) w
+editLabelHandler :: forall w r. (NA.Action -> w) -> NodeId -> HP.IProp (onDoubleClick :: MouseEvent | r) w
 editLabelHandler wrap id =
   HE.onDoubleClick
     \mouseEvent ->
       let event = toEvent mouseEvent
-          selectAction = EditLabel $ id
+          selectAction = NA.EditLabel $ id
       in
-      Just $ wrap $ StopPropagation event selectAction
+      Just $ wrap $ NA.StopPropagation event selectAction
+
+dragStartHandler :: forall w r. (DA.Action -> w) -> NodeId -> HP.IProp (onMouseDown :: MouseEvent | r) w
+dragStartHandler wrap id =
+  HE.onMouseDown
+    \mouseEvent ->
+      let event = toEvent mouseEvent
+          mouseDownAction = DA.MouseDown mouseEvent id
+      in
+      Just $ wrap $ DA.StopPropagation event mouseDownAction

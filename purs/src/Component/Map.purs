@@ -27,11 +27,11 @@ import Data.String (split, Pattern(..))
 import Control.Bind (join, (>>=))
 
 import Effect (Effect)
-import Web.Event.Event (stopPropagation, preventDefault, target)
-import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent, shiftKey)
+import Web.Event.Event (stopPropagation, preventDefault)
+import Web.UIEvent.MouseEvent (clientX, clientY, shiftKey)
 import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
-import Web.HTML.HTMLElement (toElement, DOMRect, fromEventTarget, getBoundingClientRect, fromElement, HTMLElement)
+import Web.HTML.HTMLElement (toElement, getBoundingClientRect, fromElement, HTMLElement)
 import Web.DOM.Element (getAttribute, Element, getElementsByClassName)
 import Web.DOM.HTMLCollection (toArray)
 import Web.HTML (window)
@@ -92,27 +92,6 @@ renderMap state =
     attributes
     (map (render renderChildren viewState) rootNodes)
 
-emptyDOMRect :: DOMRect
-emptyDOMRect =
-  { bottom: 0.0
-  , height: 0.0
-  , left: 0.0
-  , right: 0.0
-  , top: 0.0
-  , width: 0.0
-  }
-
-getEventTargetRect :: MouseEvent -> Effect DOMRect
-getEventTargetRect mouseEvent =
-  let
-    mhtmlElement = do -- Maybe
-      targetElement <- target $ toEvent mouseEvent
-      fromEventTarget targetElement
-  in
-  case mhtmlElement of
-    Just htmlElement -> getBoundingClientRect htmlElement
-    Nothing -> pure emptyDOMRect
-
 beaconPathToNodePath :: String -> Maybe NodePath
 beaconPathToNodePath s = do -- Maybe
   let parts = split (Pattern "-") s
@@ -160,13 +139,12 @@ handleAction action = do -- HalogenM
           KET.keydown
           (HTMLDocument.toEventTarget document)
           \event -> map MapAction.HandleMapKeyPress $ KE.fromEvent event
-    MapAction.MouseDown mouseEvent id -> do
-      state <- H.get
-      domRect <- liftEffect $ getEventTargetRect mouseEvent
-      let
-        xoffset = domRect.left - (toNumber $ clientX mouseEvent)
-        yoffset = domRect.top - (toNumber $ clientY mouseEvent)
-      H.modify_ $ const $ DragControl.onMouseDown state mouseEvent id xoffset yoffset
+    MapAction.NodeAction nodeAction -> do
+      state <- H.get >>= NodeControl.handleAction nodeAction
+      H.modify_ $ const state
+    MapAction.DragAction dragAction -> do
+      state <- H.get >>= DragControl.handleAction dragAction
+      H.modify_ $ const state
     MapAction.MouseMove mouseEvent -> do
       state <- H.get
       mhtmlMap <- H.getHTMLElementRef (H.RefLabel "main-map") 
@@ -195,9 +173,6 @@ handleAction action = do -- HalogenM
           state' = NodeControl.newNode id shift (Top $ Tuple x' y') state
         in
         state' { maxId = id, selected = Just id, mode = MapMode.Editing id }
-    MapAction.NodeAction nodeAction -> do
-      state <- H.get >>= NodeControl.handleAction nodeAction
-      H.modify_ $ const state
     MapAction.FinishEdit id value -> do
       H.modify_ \state -> do
         let nodes = update (\node -> Just $ setLabel node value) id state.nodes

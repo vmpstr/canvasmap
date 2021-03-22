@@ -16,12 +16,9 @@ import Data.Tuple as Tuple
 import Data.Tuple.Nested ((/\))
 import Data.Array (filter, (:))
 
-import Web.UIEvent.MouseEvent (toEvent)
-
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.HTML.CSS as HC
-import Halogen.HTML.Events as HE
 
 newtype ScrollerNodeImpl = ScrollerNodeImpl
   { id :: NodeId
@@ -86,13 +83,7 @@ renderContents viewState (ScrollerNodeImpl details) children =
       [ (HP.class_ CC.contents_container) /\ true
       , (NE.selectHandler MapAction.NodeAction (Just details.id)) /\ viewState.reactsToMouse
       , (NE.editLabelHandler MapAction.NodeAction details.id) /\ viewState.reactsToMouse
-      , (HE.onMouseDown
-          \mouseEvent ->
-            let event = toEvent mouseEvent
-                mouseDownAction = MapAction.MouseDown mouseEvent details.id
-            in
-            Just $ MapAction.StopPropagation event mouseDownAction
-        ) /\ viewState.reactsToMouse
+      , (NE.dragStartHandler MapAction.DragAction details.id) /\ viewState.reactsToMouse
       ]
 
     props = HP.classes $ filterBySecond
@@ -129,15 +120,16 @@ instance scrollerNodeLayoutNode :: LayoutNode ScrollerNodeImpl where
         , CC.child    /\ (viewState.parentState /= ViewState.NoParent)
         , CC.dragged  /\ (viewState.dragged == Just details.id)
         ]
+
       parentEdge = maybeDiv
         (viewState.parentState == ViewState.ShowParentEdge) $
         HH.div [ HP.class_ CC.parent_edge ] []
-
-      nsBeacon = renderNSBeacon viewState details.id
-      fcBeacon = renderFCBeacon viewState details.id
       siblingRail = maybeDiv
         (viewState.haveNextSibling && viewState.parentState == ViewState.ShowParentEdge) $
         HH.div [ HP.class_ CC.sibling_rail ] []
+
+      nsBeacon = renderNSBeacon viewState details.id
+      fcBeacon = renderFCBeacon viewState details.id
     in
     HH.div
       [ HP.classes classes -- node
@@ -148,7 +140,7 @@ instance scrollerNodeLayoutNode :: LayoutNode ScrollerNodeImpl where
           [ renderContents viewState impl
               (HH.div
                 [ HP.classes [ CC.child_area, CC.scroller ] ]
-                  $ fcBeacon : renderChildren childViewState details.id
+                $ fcBeacon : renderChildren childViewState details.id
               )
           , parentEdge
           ]

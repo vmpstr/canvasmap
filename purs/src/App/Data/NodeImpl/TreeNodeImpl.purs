@@ -16,12 +16,9 @@ import Data.Array (filter, (:))
 import Data.Tuple.Nested ((/\))
 import Data.Tuple as Tuple
 
-import Web.UIEvent.MouseEvent (toEvent)
-
 import Halogen.HTML as HH
 import Halogen.HTML.CSS as HC
 import Halogen.HTML.Properties as HP
-import Halogen.HTML.Events as HE
 
 newtype TreeNodeImpl = TreeNodeImpl
   { id :: NodeId
@@ -89,13 +86,7 @@ renderContents viewState (TreeNodeImpl details) =
       [ (HP.class_ CC.contents_container) /\ true
       , (NE.selectHandler MapAction.NodeAction (Just details.id)) /\ viewState.reactsToMouse
       , (NE.editLabelHandler MapAction.NodeAction details.id) /\ viewState.reactsToMouse
-      , (HE.onMouseDown
-          \mouseEvent ->
-            let event = toEvent mouseEvent
-                mouseDownAction = MapAction.MouseDown mouseEvent details.id
-            in
-            Just $ MapAction.StopPropagation event mouseDownAction
-        ) /\ viewState.reactsToMouse
+      , (NE.dragStartHandler MapAction.DragAction details.id) /\ viewState.reactsToMouse
       ]
   in
   HH.div

@@ -2,11 +2,15 @@ module App.Control.Drag where
 
 import App.Prelude
 import App.Data.Beacon (Beacon(..))
+import App.Data.Map.State (State)
 import App.Data.Map.State as MapState
 import App.Data.Map.Mode as Mode
 import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath(..))
 import App.Control.DragState as DragState
 import App.Data.Node as Node
+import App.Control.DragAction (Action(..))
+
+import Effect.Class (class MonadEffect)
 
 import Data.Array (head, sortBy)
 import Data.List (filter, fromFoldable, (:), elemIndex, insertAt)
@@ -14,9 +18,46 @@ import Math as Math
 
 import Data.Map as Map
 
-import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY)
+import Web.Event.Event (stopPropagation, target)
+import Web.HTML.HTMLElement (DOMRect, fromEventTarget, getBoundingClientRect)
+import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent)
 
-onMouseDown :: MapState.State -> MouseEvent -> NodeId -> Number -> Number -> MapState.State
+handleAction :: forall m. MonadEffect m => Action -> State -> m State
+handleAction action state =
+  case action of
+    StopPropagation event next -> do
+      liftEffect $ stopPropagation event
+      handleAction next state
+    MouseDown mouseEvent id -> do
+      domRect <- liftEffect $ getEventTargetRect mouseEvent
+      let
+        xoffset = domRect.left - (toNumber $ clientX mouseEvent)
+        yoffset = domRect.top - (toNumber $ clientY mouseEvent)
+      pure $ onMouseDown state mouseEvent id xoffset yoffset
+
+getEventTargetRect :: forall m. MonadEffect m => MouseEvent -> m DOMRect
+getEventTargetRect mouseEvent =
+  let
+    mhtmlElement = do -- Maybe
+      targetElement <- target $ toEvent mouseEvent
+      fromEventTarget targetElement
+  in
+  case mhtmlElement of
+    Just htmlElement -> liftEffect $ getBoundingClientRect htmlElement
+    Nothing -> pure emptyDOMRect
+
+emptyDOMRect :: DOMRect
+emptyDOMRect =
+  { bottom: 0.0
+  , height: 0.0
+  , left: 0.0
+  , right: 0.0
+  , top: 0.0
+  , width: 0.0
+  }
+
+
+onMouseDown :: State -> MouseEvent -> NodeId -> Number -> Number -> State
 onMouseDown state event id xoffset yoffset =
   let
     dragState =
