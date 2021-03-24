@@ -1,7 +1,6 @@
 module Component.Map where
 
 import App.Prelude
-import App.Data.Beacon (Beacon(..))
 import App.Control.Drag as DragControl
 import App.Control.Node as NodeControl
 import App.Events.Node as NE
@@ -9,31 +8,25 @@ import App.Data.Map.Mode as MapMode
 import App.Data.Map.Action as MapAction
 import App.Data.Map.State as MapState
 import App.Data.Map.ViewState (ViewState)
-import App.Data.Node (Node, errorNode, setLabel)
-import App.Data.NodeCommon (NodeId(..), NodePath(..), nextId)
+import App.Data.Node (Node, errorNode)
+import App.Data.NodeCommon (NodeId, NodePath(..), nextId)
 import App.Data.NodeClass (render)
+import App.Events.Map as ME
 import Capabilities.Logging as Log
 
 import Component.Slots as Slots
 
 import Data.List (toUnfoldable)
-import Data.Map (values, lookup, filterKeys, update)
+import Data.Map (values, lookup, filterKeys)
 import Data.Tuple (Tuple(..))
 import Data.Tuple as Tuple
-import Data.Int (toNumber, fromString)
-import Data.Array (filter, catMaybes, (!!), unsnoc, snoc)
-import Data.Traversable (traverse)
-import Data.String (split, Pattern(..))
-import Control.Bind (join, (>>=))
+import Data.Int (toNumber)
+import Data.Array (filter, unsnoc, snoc)
 
-import Effect (Effect)
-import Web.Event.Event (stopPropagation, preventDefault)
+import Web.Event.Event (preventDefault)
 import Web.UIEvent.MouseEvent (clientX, clientY, shiftKey)
 import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
-import Web.HTML.HTMLElement (toElement, getBoundingClientRect, fromElement, HTMLElement)
-import Web.DOM.Element (getAttribute, Element, getElementsByClassName)
-import Web.DOM.HTMLCollection (toArray)
 import Web.HTML (window)
 import Web.HTML.Window (document)
 import Web.HTML.HTMLDocument as HTMLDocument
@@ -81,48 +74,16 @@ renderMap state =
       [ HP.ref (H.RefLabel "main-map")
       , HP.class_ (HH.ClassName "map")
       ] <> filterBySecond
-            [ Tuple (HE.onMouseMove \event -> Just $ MapAction.MouseMove event) (MapMode.isHookedToDrag state.mode)
-            , Tuple (NE.selectHandler MapAction.NodeAction Nothing) viewState.reactsToMouse
-            , Tuple (HE.onMouseUp \event -> Just $ MapAction.MouseUp event) (viewState.reactsToMouse || MapMode.isHookedToDrag state.mode)
-            , Tuple (HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (shiftKey e) (clientX e) (clientY e)) viewState.reactsToMouse
+            [ (ME.dragMoveHandler MapAction.DragAction) /\ (MapMode.isHookedToDrag state.mode)
+            , (ME.dragStopHandler MapAction.DragAction) /\ (viewState.reactsToMouse || MapMode.isHookedToDrag state.mode)
+            , (NE.selectHandler MapAction.NodeAction Nothing)             /\ viewState.reactsToMouse
+            , (HE.onDoubleClick \e -> Just $ MapAction.NewTopNode (shiftKey e) (clientX e) (clientY e)) /\ viewState.reactsToMouse
             ]
 
   in
   HH.div
     attributes
     (map (render renderChildren viewState) rootNodes)
-
-beaconPathToNodePath :: String -> Maybe NodePath
-beaconPathToNodePath s = do -- Maybe
-  let parts = split (Pattern "-") s
-  pathType <- parts !! 0
-  nodeId <- map NodeId (parts !! 1 >>= fromString)
-  case pathType of
-    "ns" -> pure $ NextSibling nodeId
-    "fc" -> pure $ FirstChild nodeId
-    _ -> Nothing
-  
-parseBeaconPath :: Element -> Effect (Maybe NodePath)
-parseBeaconPath element = do -- Effect
-  mpathAttribute <- getAttribute "path" element
-  pure $ join $ map beaconPathToNodePath mpathAttribute
-
-elementToBeacon :: HTMLElement -> Effect (Maybe Beacon)
-elementToBeacon htmlElement = do -- Effect
-  domRect <- getBoundingClientRect htmlElement
-  let x = domRect.left + 0.5 * domRect.width
-  let y = domRect.top + 0.5 * domRect.height
-  mpath <- parseBeaconPath $ toElement htmlElement
-  pure $ map (\path -> Beacon { x, y, path}) mpath
-
-
-getBeaconRects :: HTMLElement -> Effect (Array Beacon)
-getBeaconRects htmlRoot = do -- Effect
-  beaconCollection <- getElementsByClassName "beacon" $ toElement htmlRoot
-  beaconElementArray <- toArray beaconCollection
-  map catMaybes $
-    traverse (map join) $
-    map (traverse elementToBeacon <<< fromElement) beaconElementArray
 
 handleAction ::
   forall s o m.
@@ -145,25 +106,6 @@ handleAction action = do -- HalogenM
     MapAction.DragAction dragAction -> do
       state <- H.get >>= DragControl.handleAction dragAction
       H.modify_ $ const state
-    MapAction.MouseMove mouseEvent -> do
-      state <- H.get
-      mhtmlMap <- H.getHTMLElementRef (H.RefLabel "main-map") 
-      beacons <-
-        liftEffect $ case mhtmlMap of
-          Just htmlMap -> getBeaconRects htmlMap
-          Nothing -> pure []
-      when (MapMode.isHookedToDrag state.mode) $
-        H.modify_ $ const $ DragControl.onMouseMove state mouseEvent beacons
-    MapAction.MouseUp mouseEvent -> do
-      state <- H.get
-      when (MapMode.isHookedToDrag state.mode) $
-        H.modify_ $ const $ DragControl.onMouseUp state mouseEvent
-    MapAction.StopPropagation event nextAction -> do
-      liftEffect $ stopPropagation event
-      handleAction nextAction
-    MapAction.PreventDefault event nextAction -> do
-      liftEffect $ preventDefault event
-      handleAction nextAction
     MapAction.NewTopNode shift x y -> do
       H.modify_ \state ->
         let
@@ -173,10 +115,6 @@ handleAction action = do -- HalogenM
           state' = NodeControl.newNode id shift (Top $ Tuple x' y') state
         in
         state' { maxId = id, selected = Just id, mode = MapMode.Editing id }
-    MapAction.FinishEdit id value -> do
-      H.modify_ \state -> do
-        let nodes = update (\node -> Just $ setLabel node value) id state.nodes
-        state { nodes = nodes, mode = MapMode.Idle }
     MapAction.HandleMapKeyPress ke
       | KE.code ke == "Tab" -> do
         liftEffect $ preventDefault $ KE.toEvent ke

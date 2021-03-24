@@ -77,7 +77,7 @@ renderContents viewState (ScrollerNodeImpl details) children =
         details.id
         (LabelEditor.mkComponent unit)
         details.label
-        (\result -> Just $ MapAction.FinishEdit details.id result)
+        (NE.finishEditHandler MapAction.NodeAction details.id)
 
     containerProps = filterBySecond
       [ (HP.class_ CC.contents_container) /\ true

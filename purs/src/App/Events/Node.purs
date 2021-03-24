@@ -4,6 +4,7 @@ import App.Prelude
 import App.Control.NodeAction as NA
 import App.Control.DragAction as DA
 import App.Data.NodeCommon (NodeId)
+import Component.LabelEditor as LabelEditor
 
 import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 
@@ -27,6 +28,10 @@ editLabelHandler wrap id =
           selectAction = NA.EditLabel $ id
       in
       Just $ wrap $ NA.StopPropagation event selectAction
+
+finishEditHandler :: forall w. (NA.Action -> w) -> NodeId -> LabelEditor.Output -> Maybe w
+finishEditHandler wrap id output =
+  Just $ wrap $ NA.FinishEdit id output
 
 dragStartHandler :: forall w r. (DA.Action -> w) -> NodeId -> HP.IProp (onMouseDown :: MouseEvent | r) w
 dragStartHandler wrap id =

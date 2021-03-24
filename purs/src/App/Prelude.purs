@@ -27,3 +27,4 @@ import Data.Symbol (SProxy(..)) as X
 import Effect.Aff.Class (class MonadAff) as X
 import Effect.Class (liftEffect) as X
 import Type.Proxy (Proxy(..)) as X
+import Data.Tuple.Nested ((/\)) as X

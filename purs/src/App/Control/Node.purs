@@ -5,7 +5,7 @@ import App.Control.NodeAction (Action(..))
 import App.Data.Map.State (State)
 import App.Data.Map.Mode as MapMode
 import App.Data.NodeCommon (NodePath(..), NodePosition(..), NodeId)
-import App.Data.Node (NodeType(..), constructNode)
+import App.Data.Node (NodeType(..), constructNode, setLabel)
 
 import Data.List (elemIndex, insertAt, (:), fromFoldable)
 import Data.Map as Map
@@ -22,9 +22,14 @@ handleAction action state =
       liftEffect $ stopPropagation event
       handleAction next state
     Select selection ->
-      pure $ state { selected = selection }
+      pure state { selected = selection }
     EditLabel id ->
-      pure $ state { mode = MapMode.Editing id }
+      pure state { mode = MapMode.Editing id }
+    FinishEdit id value ->
+      let
+        nodes = Map.update (Just <<< flip setLabel value) id state.nodes
+      in
+      pure state { nodes = nodes, mode = MapMode.Idle }
 
 nodeType :: Boolean -> NodeType
 nodeType shift =

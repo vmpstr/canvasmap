@@ -4,23 +4,31 @@ import App.Prelude
 import App.Data.Beacon (Beacon(..))
 import App.Data.Map.State (State)
 import App.Data.Map.State as MapState
+import App.Data.Map.Mode as MapMode
 import App.Data.Map.Mode as Mode
-import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath(..))
+import App.Data.NodeCommon (NodeId(..), NodePosition(..), NodePath(..))
 import App.Control.DragState as DragState
 import App.Data.Node as Node
 import App.Control.DragAction (Action(..))
 
 import Effect.Class (class MonadEffect)
+import Effect (Effect)
 
-import Data.Array (head, sortBy)
+import Data.Array (head, sortBy, (!!), catMaybes)
 import Data.List (filter, fromFoldable, (:), elemIndex, insertAt)
 import Math as Math
+import Data.String (split, Pattern(..))
+import Data.Int (toNumber, fromString)
+import Control.Bind (join)
+import Data.Traversable (traverse)
 
 import Data.Map as Map
 
-import Web.Event.Event (stopPropagation, target)
-import Web.HTML.HTMLElement (DOMRect, fromEventTarget, getBoundingClientRect)
+import Web.DOM.Element (getAttribute, Element, getElementsByClassName)
+import Web.Event.Event (stopPropagation, target, currentTarget)
+import Web.HTML.HTMLElement (HTMLElement, toElement, fromElement, DOMRect, fromEventTarget, getBoundingClientRect)
 import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent)
+import Web.DOM.HTMLCollection (toArray)
 
 handleAction :: forall m. MonadEffect m => Action -> State -> m State
 handleAction action state =
@@ -34,6 +42,54 @@ handleAction action state =
         xoffset = domRect.left - (toNumber $ clientX mouseEvent)
         yoffset = domRect.top - (toNumber $ clientY mouseEvent)
       pure $ onMouseDown state mouseEvent id xoffset yoffset
+    MouseUp mouseEvent -> do
+      if MapMode.isHookedToDrag state.mode then
+        pure $ onMouseUp state mouseEvent
+      else
+        pure state
+    MouseMove mouseEvent -> do
+      let
+        mhtmlMap = (currentTarget $ toEvent mouseEvent) >>= fromEventTarget
+      beacons <-
+        liftEffect $ case mhtmlMap of
+          Just htmlMap -> getBeaconRects htmlMap
+          Nothing -> pure []
+      if MapMode.isHookedToDrag state.mode then
+        pure $ onMouseMove state mouseEvent beacons
+      else
+        pure state
+
+beaconPathToNodePath :: String -> Maybe NodePath
+beaconPathToNodePath s = do -- Maybe
+  let parts = split (Pattern "-") s
+  pathType <- parts !! 0
+  nodeId <- map NodeId (parts !! 1 >>= fromString)
+  case pathType of
+    "ns" -> pure $ NextSibling nodeId
+    "fc" -> pure $ FirstChild nodeId
+    _ -> Nothing
+  
+parseBeaconPath :: Element -> Effect (Maybe NodePath)
+parseBeaconPath element = do -- Effect
+  mpathAttribute <- getAttribute "path" element
+  pure $ join $ map beaconPathToNodePath mpathAttribute
+
+elementToBeacon :: HTMLElement -> Effect (Maybe Beacon)
+elementToBeacon htmlElement = do -- Effect
+  domRect <- getBoundingClientRect htmlElement
+  let x = domRect.left + 0.5 * domRect.width
+  let y = domRect.top + 0.5 * domRect.height
+  mpath <- parseBeaconPath $ toElement htmlElement
+  pure $ map (\path -> Beacon { x, y, path}) mpath
+
+
+getBeaconRects :: HTMLElement -> Effect (Array Beacon)
+getBeaconRects htmlRoot = do -- Effect
+  beaconCollection <- getElementsByClassName "beacon" $ toElement htmlRoot
+  beaconElementArray <- toArray beaconCollection
+  map catMaybes $
+    traverse (map join) $
+    map (traverse elementToBeacon <<< fromElement) beaconElementArray
 
 getEventTargetRect :: forall m. MonadEffect m => MouseEvent -> m DOMRect
 getEventTargetRect mouseEvent =
