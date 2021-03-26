@@ -1,19 +1,18 @@
 module App.Data.NodeImpl.TreeNode where
 
 import App.Prelude
+import App.Utils as Utils
+
 import App.Data.Map.ViewState as ViewState
 import App.Data.Map.Action as MapAction
 import App.Data.NodeClass (class LayoutNode)
 import App.Data.NodeCommon (NodeId, NodePosition(..), positionToCSS, NodePath(..))
 import App.Data.CSSClasses as CC
-
 import App.Events.Node as NE
 
 import Component.Slots as Slots
 
-import Data.Array (filter, (:))
-import Data.Tuple.Nested ((/\))
-import Data.Tuple as Tuple
+import Data.Array ((:))
 
 import Halogen.HTML as HH
 import Halogen.HTML.CSS as HC
@@ -26,22 +25,10 @@ newtype TreeNodeImpl = TreeNodeImpl
   , maxWidth :: Maybe Number
   }
 
-filterBySecond :: forall a. Array (Tuple a Boolean) -> Array a
-filterBySecond input =
-  map Tuple.fst $ filter Tuple.snd input
-
-maybeDiv :: forall s a. Boolean -> HH.HTML s a -> HH.HTML s a
-maybeDiv condition value =
-  if condition then value else HH.div_ []
-
-maybeDiv' :: forall s a. Boolean -> (Unit -> HH.HTML s a) -> HH.HTML s a
-maybeDiv' condition valueFunc =
-  if condition then valueFunc unit else HH.div_ []
-
 renderBeacon :: forall slots. String -> Boolean -> HH.HTML slots MapAction.Action
 renderBeacon path closest =
   let
-    classes = filterBySecond
+    classes = Utils.filterBySecond
       [ CC.beacon  /\ true
       , CC.closest /\ closest
       ]
@@ -53,13 +40,13 @@ renderBeacon path closest =
 
 renderNSBeacon :: forall slots. ViewState.ViewState -> NodeId -> HH.HTML slots MapAction.Action
 renderNSBeacon viewState id =
-  maybeDiv
+  Utils.maybeDiv
     (viewState.viewBeacons && viewState.parentState /= ViewState.NoParent) $
     renderBeacon ("ns-" <> show id) (viewState.closestBeacon == (Just $ NextSibling id))
 
 renderFCBeacon :: forall slots. ViewState.ViewState -> NodeId -> HH.HTML slots MapAction.Action
 renderFCBeacon viewState id =
-  maybeDiv
+  Utils.maybeDiv
     viewState.viewBeacons $
     renderBeacon ("fc-" <> show id) (viewState.closestBeacon == (Just $ FirstChild id))
 
@@ -71,16 +58,16 @@ renderContents ::
   -> HH.ComponentHTML MapAction.Action Slots.Slots m
 renderContents viewState (TreeNodeImpl details) =
   let
-    classes = filterBySecond
+    classes = Utils.filterBySecond
       [ CC.selection_container /\ true
       , CC.selected            /\ (viewState.selected == Just details.id)
       ]
 
-    labelEditor = maybeDiv'
+    labelEditor = Utils.maybeDiv'
       (viewState.editing == Just details.id) $
       \_ -> NE.labelEditor MapAction.NodeAction details.id details.label
 
-    containerProps = filterBySecond
+    containerProps = Utils.filterBySecond
       [ (HP.class_ CC.contents_container) /\ true
       , (NE.selectHandler MapAction.NodeAction (Just details.id)) /\ viewState.reactsToMouse
       , (NE.editLabelHandler MapAction.NodeAction details.id) /\ viewState.reactsToMouse
@@ -108,19 +95,19 @@ instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
           parentState
 
       childViewState = viewState { parentState = ViewState.ShowParentEdge }
-      classes = filterBySecond
+      classes = Utils.filterBySecond
         [ CC.node    /\ true
         , CC.root    /\ (viewState.parentState == ViewState.NoParent)
         , CC.child   /\ (viewState.parentState /= ViewState.NoParent)
         , CC.dragged /\ (viewState.dragged == Just details.id)
         ]
-      parentEdge = maybeDiv
+      parentEdge = Utils.maybeDiv
         (viewState.parentState == ViewState.ShowParentEdge) $
         HH.div [ HP.class_ CC.parent_edge ] []
 
       nsBeacon = renderNSBeacon viewState details.id
       fcBeacon = renderFCBeacon viewState details.id
-      siblingRail = maybeDiv
+      siblingRail = Utils.maybeDiv
         (viewState.haveNextSibling && viewState.parentState == ViewState.ShowParentEdge) $
         HH.div [ HP.class_ CC.sibling_rail ] []
     in
