@@ -92,14 +92,13 @@ handleAction ::
 handleAction action = do -- HalogenM
   Log.log Log.Debug $ "handling action: " <> show action
   case action of
-    MapAction.Noop -> pure unit
-    MapAction.Initialize -> do
+    MapAction.Initialize -> void do
       document <- liftEffect $ document =<< window
-      void $ H.subscribe $
+      H.subscribe $
         eventListenerEventSource
           KET.keydown
           (HTMLDocument.toEventTarget document)
-          \event -> map MapAction.HandleMapKeyPress $ KE.fromEvent event
+          (map MapAction.HandleMapKeyPress <<< KE.fromEvent)
     MapAction.NodeAction nodeAction -> do
       state <- H.get >>= NodeControl.handleAction nodeAction
       H.modify_ $ const state

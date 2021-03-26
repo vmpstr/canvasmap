@@ -10,7 +10,6 @@ import App.Data.CSSClasses as CC
 import App.Events.Node as NE
 
 import Component.Slots as Slots
-import Component.LabelEditor as LabelEditor
 
 import Data.Tuple as Tuple
 import Data.Tuple.Nested ((/\))
@@ -35,6 +34,10 @@ filterBySecond input =
 maybeDiv :: forall s a. Boolean -> HH.HTML s a -> HH.HTML s a
 maybeDiv condition value =
   if condition then value else HH.div_ []
+
+maybeDiv' :: forall s a. Boolean -> (Unit -> HH.HTML s a) -> HH.HTML s a
+maybeDiv' condition valueFunc =
+  if condition then valueFunc unit else HH.div_ []
 
 renderBeacon :: forall slots. String -> Boolean -> HH.HTML slots MapAction.Action
 renderBeacon path closest =
@@ -70,14 +73,9 @@ renderContents ::
   -> HH.ComponentHTML MapAction.Action Slots.Slots m
 renderContents viewState (ScrollerNodeImpl details) children =
   let
-    labelEditor = maybeDiv
+    labelEditor = maybeDiv'
       (viewState.editing == Just details.id) $
-      HH.slot
-        Slots._labelEditor
-        details.id
-        (LabelEditor.mkComponent unit)
-        details.label
-        (NE.finishEditHandler MapAction.NodeAction details.id)
+      \_ -> NE.labelEditor MapAction.NodeAction details.id details.label
 
     containerProps = filterBySecond
       [ (HP.class_ CC.contents_container) /\ true

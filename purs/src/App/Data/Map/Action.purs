@@ -8,15 +8,13 @@ import App.Control.DragAction as DA
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, code)
 
 data Action
-  = Noop 
-  | Initialize
+  = Initialize
   | NodeAction NA.Action
   | DragAction DA.Action
   | NewTopNode Boolean Int Int
   | HandleMapKeyPress KeyboardEvent
 
 instance actionShow :: Show Action where
-  show Noop = "Noop"
   show Initialize = "Initialize"
   show (NodeAction action) = "NodeAction " <> show action
   show (DragAction action) = "DragAction " <> show action
