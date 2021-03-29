@@ -3,7 +3,7 @@ module App.Data.NodeImpl.ScrollerNode where
 import App.Prelude
 import App.Utils as Utils
 
-import App.Data.Map.Action as MapAction
+import App.Data.Map.Action as MA
 import App.Data.Map.ViewState as ViewState
 import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath(..), positionToCSS)
 import App.Data.NodeClass (class LayoutNode)
@@ -28,7 +28,7 @@ newtype ScrollerNodeImpl = ScrollerNodeImpl
   , maxHeight :: Maybe Number
   }
 
-renderBeacon :: forall slots. String -> Boolean -> HH.HTML slots MapAction.Action
+renderBeacon :: forall a slots. String -> Boolean -> HH.HTML slots a
 renderBeacon path closest =
   let
     classes = Utils.filterBySecond
@@ -41,36 +41,37 @@ renderBeacon path closest =
     , HP.attr (HH.AttrName "path") path
     ] []
 
-renderNSBeacon :: forall slots. ViewState.ViewState -> NodeId -> HH.HTML slots MapAction.Action
+renderNSBeacon :: forall a slots. ViewState.ViewState -> NodeId -> HH.HTML slots a
 renderNSBeacon viewState id =
   Utils.maybeDiv
     (viewState.viewBeacons && viewState.parentState /= ViewState.NoParent) $
     renderBeacon ("ns-" <> show id) (viewState.closestBeacon == (Just $ NextSibling id))
 
-renderFCBeacon :: forall slots. ViewState.ViewState -> NodeId -> HH.HTML slots MapAction.Action
+renderFCBeacon :: forall a slots. ViewState.ViewState -> NodeId -> HH.HTML slots a
 renderFCBeacon viewState id =
   Utils.maybeDiv
     viewState.viewBeacons $
     renderBeacon ("fc-" <> show id) (viewState.closestBeacon == (Just $ FirstChild id))
 
 renderContents ::
-  forall m.
+  forall m a.
   MonadAff m =>
-   ViewState.ViewState
+  (MA.Action -> a)
+  -> ViewState.ViewState
   -> ScrollerNodeImpl
-  -> HH.ComponentHTML MapAction.Action Slots.Slots m
-  -> HH.ComponentHTML MapAction.Action Slots.Slots m
-renderContents viewState (ScrollerNodeImpl details) children =
+  -> HH.ComponentHTML a Slots.Slots m
+  -> HH.ComponentHTML a Slots.Slots m
+renderContents wrap viewState (ScrollerNodeImpl details) children =
   let
     labelEditor = Utils.maybeDiv'
       (viewState.editing == Just details.id) $
-      \_ -> NE.labelEditor MapAction.NodeAction details.id details.label
+      \_ -> NE.labelEditor (wrap <<< MA.NodeAction) details.id details.label
 
     containerProps = Utils.filterBySecond
       [ (HP.class_ CC.contents_container) /\ true
-      , (NE.selectHandler MapAction.NodeAction (Just details.id)) /\ viewState.reactsToMouse
-      , (NE.editLabelHandler MapAction.NodeAction details.id) /\ viewState.reactsToMouse
-      , (NE.dragStartHandler MapAction.DragAction details.id) /\ viewState.reactsToMouse
+      , (NE.selectHandler (wrap <<< MA.NodeAction) (Just details.id)) /\ viewState.reactsToMouse
+      , (NE.editLabelHandler (wrap <<< MA.NodeAction) details.id) /\ viewState.reactsToMouse
+      , (NE.dragStartHandler (wrap <<< MA.DragAction) details.id) /\ viewState.reactsToMouse
       ]
 
     props = HP.classes $ Utils.filterBySecond
@@ -91,7 +92,7 @@ renderContents viewState (ScrollerNodeImpl details) children =
     ]
 
 instance scrollerNodeLayoutNode :: LayoutNode ScrollerNodeImpl where
-  render renderChildren parentState impl@(ScrollerNodeImpl details) =
+  render wrap renderChildren parentState impl@(ScrollerNodeImpl details) =
     let
       viewState = 
         if parentState.dragged == Just details.id then
@@ -124,7 +125,7 @@ instance scrollerNodeLayoutNode :: LayoutNode ScrollerNodeImpl where
       ]
       [ HH.div 
           [ HP.class_ CC.position_capture ]
-          [ renderContents viewState impl
+          [ renderContents wrap viewState impl
               (HH.div
                 [ HP.classes [ CC.child_area, CC.scroller ] ]
                 $ fcBeacon : renderChildren childViewState details.id

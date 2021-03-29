@@ -13,10 +13,10 @@ data Node
   | ScrollerNode ScrollerNodeImpl
 
 instance nodeLayoutNode :: LayoutNode Node where
-  render renderChildren viewState node =
+  render wrap renderChildren viewState node =
     case node of
-      TreeNode impl -> render renderChildren viewState impl
-      ScrollerNode impl -> render renderChildren viewState impl
+      TreeNode impl -> render wrap renderChildren viewState impl
+      ScrollerNode impl -> render wrap renderChildren viewState impl
 
 instance nodeShow :: Show Node where
   show = case _ of

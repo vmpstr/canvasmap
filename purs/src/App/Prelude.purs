@@ -9,6 +9,7 @@ import Data.Boolean (otherwise) as X
 import Data.Eq (class Eq, (==), (/=)) as X
 import Data.Function (($), (#), flip, const) as X
 import Data.Foldable (traverse_) as X
+import Data.Traversable (traverse) as X
 import Data.Functor (map, void) as X
 import Data.Generic.Rep (class Generic) as X
 import Data.Generic.Rep.Show (genericShow) as X

@@ -1,7 +1,7 @@
 module App.Data.NodeClass where
 
 import App.Prelude
-import App.Data.Map.Action as MapAction
+import App.Data.Map.Action as MA
 import App.Data.NodeCommon (NodeId)
 import App.Data.Map.ViewState (ViewState)
 
@@ -11,9 +11,10 @@ import Halogen.HTML as HH
 
 class LayoutNode n where
   render ::
-    forall m.
+    forall m a.
     MonadAff m =>
-    (ViewState -> NodeId -> Array (HH.ComponentHTML MapAction.Action Slots.Slots m))
+    (MA.Action -> a)
+    -> (ViewState -> NodeId -> Array (HH.ComponentHTML a Slots.Slots m))
     -> ViewState
     -> n
-    -> HH.ComponentHTML MapAction.Action Slots.Slots m
+    -> HH.ComponentHTML a Slots.Slots m

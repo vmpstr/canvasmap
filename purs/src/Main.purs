@@ -3,7 +3,7 @@ module Main where
 import App.Prelude
 import App.Environment (mkEnvironment)
 import App.Monad (runAppM)
-import Component.Map as CMap
+import Component.App as App
 
 import Effect (Effect)
 
@@ -21,9 +21,8 @@ main = HA.runHalogenAff do
     -- TODO(vmpstr): We should read this from some config probably.
     environment = mkEnvironment unit
 
-    -- Make a map component
-    -- TODO(vmpstr): Eventually this needs to be a full app with routing.
-    component = CMap.mkComponent unit
+    -- Make an app component
+    component = App.mkComponent unit
 
     -- Hoist the component from AppM to Aff using runAppM as a transformation.
     component' = H.hoist (flip runAppM environment) component
