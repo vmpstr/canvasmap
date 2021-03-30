@@ -2,12 +2,12 @@ module Component.App where
 
 import App.Prelude
 
-import App.Data.Map.Action as MA
+import App.Control.MapAction as MA
 import Capabilities.Logging as Log
 import App.Control.Map as MC
 -- TODO(vmpstr): This is used for initial state. I need to make the state be
 -- app state, and delegate to something like map to build up its own state?
-import App.Data.Map.State as MapState
+import App.Control.MapState as MapState
 
 import Component.Slots (Slots)
 

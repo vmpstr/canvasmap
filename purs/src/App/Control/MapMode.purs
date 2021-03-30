@@ -1,4 +1,4 @@
-module App.Data.Map.Mode where
+module App.Control.MapMode where
 
 import App.Prelude
 import App.Control.DragState as Drag

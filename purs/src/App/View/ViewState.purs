@@ -1,4 +1,4 @@
-module App.Data.Map.ViewState where
+module App.View.ViewState where
 
 import App.Prelude
 import App.Data.NodeCommon (NodeId, NodePath)

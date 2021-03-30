@@ -3,9 +3,9 @@ module App.Data.NodeImpl.TreeNode where
 import App.Prelude
 import App.Utils as Utils
 
-import App.Data.Map.ViewState as ViewState
-import App.Data.Map.Action as MA
-import App.Data.NodeClass (class LayoutNode)
+import App.View.ViewState as ViewState
+import App.Control.MapAction as MA
+import App.Class.LayoutNode (class LayoutNode)
 import App.Data.NodeCommon (NodeId, NodePosition(..), positionToCSS, NodePath(..))
 import App.Data.CSSClasses as CC
 import App.Events.Node as NE

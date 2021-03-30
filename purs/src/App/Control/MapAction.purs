@@ -1,4 +1,4 @@
-module App.Data.Map.Action where
+module App.Control.MapAction where
 
 import App.Prelude
 

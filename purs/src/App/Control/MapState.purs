@@ -1,10 +1,10 @@
-module App.Data.Map.State where
+module App.Control.MapState where
 
 import App.Prelude
 import App.Data.Node (Node)
 import App.Data.NodeCommon (NodeId(..))
-import App.Data.Map.ViewState (ViewState, ParentState(..))
-import App.Data.Map.Mode (Mode(..), isDrag, getDragNodeId, getClosestBeacon, reactsToMouse, getEditNodeId)
+import App.View.ViewState (ViewState, ParentState(..))
+import App.Control.MapMode (Mode(..), isDrag, getDragNodeId, getClosestBeacon, reactsToMouse, getEditNodeId)
 
 import Data.List (List)
 import Data.Map (Map)

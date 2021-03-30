@@ -2,8 +2,8 @@ module App.Control.Node where
 
 import App.Prelude
 import App.Control.NodeAction (Action(..))
-import App.Data.Map.State (State)
-import App.Data.Map.Mode as MapMode
+import App.Control.MapState (State)
+import App.Control.MapMode as MapMode
 import App.Data.NodeCommon (NodePath(..), NodePosition(..), NodeId)
 import App.Data.Node (NodeType(..), constructNode, setLabel)
 

@@ -5,13 +5,13 @@ import App.Utils as Utils
 
 import App.Control.Node as NCtl
 import App.Control.Drag as DCtl
-import App.Data.Map.Action as MA
-import App.Data.Map.State as MS
+import App.Control.MapAction as MA
+import App.Control.MapState as MS
 import App.Data.NodeCommon (NodeId, NodePath(..), nextId)
 import App.Data.Node (Node, errorNode)
-import App.Data.Map.ViewState (ViewState)
-import App.Data.Map.Mode as MM
-import App.Data.NodeClass as NCls
+import App.View.ViewState (ViewState)
+import App.Control.MapMode as MM
+import App.Class.LayoutNode as NCls
 import App.Events.Map as ME
 import App.Events.Node as NE
 

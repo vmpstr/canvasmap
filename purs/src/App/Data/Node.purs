@@ -1,7 +1,7 @@
 module App.Data.Node where
 
 import App.Prelude
-import App.Data.NodeClass (class LayoutNode, render)
+import App.Class.LayoutNode (class LayoutNode, render)
 import App.Data.NodeImpl.ScrollerNode (ScrollerNodeImpl)
 import App.Data.NodeImpl.ScrollerNode as ScrollerNodeImpl
 import App.Data.NodeImpl.TreeNode as TreeNodeImpl

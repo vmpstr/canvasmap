@@ -1,9 +1,9 @@
-module App.Data.NodeClass where
+module App.Class.LayoutNode where
 
 import App.Prelude
-import App.Data.Map.Action as MA
+import App.Control.MapAction as MA
 import App.Data.NodeCommon (NodeId)
-import App.Data.Map.ViewState (ViewState)
+import App.View.ViewState (ViewState)
 
 import Component.Slots as Slots
 

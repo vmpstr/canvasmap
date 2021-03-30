@@ -2,10 +2,10 @@ module App.Control.Drag where
 
 import App.Prelude
 import App.Data.Beacon (Beacon(..))
-import App.Data.Map.State (State)
-import App.Data.Map.State as MapState
-import App.Data.Map.Mode as MapMode
-import App.Data.Map.Mode as Mode
+import App.Control.MapState (State)
+import App.Control.MapState as MapState
+import App.Control.MapMode as MapMode
+import App.Control.MapMode as Mode
 import App.Data.NodeCommon (NodeId(..), NodePosition(..), NodePath(..))
 import App.Control.DragState as DragState
 import App.Data.Node as Node
