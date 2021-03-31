@@ -3,7 +3,7 @@ module App.Data.NodeImpl.ScrollerNode where
 import App.Prelude
 import App.Utils as Utils
 
-import App.Control.MapAction as MA
+import App.Control.NodeAction as NA
 import App.View.ViewState as ViewState
 import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath(..), positionToCSS)
 import App.Class.LayoutNode (class LayoutNode)
@@ -56,7 +56,7 @@ renderFCBeacon viewState id =
 renderContents ::
   forall m a.
   MonadAff m =>
-  (MA.Action -> a)
+  (NA.Action -> a)
   -> ViewState.ViewState
   -> ScrollerNodeImpl
   -> HH.ComponentHTML a Slots.Slots m
@@ -65,13 +65,13 @@ renderContents wrap viewState (ScrollerNodeImpl details) children =
   let
     labelEditor = Utils.maybeDiv'
       (viewState.editing == Just details.id) $
-      \_ -> NE.labelEditor (wrap <<< MA.NodeAction) details.id details.label
+      \_ -> NE.labelEditor wrap details.id details.label
 
     containerProps = Utils.filterBySecond
       [ (HP.class_ CC.contents_container) /\ true
-      , (NE.selectHandler (wrap <<< MA.NodeAction) (Just details.id)) /\ viewState.reactsToMouse
-      , (NE.editLabelHandler (wrap <<< MA.NodeAction) details.id) /\ viewState.reactsToMouse
-      , (NE.dragStartHandler (wrap <<< MA.DragAction) details.id) /\ viewState.reactsToMouse
+      , (NE.selectHandler wrap (Just details.id)) /\ viewState.reactsToMouse
+      , (NE.editLabelHandler wrap details.id) /\ viewState.reactsToMouse
+      , (NE.dragStartHandler (wrap <<< NA.DragAction) details.id) /\ viewState.reactsToMouse
       ]
 
     props = HP.classes $ Utils.filterBySecond

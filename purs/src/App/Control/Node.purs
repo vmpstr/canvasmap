@@ -1,6 +1,7 @@
 module App.Control.Node where
 
 import App.Prelude
+import App.Control.Drag as DCtl
 import App.Control.NodeAction (Action(..))
 import App.Control.MapState (State)
 import App.Control.MapMode as MapMode
@@ -21,6 +22,8 @@ handleAction action state =
     StopPropagation event next -> do
       liftEffect $ stopPropagation event
       handleAction next state
+    DragAction da -> do
+      DCtl.handleAction da state
     Select selection ->
       pure state { selected = selection }
     EditLabel id ->

@@ -33,7 +33,30 @@ import Halogen.HTML.Events as HE
 render :: forall m a. MonadAff m => (MA.Action -> a) -> MS.State -> HH.ComponentHTML a Slots m
 render wrap state =
   let
+    attributes = Utils.filterBySecond
+      [ HP.ref (H.RefLabel "main-map")
+          /\ true
+      , HP.class_ (HH.ClassName "map")
+          /\ true
+      , (ME.dragMoveHandler $ wrap <<< MA.DragAction)
+          /\ (MM.isHookedToDrag state.mode)
+      , (ME.dragStopHandler $ wrap <<< MA.DragAction)
+          /\ (viewState.reactsToMouse || MM.isHookedToDrag state.mode)
+      , (NE.selectHandler (wrap <<< MA.NodeAction) Nothing)
+          /\ viewState.reactsToMouse
+      , (HE.onDoubleClick \e -> Just $ wrap $ MA.NewTopNode (WME.shiftKey e) (WME.clientX e) (WME.clientY e))
+          /\ viewState.reactsToMouse
+      ]
+
+  in
+  HH.div
+    attributes
+    (map (NCls.render nodeWrap renderChildren viewState) rootNodes)
+  where
     viewState = MS.toInitialViewState state
+
+    nodeWrap = wrap <<< MA.NodeAction
+
     noParent :: NodeId -> Boolean
     noParent nodeId =
       (Map.lookup nodeId state.relations.parents) == Nothing
@@ -55,29 +78,9 @@ render wrap state =
       case unsnoc $ getChildren nodeId of
         Just { init, last } ->
           snoc
-            (map (NCls.render wrap renderChildren localViewState { haveNextSibling = true }) init)
-            (NCls.render wrap renderChildren localViewState { haveNextSibling = false } last)
+            (map (NCls.render nodeWrap renderChildren localViewState { haveNextSibling = true }) init)
+            (NCls.render nodeWrap renderChildren localViewState { haveNextSibling = false } last)
         Nothing -> []
-
-    attributes = Utils.filterBySecond
-      [ HP.ref (H.RefLabel "main-map")
-          /\ true
-      , HP.class_ (HH.ClassName "map")
-          /\ true
-      , (ME.dragMoveHandler $ wrap <<< MA.DragAction)
-          /\ (MM.isHookedToDrag state.mode)
-      , (ME.dragStopHandler $ wrap <<< MA.DragAction)
-          /\ (viewState.reactsToMouse || MM.isHookedToDrag state.mode)
-      , (NE.selectHandler (wrap <<< MA.NodeAction) Nothing)
-          /\ viewState.reactsToMouse
-      , (HE.onDoubleClick \e -> Just $ wrap $ MA.NewTopNode (WME.shiftKey e) (WME.clientX e) (WME.clientY e))
-          /\ viewState.reactsToMouse
-      ]
-
-  in
-  HH.div
-    attributes
-    (map (NCls.render wrap renderChildren viewState) rootNodes)
 
 handleAction :: forall m. MonadAff m => MA.Action -> MS.State -> m MS.State
 handleAction action state =

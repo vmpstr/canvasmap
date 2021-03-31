@@ -4,7 +4,7 @@ import App.Prelude
 import App.Utils as Utils
 
 import App.View.ViewState as ViewState
-import App.Control.MapAction as MA
+import App.Control.NodeAction as NA
 import App.Class.LayoutNode (class LayoutNode)
 import App.Data.NodeCommon (NodeId, NodePosition(..), positionToCSS, NodePath(..))
 import App.Data.CSSClasses as CC
@@ -53,7 +53,7 @@ renderFCBeacon viewState id =
 renderContents ::
   forall m a.
   MonadAff m =>
-  (MA.Action -> a)
+  (NA.Action -> a )
   -> ViewState.ViewState
   -> TreeNodeImpl
   -> HH.ComponentHTML a Slots.Slots m
@@ -66,13 +66,13 @@ renderContents wrap viewState (TreeNodeImpl details) =
 
     labelEditor = Utils.maybeDiv'
       (viewState.editing == Just details.id) $
-      \_ -> NE.labelEditor (wrap <<< MA.NodeAction) details.id details.label
+      \_ -> NE.labelEditor wrap details.id details.label
 
     containerProps = Utils.filterBySecond
       [ (HP.class_ CC.contents_container) /\ true
-      , (NE.selectHandler (wrap <<< MA.NodeAction) (Just details.id)) /\ viewState.reactsToMouse
-      , (NE.editLabelHandler (wrap <<< MA.NodeAction) details.id) /\ viewState.reactsToMouse
-      , (NE.dragStartHandler (wrap <<< MA.DragAction) details.id) /\ viewState.reactsToMouse
+      , (NE.selectHandler wrap (Just details.id)) /\ viewState.reactsToMouse
+      , (NE.editLabelHandler wrap details.id) /\ viewState.reactsToMouse
+      , (NE.dragStartHandler (wrap <<< NA.DragAction) details.id) /\ viewState.reactsToMouse
       ]
   in
   HH.div
