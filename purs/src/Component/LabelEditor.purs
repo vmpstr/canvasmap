@@ -15,7 +15,8 @@ import Web.Event.Event (Event, stopPropagation)
 import Web.HTML.HTMLElement (focus)
 
 data Action
-  = Initialize
+  = Noop
+  | Initialize
   | StopPropagation Event Action
   | HandleKeyPress KeyboardEvent
   | Cancelled
@@ -86,6 +87,7 @@ handleAction ::
   MonadAff m =>
   Action -> H.HalogenM State Action Slots Output m Unit
 handleAction  = case _ of
+  Noop -> pure unit
   Initialize -> do
     H.getHTMLElementRef inputRef >>= traverse_ \e -> do
       liftEffect $ focus e
@@ -97,7 +99,9 @@ handleAction  = case _ of
   HandleKeyPress ke
     | code ke == "Enter" -> handleAction $ StopPropagation (toEvent ke) Finished
     | code ke == "Escape" -> handleAction $ StopPropagation (toEvent ke) Cancelled
-    | otherwise -> pure unit
+    -- Don't stop the propagation on Tab, since we want the map to handle it.
+    | code ke == "Tab" -> pure unit
+    | otherwise -> handleAction $ StopPropagation (toEvent ke) Noop
   Cancelled -> do
     state <- H.get
     H.modify_ _ { finalized = true }

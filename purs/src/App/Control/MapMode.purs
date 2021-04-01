@@ -9,6 +9,8 @@ data Mode
   | Drag Drag.State
   | Editing NodeId
 
+derive instance modeEq :: Eq Mode
+
 isHookedToDrag :: Mode -> Boolean
 isHookedToDrag (Drag _) = true
 isHookedToDrag _ = false

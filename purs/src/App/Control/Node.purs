@@ -10,7 +10,7 @@ import App.Control.MapMode as MapMode
 import App.Data.NodeCommon (NodePath(..), NodePosition(..), NodeId)
 import App.Data.Node (NodeType(..), constructNode, setLabel)
 
-import Data.List (elemIndex, insertAt, (:), fromFoldable)
+import Data.List (elemIndex, insertAt, (:), fromFoldable, filter)
 import Data.Map as Map
 import Data.Tuple (Tuple(..))
 
@@ -33,8 +33,11 @@ handleAction action state =
     FinishEdit id value ->
       let
         nodes = Map.update (Just <<< flip setLabel value) id state.nodes
+        -- Only switch to idle if we are editing this id. Things like Tab can switch
+        -- to editing a different id before the FinishEdit message is processed.
+        mode = if state.mode == MapMode.Editing id then MapMode.Idle else state.mode
       in
-      pure (state { nodes = nodes, mode = MapMode.Idle } /\ SCT.Persistent)
+      pure (state { nodes = nodes, mode = mode } /\ SCT.Persistent)
 
 nodeType :: Boolean -> NodeType
 nodeType shift =
@@ -42,6 +45,29 @@ nodeType shift =
     ScrollerNodeType
   else
     TreeNodeType
+
+deleteNode :: NodeId -> State -> State
+deleteNode id state =
+  let
+    nodes = Map.delete id state.nodes
+    childList = fromMaybe (fromFoldable []) (Map.lookup id state.relations.children)
+    children = Map.delete id state.relations.children
+    popResult = Map.pop id state.relations.parents
+  in
+  case popResult of
+    Just (parentId /\ parents) ->
+      let
+        children' = Map.update (Just <<< filter (_ /= id)) parentId children
+        state' = state { nodes = nodes, relations { children = children', parents = parents }}
+      in
+      -- TODO(vmpstr): Fold over childList?
+      state'
+    Nothing ->
+      let
+        state' = state { nodes = nodes, relations { children = children }}
+      in
+      -- TODO(vmpstr): Fold over childList?
+      state'
 
 newNode :: NodeId -> Boolean -> NodePath -> State -> State
 newNode id shift (Top (Tuple x y)) state =

@@ -16,6 +16,8 @@ import App.Class.LayoutNode as NCls
 import App.Events.Map as ME
 import App.Events.Node as NE
 
+import Capabilities.Logging as Log
+
 import Component.Slots (Slots)
 
 import Data.Array (unsnoc, snoc)
@@ -83,7 +85,7 @@ render wrap state =
             (NCls.render nodeWrap renderChildren localViewState { haveNextSibling = false } last)
         Nothing -> []
 
-handleAction :: forall m. MonadAff m => MA.Action -> MS.State -> m (Tuple MS.State SCT.Type)
+handleAction :: forall m. MonadAff m => Log.Logger m => MA.Action -> MS.State -> m (Tuple MS.State SCT.Type)
 handleAction action state =
   case action of
     MA.NodeAction na -> do
@@ -98,6 +100,7 @@ handleAction action state =
       pure (state' { maxId = id, selected = Just id, mode = MM.Editing id } /\ SCT.Persistent)
     MA.HandleMapKeyPress ke
       | WKE.code ke == "Tab" -> do
+        Log.log Log.Info $ " " <> (WKE.code ke)
         liftEffect $ preventDefault $ WKE.toEvent ke
         case state.selected of
           Just id -> 
@@ -117,4 +120,16 @@ handleAction action state =
             in
             pure (state' { maxId = newId, selected = Just newId, mode = MM.Editing newId } /\ SCT.Persistent)
           Nothing -> pure (state /\ SCT.NoChange)
-      | otherwise -> pure (state /\ SCT.NoChange)
+      | WKE.code ke == "Delete" || WKE.code ke == "Backspace" -> do
+        liftEffect $ preventDefault $ WKE.toEvent ke
+        case state.selected of
+          Just id ->
+            let
+              state' = NCtl.deleteNode id state
+            in
+            -- TODO(vmpstr): Should selected become the parent or something?
+            pure (state' { selected = Nothing } /\ SCT.Persistent)
+          Nothing -> pure (state /\ SCT.NoChange)
+      | otherwise -> do
+          Log.log Log.Info $ "unhandled keypress " <> (WKE.code ke)
+          pure (state /\ SCT.NoChange)
