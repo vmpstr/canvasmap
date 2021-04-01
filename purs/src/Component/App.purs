@@ -2,6 +2,7 @@ module Component.App where
 
 import App.Prelude
 
+import App.Control.StateChangeType as SCT
 import App.Control.MapAction as MA
 import Capabilities.Logging as Log
 import App.Control.Map as MC
@@ -47,14 +48,19 @@ mkComponent _ =
     forall s.
     Action -> H.HalogenM MapState.State Action s o m Unit
   handleAction action = do -- HalogenM
-    case action of
-      Initialize -> void do
-        document <- liftEffect $ document =<< window
-        H.subscribe $
-          eventListenerEventSource
-            KET.keydown
-            (HTMLDocument.toEventTarget document)
-            (map (MapAction <<< MA.HandleMapKeyPress) <<< KE.fromEvent)
-      MapAction ma -> do
-        state <- H.get >>= MC.handleAction ma
-        H.modify_ $ const state
+    state <- H.get
+    state' /\ changeType <-
+      case action of
+        Initialize -> do -- HalogenM
+          document <- liftEffect $ document =<< window
+          void $ H.subscribe $
+            eventListenerEventSource
+              KET.keydown
+              (HTMLDocument.toEventTarget document)
+              (map (MapAction <<< MA.HandleMapKeyPress) <<< KE.fromEvent)
+          pure $ state /\ SCT.NoChange
+        MapAction ma ->
+          MC.handleAction ma state
+
+    when (changeType /= SCT.NoChange)
+      (H.modify_ $ const state')

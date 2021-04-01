@@ -3,6 +3,7 @@ module App.Control.Map where
 import App.Prelude
 import App.Utils as Utils
 
+import App.Control.StateChangeType as SCT
 import App.Control.Node as NCtl
 import App.Control.Drag as DCtl
 import App.Control.MapAction as MA
@@ -82,7 +83,7 @@ render wrap state =
             (NCls.render nodeWrap renderChildren localViewState { haveNextSibling = false } last)
         Nothing -> []
 
-handleAction :: forall m. MonadAff m => MA.Action -> MS.State -> m MS.State
+handleAction :: forall m. MonadAff m => MA.Action -> MS.State -> m (Tuple MS.State SCT.Type)
 handleAction action state =
   case action of
     MA.NodeAction na -> do
@@ -94,7 +95,7 @@ handleAction action state =
       let y' = toNumber y - 20.0
       let id = nextId state.maxId
       let state' = NCtl.newNode id shift (Top $ Tuple x' y') state
-      pure state' { maxId = id, selected = Just id, mode = MM.Editing id }
+      pure (state' { maxId = id, selected = Just id, mode = MM.Editing id } /\ SCT.Persistent)
     MA.HandleMapKeyPress ke
       | WKE.code ke == "Tab" -> do
         liftEffect $ preventDefault $ WKE.toEvent ke
@@ -104,8 +105,8 @@ handleAction action state =
               newId = nextId state.maxId
               state' = NCtl.newNode newId (WKE.shiftKey ke) (FirstChild id) state
             in
-            pure state' { maxId = newId, selected = Just newId, mode = MM.Editing newId }
-          Nothing -> pure state
+            pure (state' { maxId = newId, selected = Just newId, mode = MM.Editing newId } /\ SCT.Persistent)
+          Nothing -> pure (state /\ SCT.NoChange)
       | WKE.code ke == "Enter" -> do
         liftEffect $ preventDefault $ WKE.toEvent ke
         case state.selected of
@@ -114,6 +115,6 @@ handleAction action state =
               newId = nextId state.maxId
               state' = NCtl.newNode newId (WKE.shiftKey ke) (NextSibling id) state
             in
-            pure state' { maxId = newId, selected = Just newId, mode = MM.Editing newId }
-          Nothing -> pure state
-      | otherwise -> pure state
+            pure (state' { maxId = newId, selected = Just newId, mode = MM.Editing newId } /\ SCT.Persistent)
+          Nothing -> pure (state /\ SCT.NoChange)
+      | otherwise -> pure (state /\ SCT.NoChange)

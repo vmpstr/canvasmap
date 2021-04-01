@@ -1,6 +1,8 @@
 module App.Control.Node where
 
 import App.Prelude
+
+import App.Control.StateChangeType as SCT
 import App.Control.Drag as DCtl
 import App.Control.NodeAction (Action(..))
 import App.Control.MapState (State)
@@ -16,7 +18,7 @@ import Web.Event.Event (stopPropagation)
 
 import Effect.Class (class MonadEffect)
 
-handleAction :: forall m. MonadEffect m => Action -> State -> m State
+handleAction :: forall m. MonadEffect m => Action -> State -> m (Tuple State SCT.Type)
 handleAction action state =
   case action of
     StopPropagation event next -> do
@@ -25,14 +27,14 @@ handleAction action state =
     DragAction da -> do
       DCtl.handleAction da state
     Select selection ->
-      pure state { selected = selection }
+      pure (state { selected = selection } /\ SCT.Ephemeral)
     EditLabel id ->
-      pure state { mode = MapMode.Editing id }
+      pure (state { mode = MapMode.Editing id } /\ SCT.Ephemeral)
     FinishEdit id value ->
       let
         nodes = Map.update (Just <<< flip setLabel value) id state.nodes
       in
-      pure state { nodes = nodes, mode = MapMode.Idle }
+      pure (state { nodes = nodes, mode = MapMode.Idle } /\ SCT.Persistent)
 
 nodeType :: Boolean -> NodeType
 nodeType shift =

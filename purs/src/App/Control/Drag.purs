@@ -1,7 +1,9 @@
 module App.Control.Drag where
 
 import App.Prelude
+
 import App.Data.Beacon (Beacon(..))
+import App.Control.StateChangeType as SCT
 import App.Control.MapState (State)
 import App.Control.MapState as MapState
 import App.Control.MapMode as MapMode
@@ -30,7 +32,7 @@ import Web.HTML.HTMLElement (HTMLElement, toElement, fromElement, DOMRect, fromE
 import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent)
 import Web.DOM.HTMLCollection (toArray)
 
-handleAction :: forall m. MonadEffect m => Action -> State -> m State
+handleAction :: forall m. MonadEffect m => Action -> State -> m (Tuple State SCT.Type)
 handleAction action state =
   case action of
     StopPropagation event next -> do
@@ -46,7 +48,7 @@ handleAction action state =
       if MapMode.isHookedToDrag state.mode then
         pure $ onMouseUp state mouseEvent
       else
-        pure state
+        pure $ state /\ SCT.NoChange
     MouseMove mouseEvent -> do
       let
         mhtmlMap = (currentTarget $ toEvent mouseEvent) >>= fromEventTarget
@@ -57,7 +59,7 @@ handleAction action state =
       if MapMode.isHookedToDrag state.mode then
         pure $ onMouseMove state mouseEvent beacons
       else
-        pure state
+        pure $ state /\ SCT.NoChange
 
 beaconPathToNodePath :: String -> Maybe NodePath
 beaconPathToNodePath s = do -- Maybe
@@ -113,7 +115,7 @@ emptyDOMRect =
   }
 
 
-onMouseDown :: State -> MouseEvent -> NodeId -> Number -> Number -> State
+onMouseDown :: State -> MouseEvent -> NodeId -> Number -> Number -> Tuple State SCT.Type
 onMouseDown state event id xoffset yoffset =
   let
     dragState =
@@ -126,7 +128,7 @@ onMouseDown state event id xoffset yoffset =
       , closestBeacon: Nothing
       }
   in
-  state { mode = Mode.Drag dragState }
+  state { mode = Mode.Drag dragState } /\ SCT.Ephemeral
 
 getDragState :: MapState.State -> Maybe DragState.State
 getDragState s =
@@ -190,8 +192,8 @@ findClosestBeacon beacons x y =
     Just beacon | beacon.distance < 50.0 -> Just beacon.path
     _ -> Nothing
 
-onMouseMove :: MapState.State -> MouseEvent -> Array Beacon -> MapState.State
-onMouseMove state event beacons = fromMaybe state do -- Maybe
+onMouseMove :: MapState.State -> MouseEvent -> Array Beacon -> Tuple MapState.State SCT.Type
+onMouseMove state event beacons = fromMaybe (state /\ SCT.NoChange) do -- Maybe
   startingDragState <- getDragState state
   let dragData = DragState.toDragData startingDragState event
   let xo = startingDragState.nodeXOffset
@@ -208,12 +210,12 @@ onMouseMove state event beacons = fromMaybe state do -- Maybe
       let n' = n + (abs dragData.dx) + (abs dragData.dy) in
       if n' > 10.0 then
         let state' = setDragState state $ dragState { state = DragState.Dragging } in
-        setNodePath state' dragState.nodeId $ Top $ Tuple (dragData.x + xo) (dragData.y + yo)
+        (setNodePath state' dragState.nodeId $ Top $ Tuple (dragData.x + xo) (dragData.y + yo)) /\ SCT.Persistent
       else
-        setDragState state $ dragState { state = DragState.Hooked n' }
+        (setDragState state $ dragState { state = DragState.Hooked n' }) /\ SCT.Ephemeral
     DragState.Dragging ->
       let state' = setDragState state dragState in
-      moveNodePosition state' dragState.nodeId dragData.dx dragData.dy
+      (moveNodePosition state' dragState.nodeId dragData.dx dragData.dy) /\ SCT.Ephemeral
 
 -- TODO(vmpstr): This needs a refactor badly.
 setNodePath :: MapState.State -> NodeId -> NodePath -> MapState.State
@@ -262,12 +264,12 @@ setNodePath state nodeId path =
       in
       resetNodePosition state'' nodeId
 
-onMouseUp :: MapState.State -> MouseEvent -> MapState.State
+onMouseUp :: MapState.State -> MouseEvent -> Tuple MapState.State SCT.Type
 onMouseUp state event =
   if Mode.isHookedToDrag state.mode then
     let state' = state { mode = Mode.Idle } in
     case Mode.getClosestBeacon state.mode, Mode.getDragNodeId state.mode of
-      Just path, Just nodeId -> setNodePath state' nodeId path
-      _, _ -> state'
+      Just path, Just nodeId -> (setNodePath state' nodeId path) /\ SCT.Persistent
+      _, _ -> state' /\ SCT.Ephemeral
   else
-    state
+    state /\ SCT.NoChange
