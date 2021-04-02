@@ -10,7 +10,7 @@ import App.Control.MapMode as MapMode
 import App.Data.NodeCommon (NodePath(..), NodePosition(..), NodeId)
 import App.Data.Node (NodeType(..), constructNode, setLabel)
 
-import Data.List (elemIndex, insertAt, (:), fromFoldable, filter)
+import Data.List (elemIndex, insertAt, (:), fromFoldable, filter, foldr)
 import Data.Map as Map
 import Data.Tuple (Tuple(..))
 
@@ -60,14 +60,12 @@ deleteNode id state =
         children' = Map.update (Just <<< filter (_ /= id)) parentId children
         state' = state { nodes = nodes, relations { children = children', parents = parents }}
       in
-      -- TODO(vmpstr): Fold over childList?
-      state'
+      foldr deleteNode state' childList
     Nothing ->
       let
         state' = state { nodes = nodes, relations { children = children }}
       in
-      -- TODO(vmpstr): Fold over childList?
-      state'
+      foldr deleteNode state' childList
 
 newNode :: NodeId -> Boolean -> NodePath -> State -> State
 newNode id shift (Top (Tuple x y)) state =
