@@ -57,6 +57,10 @@ deleteNode id state =
   case popResult of
     Just (parentId /\ parents) ->
       let
+        -- Because of the work in this function, and the recursive fold below,
+        -- this call may not actually invoke the update. In other words, even
+        -- though we have a parentId, the parent may not have a children list
+        -- anymore.
         children' = Map.update (Just <<< filter (_ /= id)) parentId children
         state' = state { nodes = nodes, relations { children = children', parents = parents }}
       in
