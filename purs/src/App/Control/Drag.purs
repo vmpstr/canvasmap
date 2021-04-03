@@ -270,6 +270,8 @@ onMouseUp state event =
     let state' = state { mode = Mode.Idle } in
     case Mode.getClosestBeacon state.mode, Mode.getDragNodeId state.mode of
       Just path, Just nodeId -> (setNodePath state' nodeId path) /\ SCT.Persistent
-      _, _ -> state' /\ SCT.Ephemeral
+      -- We need to record a persistent state here, because the 'moves' while
+      -- mouse was pressed were all ephemeral. We need to end on a persistent.
+      _, _ -> state' /\ SCT.Persistent
   else
     state /\ SCT.NoChange

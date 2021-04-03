@@ -25,6 +25,8 @@ newtype TreeNodeImpl = TreeNodeImpl
   , maxWidth :: Maybe Number
   }
 
+derive newtype instance encodeTreeNodeImpl :: EncodeJson TreeNodeImpl
+
 renderBeacon :: forall a slots. String -> Boolean -> HH.HTML slots a
 renderBeacon path closest =
   let

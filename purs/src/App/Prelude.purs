@@ -5,6 +5,9 @@ import Control.Bind (bind, discard, (>>=), (=<<)) as X
 import Control.Category (identity) as X
 import Control.Semigroupoid ((<<<)) as X
 
+import Data.Argonaut.Core (stringify) as X
+import Data.Argonaut.Encode.Class (class EncodeJson) as X
+import Data.Argonaut.Encode (encodeJson) as X
 import Data.Boolean (otherwise) as X
 import Data.Eq (class Eq, (==), (/=)) as X
 import Data.Function (($), (#), flip, const) as X
@@ -25,7 +28,7 @@ import Data.Unit (Unit, unit) as X
 import Data.Tuple (Tuple(..)) as X
 import Data.Void (Void) as X
 import Data.Symbol (SProxy(..)) as X
-import Effect.Aff.Class (class MonadAff) as X
-import Effect.Class (liftEffect) as X
+import Effect.Aff.Class (class MonadAff, liftAff) as X
+import Effect.Class (liftEffect, class MonadEffect) as X
 import Type.Proxy (Proxy(..)) as X
 import Data.Tuple.Nested ((/\)) as X

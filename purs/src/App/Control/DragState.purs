@@ -13,6 +13,9 @@ instance showDragMode :: Show DragMode where
   show (Hooked n) = "Hooked " <> show n
   show Dragging = "Dragging"
 
+instance encodeDragMode :: EncodeJson DragMode where
+  encodeJson x = encodeJson $ show x
+
 derive instance eqDragMode :: Eq DragMode
 
 type State =

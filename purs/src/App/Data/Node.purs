@@ -23,6 +23,10 @@ instance nodeShow :: Show Node where
     TreeNode impl -> "TreeNode { " <> show impl <> "}\n"
     ScrollerNode impl -> "ScrollerNode { " <> show impl <> "}\n"
 
+instance encodeNode :: EncodeJson Node where
+  encodeJson (TreeNode impl) = encodeJson $ "TreeNode " <> (stringify $ encodeJson impl)
+  encodeJson (ScrollerNode impl) = encodeJson $ "ScrollerNode " <> (stringify $ encodeJson impl)
+
 errorNode :: NodeId -> Node
 errorNode id =
   TreeNode $ TreeNodeImpl

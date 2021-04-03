@@ -12,6 +12,7 @@ newtype NodeId = NodeId Int
 derive newtype instance nodeIdEq :: Eq NodeId
 derive newtype instance nodeIdOrd :: Ord NodeId
 derive newtype instance nodeIdShow :: Show NodeId
+derive newtype instance nodeIdEncode :: EncodeJson NodeId
 
 nextId :: NodeId -> NodeId
 nextId (NodeId n) = NodeId $ n + 1
@@ -19,6 +20,10 @@ nextId (NodeId n) = NodeId $ n + 1
 data NodePosition
   = Absolute { x :: Number, y :: Number }
   | Static
+
+instance encodeNodePosition :: EncodeJson NodePosition where
+  encodeJson (Absolute coords) = encodeJson $ "Absolute " <> (stringify $ encodeJson coords)
+  encodeJson Static = encodeJson "Static"
 
 positionToCSS :: NodePosition -> CSS
 positionToCSS = case _ of
@@ -35,6 +40,10 @@ data NodePath
   | FirstChild NodeId
 
 derive instance eqNodePath :: Eq NodePath
+instance encodeNodePath :: EncodeJson NodePath where
+  encodeJson (Top (a /\ b)) = encodeJson $ "Top " <> (stringify $ encodeJson a) <> " " <> (stringify $ encodeJson b)
+  encodeJson (NextSibling id) = encodeJson $ "NS " <> (stringify $ encodeJson id)
+  encodeJson (FirstChild id) = encodeJson $ "FC " <> (stringify $ encodeJson id)
 
 derive instance genericNodePath :: Generic (NodePath) _
 instance showNodePath :: Show NodePath where

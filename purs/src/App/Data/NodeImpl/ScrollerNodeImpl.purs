@@ -28,6 +28,8 @@ newtype ScrollerNodeImpl = ScrollerNodeImpl
   , maxHeight :: Maybe Number
   }
 
+derive newtype instance encodeScrollerNodeImpl :: EncodeJson ScrollerNodeImpl
+
 renderBeacon :: forall a slots. String -> Boolean -> HH.HTML slots a
 renderBeacon path closest =
   let

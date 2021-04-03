@@ -10,6 +10,10 @@ data Mode
   | Editing NodeId
 
 derive instance modeEq :: Eq Mode
+instance modeEncode :: EncodeJson Mode where
+  encodeJson Idle = encodeJson "Idle"
+  encodeJson (Drag state) = encodeJson ("Drag " <> (stringify $ encodeJson state))
+  encodeJson (Editing id) = encodeJson ("Editing " <> (stringify $ encodeJson id))
 
 isHookedToDrag :: Mode -> Boolean
 isHookedToDrag (Drag _) = true

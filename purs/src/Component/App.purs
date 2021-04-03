@@ -10,12 +10,13 @@ import App.Control.Map as MC
 -- app state, and delegate to something like map to build up its own state?
 import App.Control.MapState as MapState
 
+import Data.Argonaut.Core (stringifyWithIndent)
 import Component.Slots (Slots)
 
 import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.KeyboardEvent.EventTypes as KET
 import Web.HTML (window)
-import Web.HTML.Window (document)
+import Web.HTML.Window (document, localStorage)
 import Web.HTML.HTMLDocument as HTMLDocument
 
 import Halogen as H
@@ -64,3 +65,14 @@ mkComponent _ =
 
     when (changeType /= SCT.NoChange)
       (H.modify_ $ const state')
+
+    -- TODO(vmpstr): Should this be persistent && mode == Idle?
+    when (changeType == SCT.Persistent)
+      (H.lift $ saveState state')
+
+  saveState :: MapState.State -> m Unit
+  saveState state = do
+    storage <- liftEffect $ localStorage =<< window
+    let json = encodeJson state
+    Log.log Log.Debug $ stringifyWithIndent 2 json
+    pure unit
