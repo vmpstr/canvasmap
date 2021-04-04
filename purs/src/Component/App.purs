@@ -10,7 +10,7 @@ import App.Control.Map as MC
 -- app state, and delegate to something like map to build up its own state?
 import App.Control.MapState as MapState
 
-import Data.Argonaut.Core (stringifyWithIndent)
+import Data.Argonaut.Core (stringify)
 import Component.Slots (Slots)
 
 import Web.UIEvent.KeyboardEvent as KE
@@ -18,6 +18,7 @@ import Web.UIEvent.KeyboardEvent.EventTypes as KET
 import Web.HTML (window)
 import Web.HTML.Window (document, localStorage)
 import Web.HTML.HTMLDocument as HTMLDocument
+import Web.Storage.Storage as Storage
 
 import Halogen as H
 import Halogen.HTML as HH
@@ -70,9 +71,11 @@ mkComponent _ =
     when (changeType == SCT.Persistent)
       (H.lift $ saveState state')
 
+  storageName = "cmstate" :: String
+
   saveState :: MapState.State -> m Unit
   saveState state = do
     storage <- liftEffect $ localStorage =<< window
     let json = encodeJson state
-    Log.log Log.Debug $ stringifyWithIndent 2 json
-    pure unit
+    liftEffect $ Storage.setItem storageName (stringify json) storage
+    --Log.log Log.Debug $ stringifyWithIndent 2 json

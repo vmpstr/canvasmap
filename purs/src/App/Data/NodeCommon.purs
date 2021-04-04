@@ -22,8 +22,8 @@ data NodePosition
   | Static
 
 instance encodeNodePosition :: EncodeJson NodePosition where
-  encodeJson (Absolute coords) = encodeJson $ "Absolute " <> (stringify $ encodeJson coords)
-  encodeJson Static = encodeJson "Static"
+  encodeJson (Absolute coords) = encodeJson { ctor: "Absolute", coords: coords }
+  encodeJson Static = encodeJson { ctor: "Static" }
 
 positionToCSS :: NodePosition -> CSS
 positionToCSS = case _ of
@@ -41,9 +41,9 @@ data NodePath
 
 derive instance eqNodePath :: Eq NodePath
 instance encodeNodePath :: EncodeJson NodePath where
-  encodeJson (Top (a /\ b)) = encodeJson $ "Top " <> (stringify $ encodeJson a) <> " " <> (stringify $ encodeJson b)
-  encodeJson (NextSibling id) = encodeJson $ "NS " <> (stringify $ encodeJson id)
-  encodeJson (FirstChild id) = encodeJson $ "FC " <> (stringify $ encodeJson id)
+  encodeJson (Top (x /\ y)) = encodeJson { ctor: "Top", x: x, y: y }
+  encodeJson (NextSibling id) = encodeJson { ctor: "NextSibling", id: id }
+  encodeJson (FirstChild id) = encodeJson { ctor: "FirstChild", id: id }
 
 derive instance genericNodePath :: Generic (NodePath) _
 instance showNodePath :: Show NodePath where

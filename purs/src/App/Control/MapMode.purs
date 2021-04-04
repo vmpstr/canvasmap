@@ -10,10 +10,16 @@ data Mode
   | Editing NodeId
 
 derive instance modeEq :: Eq Mode
+
+instance modeShow :: Show Mode where
+  show Idle = "Idle"
+  show (Drag dragState) = "Drag (" <> show dragState.state <> ")"
+  show (Editing nodeId) = "Editing (" <> show nodeId <> ")"
+
 instance modeEncode :: EncodeJson Mode where
-  encodeJson Idle = encodeJson "Idle"
-  encodeJson (Drag state) = encodeJson ("Drag " <> (stringify $ encodeJson state))
-  encodeJson (Editing id) = encodeJson ("Editing " <> (stringify $ encodeJson id))
+  encodeJson Idle = encodeJson { ctor: "Idle" }
+  encodeJson (Drag state) = encodeJson { ctor: "Drag", state: state }
+  encodeJson (Editing id) = encodeJson { ctor: "Editing", id: id }
 
 isHookedToDrag :: Mode -> Boolean
 isHookedToDrag (Drag _) = true
@@ -22,7 +28,6 @@ isHookedToDrag _ = false
 isDrag :: Mode -> Boolean
 isDrag (Drag state) | state.state == Drag.Dragging = true
 isDrag _ = false
-
 
 getDragNodeId :: Mode -> Maybe NodeId
 getDragNodeId (Drag state) | state.state == Drag.Dragging = Just state.nodeId
@@ -40,8 +45,3 @@ reactsToMouse _ = false
 getEditNodeId :: Mode -> Maybe NodeId
 getEditNodeId (Editing id) = Just id
 getEditNodeId _ = Nothing
-
-instance modeShow :: Show Mode where
-  show Idle = "Idle"
-  show (Drag dragState) = "Drag (" <> show dragState.state <> ")"
-  show (Editing nodeId) = "Editing (" <> show nodeId <> ")"

@@ -5,7 +5,6 @@ import Control.Bind (bind, discard, (>>=), (=<<)) as X
 import Control.Category (identity) as X
 import Control.Semigroupoid ((<<<)) as X
 
-import Data.Argonaut.Core (stringify) as X
 import Data.Argonaut.Encode.Class (class EncodeJson) as X
 import Data.Argonaut.Encode (encodeJson) as X
 import Data.Boolean (otherwise) as X
