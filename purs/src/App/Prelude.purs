@@ -6,8 +6,13 @@ import Control.Category (identity) as X
 import Control.Semigroupoid ((<<<)) as X
 
 import Data.Argonaut.Encode.Class (class EncodeJson) as X
+import Data.Argonaut.Encode.Generic.Rep (genericEncodeJson) as X
+import Data.Argonaut.Decode.Class (class DecodeJson) as X
+import Data.Argonaut.Decode.Generic.Rep (genericDecodeJson) as X
 import Data.Argonaut.Encode (encodeJson) as X
+import Data.Argonaut.Decode (decodeJson) as X
 import Data.Boolean (otherwise) as X
+import Data.Either (Either(..), note) as X
 import Data.Eq (class Eq, (==), (/=)) as X
 import Data.Function (($), (#), flip, const) as X
 import Data.Foldable (traverse_) as X

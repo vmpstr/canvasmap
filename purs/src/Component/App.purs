@@ -20,6 +20,9 @@ import Web.HTML.Window (document, localStorage)
 import Web.HTML.HTMLDocument as HTMLDocument
 import Web.Storage.Storage as Storage
 
+import Data.Argonaut.Parser (jsonParser)
+import Data.Argonaut.Decode.Error (printJsonDecodeError)
+
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.Query.EventSource (eventListenerEventSource)
@@ -60,7 +63,8 @@ mkComponent _ =
               KET.keydown
               (HTMLDocument.toEventTarget document)
               (map (MapAction <<< MA.HandleMapKeyPress) <<< KE.fromEvent)
-          pure $ state /\ SCT.NoChange
+          -- Make this ephemeral so we actually apply it.
+          map (_ /\ SCT.Ephemeral) $ H.lift $ loadState unit
         MapAction ma ->
           MC.handleAction ma state
 
@@ -79,3 +83,25 @@ mkComponent _ =
     let json = encodeJson state
     liftEffect $ Storage.setItem storageName (stringify json) storage
     --Log.log Log.Debug $ stringifyWithIndent 2 json
+
+  loadState :: Unit -> m MapState.State
+  loadState _ = do
+    let defaultState = pure <<< MapState.initialState
+    storage <- liftEffect $ localStorage =<< window
+    mvalue <- liftEffect $ Storage.getItem storageName storage
+    -- TODO(vmpstr): How to do this elegantly?
+    case mvalue of
+      Just value -> do
+        case jsonParser value of
+          Left parseError -> do
+            Log.log Log.Error $ "State parse error: " <> parseError
+            defaultState unit
+          Right json ->
+            case decodeJson json of
+              Left constructError -> do
+                Log.log Log.Error $ "State construction error: " <> printJsonDecodeError constructError
+                defaultState unit
+              Right state -> pure state
+      Nothing -> do
+        Log.log Log.Info $ "Empty storage, returning fresh state"
+        defaultState unit

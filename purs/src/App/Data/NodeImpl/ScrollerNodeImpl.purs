@@ -29,6 +29,7 @@ newtype ScrollerNodeImpl = ScrollerNodeImpl
   }
 
 derive newtype instance encodeScrollerNodeImpl :: EncodeJson ScrollerNodeImpl
+derive newtype instance decodeScrollerNodeImpl :: DecodeJson ScrollerNodeImpl
 
 renderBeacon :: forall a slots. String -> Boolean -> HH.HTML slots a
 renderBeacon path closest =

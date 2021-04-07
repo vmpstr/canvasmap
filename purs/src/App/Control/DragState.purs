@@ -9,15 +9,11 @@ data DragMode
   = Hooked Number
   | Dragging
 
-instance showDragMode :: Show DragMode where
-  show (Hooked n) = "Hooked " <> show n
-  show Dragging = "Dragging"
-
-instance encodeDragMode :: EncodeJson DragMode where
-  encodeJson (Hooked n) = encodeJson { ctor: "Hooked", n: n } 
-  encodeJson Dragging = encodeJson { ctor: "Dragging" }
-
 derive instance eqDragMode :: Eq DragMode
+derive instance genericDragMode :: Generic DragMode _
+instance showDragMode :: Show DragMode where show = genericShow
+instance encodeDragMode :: EncodeJson DragMode where encodeJson = genericEncodeJson
+instance decodeDragMode :: DecodeJson DragMode where decodeJson = genericDecodeJson
 
 type State =
   { nodeId :: NodeId

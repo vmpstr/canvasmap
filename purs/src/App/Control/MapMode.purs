@@ -10,16 +10,11 @@ data Mode
   | Editing NodeId
 
 derive instance modeEq :: Eq Mode
+derive instance modeGeneric :: Generic Mode _
 
-instance modeShow :: Show Mode where
-  show Idle = "Idle"
-  show (Drag dragState) = "Drag (" <> show dragState.state <> ")"
-  show (Editing nodeId) = "Editing (" <> show nodeId <> ")"
-
-instance modeEncode :: EncodeJson Mode where
-  encodeJson Idle = encodeJson { ctor: "Idle" }
-  encodeJson (Drag state) = encodeJson { ctor: "Drag", state: state }
-  encodeJson (Editing id) = encodeJson { ctor: "Editing", id: id }
+instance modeShow :: Show Mode where show = genericShow
+instance modeEncode :: EncodeJson Mode where encodeJson = genericEncodeJson
+instance modeDecode :: DecodeJson Mode where decodeJson = genericDecodeJson
 
 isHookedToDrag :: Mode -> Boolean
 isHookedToDrag (Drag _) = true

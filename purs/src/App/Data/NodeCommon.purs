@@ -13,6 +13,7 @@ derive newtype instance nodeIdEq :: Eq NodeId
 derive newtype instance nodeIdOrd :: Ord NodeId
 derive newtype instance nodeIdShow :: Show NodeId
 derive newtype instance nodeIdEncode :: EncodeJson NodeId
+derive newtype instance nodeIdDecode :: DecodeJson NodeId
 
 nextId :: NodeId -> NodeId
 nextId (NodeId n) = NodeId $ n + 1
@@ -21,9 +22,9 @@ data NodePosition
   = Absolute { x :: Number, y :: Number }
   | Static
 
-instance encodeNodePosition :: EncodeJson NodePosition where
-  encodeJson (Absolute coords) = encodeJson { ctor: "Absolute", coords: coords }
-  encodeJson Static = encodeJson { ctor: "Static" }
+derive instance genericNodePosition :: Generic NodePosition _
+instance encodeNodePosition :: EncodeJson NodePosition where encodeJson = genericEncodeJson
+instance decodeNodePosition :: DecodeJson NodePosition where decodeJson = genericDecodeJson
 
 positionToCSS :: NodePosition -> CSS
 positionToCSS = case _ of
@@ -40,11 +41,7 @@ data NodePath
   | FirstChild NodeId
 
 derive instance eqNodePath :: Eq NodePath
-instance encodeNodePath :: EncodeJson NodePath where
-  encodeJson (Top (x /\ y)) = encodeJson { ctor: "Top", x: x, y: y }
-  encodeJson (NextSibling id) = encodeJson { ctor: "NextSibling", id: id }
-  encodeJson (FirstChild id) = encodeJson { ctor: "FirstChild", id: id }
-
-derive instance genericNodePath :: Generic (NodePath) _
-instance showNodePath :: Show NodePath where
-  show = genericShow
+derive instance genericNodePath :: Generic NodePath _
+instance showNodePath :: Show NodePath where show = genericShow
+instance encodeNodePath :: EncodeJson NodePath where encodeJson = genericEncodeJson
+instance decodeNodePath :: DecodeJson NodePath where decodeJson = genericDecodeJson

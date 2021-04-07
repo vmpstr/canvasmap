@@ -12,20 +12,16 @@ data Node
   = TreeNode TreeNodeImpl
   | ScrollerNode ScrollerNodeImpl
 
+derive instance genericNode :: Generic Node _
+instance showNode :: Show Node where show = genericShow
+instance encodeNode :: EncodeJson Node where encodeJson = genericEncodeJson
+instance decodeNode :: DecodeJson Node where decodeJson = genericDecodeJson
+
 instance nodeLayoutNode :: LayoutNode Node where
   render wrap renderChildren viewState node =
     case node of
       TreeNode impl -> render wrap renderChildren viewState impl
       ScrollerNode impl -> render wrap renderChildren viewState impl
-
-instance nodeShow :: Show Node where
-  show = case _ of
-    TreeNode impl -> "TreeNode { " <> show impl <> "}\n"
-    ScrollerNode impl -> "ScrollerNode { " <> show impl <> "}\n"
-
-instance encodeNode :: EncodeJson Node where
-  encodeJson (TreeNode impl) = encodeJson { ctor: "TreeNode", impl: impl }
-  encodeJson (ScrollerNode impl) = encodeJson { ctor: "ScrollerNode", impl: impl }
 
 errorNode :: NodeId -> Node
 errorNode id =
