@@ -84,24 +84,21 @@ mkComponent _ =
     liftEffect $ Storage.setItem storageName (stringify json) storage
     --Log.log Log.Debug $ stringifyWithIndent 2 json
 
+  mapLeft :: forall a b c. (a -> b) -> Either a c -> Either b c
+  mapLeft _ (Right x) = Right x
+  mapLeft f (Left x) = Left $ f x
+
+  fromEither' :: forall a b. Show a => (Unit -> b) -> Either a b -> m b
+  fromEither' _ (Right x) = pure x
+  fromEither' gen (Left x) = do
+    Log.log Log.Error $ "Error: " <> show x
+    pure $ gen unit
+
   loadState :: Unit -> m MapState.State
   loadState _ = do
-    let defaultState = pure <<< MapState.initialState
     storage <- liftEffect $ localStorage =<< window
     mvalue <- liftEffect $ Storage.getItem storageName storage
-    -- TODO(vmpstr): How to do this elegantly?
-    case mvalue of
-      Just value -> do
-        case jsonParser value of
-          Left parseError -> do
-            Log.log Log.Error $ "State parse error: " <> parseError
-            defaultState unit
-          Right json ->
-            case decodeJson json of
-              Left constructError -> do
-                Log.log Log.Error $ "State construction error: " <> printJsonDecodeError constructError
-                defaultState unit
-              Right state -> pure state
-      Nothing -> do
-        Log.log Log.Info $ "Empty storage, returning fresh state"
-        defaultState unit
+    fromEither' MapState.initialState do
+      value <- note "Empty storage" mvalue
+      json <- jsonParser value
+      mapLeft printJsonDecodeError $ decodeJson json
