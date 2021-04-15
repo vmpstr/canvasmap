@@ -3,6 +3,8 @@ module App.Events.Node where
 import App.Prelude
 import App.Control.NodeAction as NA
 import App.Control.DragAction as DA
+import App.Control.ResizeAction as RA
+import App.Data.CSSClasses as CC
 import App.Data.NodeCommon (NodeId)
 import Component.LabelEditor as LabelEditor
 import Component.Slots as Slots
@@ -60,5 +62,19 @@ labelEditor wrap id input =
     handler = finishEditHandler wrap id
   in
   HH.slot Slots._labelEditor id component input handler
+
+ewResizer :: forall w s. (NA.Action -> w) -> NodeId -> HH.HTML s w
+ewResizer wrap id =
+  let wrap' = wrap <<< NA.ResizeAction in
+  HH.div
+    [ HP.class_ CC.ew_resizer
+    , HE.onMouseDown
+        \mouseEvent ->
+          let event = toEvent mouseEvent
+              mouseDownAction = RA.EWStart mouseEvent id
+          in
+          Just $ wrap' $ RA.StopPropagation event mouseDownAction
+    ] []
+
 
 

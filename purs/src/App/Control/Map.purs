@@ -1,7 +1,6 @@
 module App.Control.Map where
 
 import App.Prelude
-import App.Utils as Utils
 
 import App.Control.StateChangeType as SCT
 import App.Control.Node as NCtl
@@ -14,7 +13,6 @@ import App.View.ViewState (ViewState)
 import App.Control.MapMode as MM
 import App.Class.LayoutNode as NCls
 import App.Events.Map as ME
-import App.Events.Node as NE
 
 import Capabilities.Logging as Log
 
@@ -26,30 +24,18 @@ import Data.List as List
 
 import Web.Event.Event (preventDefault)
 import Web.UIEvent.KeyboardEvent as WKE
-import Web.UIEvent.MouseEvent as WME
 
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Halogen.HTML.Events as HE
 
 render :: forall m a. MonadAff m => (MA.Action -> a) -> MS.State -> HH.ComponentHTML a Slots m
 render wrap state =
   let
-    attributes = Utils.filterBySecond
+    attributes =
       [ HP.ref (H.RefLabel "main-map")
-          /\ true
       , HP.class_ (HH.ClassName "map")
-          /\ true
-      , (ME.dragMoveHandler $ wrap <<< MA.DragAction)
-          /\ (MM.isHookedToDrag state.mode)
-      , (ME.dragStopHandler $ wrap <<< MA.DragAction)
-          /\ (viewState.reactsToMouse || MM.isHookedToDrag state.mode)
-      , (NE.selectHandler (wrap <<< MA.NodeAction) Nothing)
-          /\ viewState.reactsToMouse
-      , (HE.onDoubleClick \e -> Just $ wrap $ MA.NewTopNode (WME.shiftKey e) (WME.clientX e) (WME.clientY e))
-          /\ viewState.reactsToMouse
-      ]
+      ] <> ME.mapActionsForMode wrap state.mode
 
   in
   HH.div

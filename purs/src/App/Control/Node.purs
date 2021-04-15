@@ -4,6 +4,7 @@ import App.Prelude
 
 import App.Control.StateChangeType as SCT
 import App.Control.Drag as DCtl
+import App.Control.Resize as RCtl
 import App.Control.NodeAction (Action(..))
 import App.Control.MapState (State)
 import App.Control.MapMode as MapMode
@@ -24,8 +25,10 @@ handleAction action state =
     StopPropagation event next -> do
       liftEffect $ stopPropagation event
       handleAction next state
-    DragAction da -> do
+    DragAction da ->
       DCtl.handleAction da state
+    ResizeAction ra ->
+      RCtl.handleAction ra state
     Select selection ->
       pure (state { selected = selection } /\ SCT.Ephemeral)
     EditLabel id ->
