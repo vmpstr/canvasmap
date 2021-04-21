@@ -4,6 +4,7 @@ import App.Prelude
 import App.Control.MapAction as MA
 import App.Control.NodeAction as NA
 import App.Control.DragAction as DA
+import App.Control.ResizeAction as RA
 import App.Control.MapMode as MM
 
 import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
@@ -25,6 +26,10 @@ mapActionsForMode wrap mode
     [ dragMoveHandler $ wrap <<< MA.DragAction
     , dragStopHandler $ wrap <<< MA.DragAction
     ]
+  | MM.isHookedToResize mode =
+    [ resizeMoveHandler $ wrap <<< MA.ResizeAction
+    , resizeStopHandler $ wrap <<< MA.ResizeAction
+    ]
   | otherwise =
     [ deselectHandler $ wrap <<< MA.NodeAction
     , newTopNodeHandler wrap
@@ -37,7 +42,7 @@ dragStopHandler wrap =
       let event = toEvent mouseEvent
           mouseUpAction = DA.MouseUp mouseEvent
       in
-      Just $ wrap $ DA.StopPropagation event mouseUpAction
+      wrap $ DA.StopPropagation event mouseUpAction
 
 dragMoveHandler :: forall w r. (DA.Action -> w) -> HP.IProp (onMouseMove :: MouseEvent | r) w
 dragMoveHandler wrap =
@@ -46,7 +51,25 @@ dragMoveHandler wrap =
       let event = toEvent mouseEvent
           mouseMoveAction = DA.MouseMove mouseEvent
       in
-      Just $ wrap $ DA.StopPropagation event mouseMoveAction
+      wrap $ DA.StopPropagation event mouseMoveAction
+
+resizeStopHandler :: forall w r. (RA.Action -> w) -> HP.IProp (onMouseUp :: MouseEvent | r) w
+resizeStopHandler wrap =
+  HE.onMouseUp
+    \mouseEvent ->
+      let event = toEvent mouseEvent
+          mouseUpAction = RA.MouseUp mouseEvent
+      in
+      wrap $ RA.StopPropagation event mouseUpAction
+
+resizeMoveHandler :: forall w r. (RA.Action -> w) -> HP.IProp (onMouseMove :: MouseEvent | r) w
+resizeMoveHandler wrap =
+  HE.onMouseMove
+    \mouseEvent ->
+      let event = toEvent mouseEvent
+          mouseMoveAction = RA.MouseMove mouseEvent
+      in
+      wrap $ RA.StopPropagation event mouseMoveAction
 
 deselectHandler :: forall w r. (NA.Action -> w) -> HP.IProp (onClick :: MouseEvent | r) w
 deselectHandler wrap =
@@ -55,7 +78,7 @@ deselectHandler wrap =
       let event = toEvent mouseEvent
           selectAction = NA.Select Nothing
       in
-      Just $ wrap $ NA.StopPropagation event selectAction
+      wrap $ NA.StopPropagation event selectAction
 
 newTopNodeHandler :: forall w r. (MA.Action -> w) -> HP.IProp (onDoubleClick :: MouseEvent | r) w
 newTopNodeHandler wrap =
@@ -68,4 +91,4 @@ newTopNodeHandler wrap =
             (WME.clientX mouseEvent)
             (WME.clientY mouseEvent)
       in
-      Just $ wrap $ newAction
+      wrap $ newAction

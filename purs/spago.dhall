@@ -10,10 +10,10 @@ You can edit this file as you like.
   , "css"
   , "effect"
   , "halogen"
-  , "halogen-css"
   , "maybe"
   , "psci-support"
   , "transformers"
+  , "web-dom"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

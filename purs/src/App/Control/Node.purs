@@ -10,6 +10,7 @@ import App.Control.MapState (State)
 import App.Control.MapMode as MapMode
 import App.Data.NodeCommon (NodePath(..), NodePosition(..), NodeId)
 import App.Data.Node (NodeType(..), constructNode, setLabel)
+import Capabilities.Logging as Log
 
 import Data.List (elemIndex, insertAt, (:), fromFoldable, filter, foldr)
 import Data.Map as Map
@@ -19,7 +20,7 @@ import Web.Event.Event (stopPropagation)
 
 import Effect.Class (class MonadEffect)
 
-handleAction :: forall m. MonadEffect m => Action -> State -> m (Tuple State SCT.Type)
+handleAction :: forall m. Log.Logger m => MonadEffect m => Action -> State -> m (Tuple State SCT.Type)
 handleAction action state =
   case action of
     StopPropagation event next -> do

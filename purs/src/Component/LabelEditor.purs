@@ -35,7 +35,7 @@ type Slots = ()
 mkComponent ::
   forall q m.
   MonadAff m =>
-  Unit -> H.Component HH.HTML q Input Output m
+  Unit -> H.Component q Input Output m
 mkComponent _ =
   H.mkComponent
     { initialState
@@ -76,8 +76,8 @@ render state =
         , HP.value state.original
         , HP.class_ $ H.ClassName "label-editor"
         , HP.ref inputRef
-        , HE.onBlur \_ -> Just Finished
-        , HE.onKeyDown \ke -> Just $ HandleKeyPress ke
+        , HE.onBlur \_ -> Finished
+        , HE.onKeyDown \ke -> HandleKeyPress ke
         ]
   in
   HH.input attributes

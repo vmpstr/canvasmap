@@ -2,11 +2,13 @@ module App.Control.MapMode where
 
 import App.Prelude
 import App.Control.DragState as Drag
+import App.Control.ResizeState as Resize
 import App.Data.NodeCommon (NodeId, NodePath)
 
 data Mode
   = Idle
   | Drag Drag.State
+  | Resize Resize.State
   | Editing NodeId
 
 derive instance modeEq :: Eq Mode
@@ -15,6 +17,10 @@ derive instance modeGeneric :: Generic Mode _
 instance modeShow :: Show Mode where show = genericShow
 instance modeEncode :: EncodeJson Mode where encodeJson = genericEncodeJson
 instance modeDecode :: DecodeJson Mode where decodeJson = genericDecodeJson
+
+isHookedToResize :: Mode -> Boolean
+isHookedToResize (Resize _) = true
+isHookedToResize _ = false
 
 isHookedToDrag :: Mode -> Boolean
 isHookedToDrag (Drag _) = true

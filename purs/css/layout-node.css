@@ -52,10 +52,20 @@
   contain: layout;
 }
 
+input[type="text"] {
+  font: inherit;
+  border: none;
+  outline: none;
+  padding: 0;
+}
+
 .node_label {
   max-width: 100%;
   cursor: default;
   pointer-events: none;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .dragged {

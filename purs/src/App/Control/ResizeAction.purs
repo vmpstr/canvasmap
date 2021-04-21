@@ -9,8 +9,10 @@ data Action
   = StopPropagation Event Action
   | EWStart MouseEvent NodeId
   | MouseMove MouseEvent
+  | MouseUp MouseEvent
 
 instance actionShow :: Show Action where
   show (StopPropagation _ action) = "StopPropagation & " <> show action
   show (EWStart _ id) = "EWStart " <> show id
   show (MouseMove _) = "MouseMove"
+  show (MouseUp _) = "MouseUp"

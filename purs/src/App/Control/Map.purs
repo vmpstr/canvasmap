@@ -5,6 +5,7 @@ import App.Prelude
 import App.Control.StateChangeType as SCT
 import App.Control.Node as NCtl
 import App.Control.Drag as DCtl
+import App.Control.Resize as RCtl
 import App.Control.MapAction as MA
 import App.Control.MapState as MS
 import App.Data.NodeCommon (NodeId, NodePath(..), nextId)
@@ -13,6 +14,7 @@ import App.View.ViewState (ViewState)
 import App.Control.MapMode as MM
 import App.Class.LayoutNode as NCls
 import App.Events.Map as ME
+import App.Data.MapRef (mapRef)
 
 import Capabilities.Logging as Log
 
@@ -25,7 +27,6 @@ import Data.List as List
 import Web.Event.Event (preventDefault)
 import Web.UIEvent.KeyboardEvent as WKE
 
-import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 
@@ -33,7 +34,7 @@ render :: forall m a. MonadAff m => (MA.Action -> a) -> MS.State -> HH.Component
 render wrap state =
   let
     attributes =
-      [ HP.ref (H.RefLabel "main-map")
+      [ HP.ref mapRef
       , HP.class_ (HH.ClassName "map")
       ] <> ME.mapActionsForMode wrap state.mode
 
@@ -78,6 +79,8 @@ handleAction action state =
       NCtl.handleAction na state
     MA.DragAction da -> do
       DCtl.handleAction da state
+    MA.ResizeAction ra -> do
+      RCtl.handleAction ra state
     MA.NewTopNode shift x y -> do
       let x' = toNumber x - 40.0
       let y' = toNumber y - 20.0

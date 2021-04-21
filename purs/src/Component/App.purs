@@ -25,7 +25,7 @@ import Data.Argonaut.Decode.Error (printJsonDecodeError)
 
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.Query.EventSource (eventListenerEventSource)
+import Halogen.Query.Event (eventListener)
 
 data Action 
   = Initialize
@@ -34,7 +34,7 @@ data Action
 mkComponent ::
   forall q i o m.
   Log.Logger m => MonadAff m =>
-  Unit -> H.Component HH.HTML q i o m
+  Unit -> H.Component q i o m
 mkComponent _ =
   H.mkComponent
     { initialState: MapState.initialState
@@ -59,7 +59,7 @@ mkComponent _ =
         Initialize -> do -- HalogenM
           document <- liftEffect $ document =<< window
           void $ H.subscribe $
-            eventListenerEventSource
+            eventListener
               KET.keydown
               (HTMLDocument.toEventTarget document)
               (map (MapAction <<< MA.HandleMapKeyPress) <<< KE.fromEvent)

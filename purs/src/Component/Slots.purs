@@ -9,6 +9,6 @@ import Component.LabelEditor as LabelEditor
 type Slots =
   ( labelEditor :: forall query. H.Slot query LabelEditor.Input NodeId )
 
-_labelEditor = SProxy :: SProxy "labelEditor"
+_labelEditor = Proxy :: Proxy "labelEditor"
 
  

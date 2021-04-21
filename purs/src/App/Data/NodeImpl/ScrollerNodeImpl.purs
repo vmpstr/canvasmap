@@ -18,7 +18,6 @@ import Data.Array ((:))
 
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Halogen.HTML.CSS as HC
 
 newtype ScrollerNodeImpl = ScrollerNodeImpl
   { id :: NodeId
@@ -124,7 +123,7 @@ instance scrollerNodeLayoutNode :: LayoutNode ScrollerNodeImpl where
     in
     HH.div
       [ HP.classes classes -- node
-      , HC.style $ positionToCSS details.position
+      , Utils.cssToStyle $ positionToCSS details.position
       ]
       [ HH.div 
           [ HP.class_ CC.position_capture ]

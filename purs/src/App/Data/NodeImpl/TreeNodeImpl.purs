@@ -15,7 +15,6 @@ import Component.Slots as Slots
 import Data.Array ((:))
 
 import Halogen.HTML as HH
-import Halogen.HTML.CSS as HC
 import Halogen.HTML.Properties as HP
 
 newtype TreeNodeImpl = TreeNodeImpl
@@ -117,12 +116,13 @@ instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
     in
     HH.div
       [ HP.classes classes -- node
-      , HC.style $ positionToCSS details.position
+      , Utils.cssToStyle $ positionToCSS details.position
       ]
       [ HH.div 
           [ HP.class_ CC.position_capture ]
           [ renderContents wrap viewState impl 
           , parentEdge
+          , NE.ewResizer wrap details.id
           ]
       , HH.div
           [ HP.class_ CC.child_area ]
