@@ -165,3 +165,7 @@ moveAbsolutePosition impl@(ScrollerNodeImpl details) dx dy =
 setLabel :: ScrollerNodeImpl -> String -> ScrollerNodeImpl
 setLabel (ScrollerNodeImpl details) value =
   ScrollerNodeImpl details { label = value }
+
+setMaxWidth :: ScrollerNodeImpl -> Maybe Number -> ScrollerNodeImpl
+setMaxWidth (ScrollerNodeImpl details) value =
+  ScrollerNodeImpl details { maxWidth = value }

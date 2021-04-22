@@ -20,4 +20,5 @@ sibling_rail = HH.ClassName "sibling_rail" :: HH.ClassName
 ew_resizer = HH.ClassName "ew_resizer" :: HH.ClassName
 ns_resizer = HH.ClassName "ns_resizer" :: HH.ClassName
 nsew_resizer = HH.ClassName "nsew_resizer" :: HH.ClassName
+resized = HH.ClassName "resized" :: HH.ClassName
 

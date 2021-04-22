@@ -40,9 +40,12 @@ getClosestBeacon _ = Nothing
 
 reactsToMouse :: Mode -> Boolean
 reactsToMouse Idle = true
-reactsToMouse mode@(Drag state) = isHookedToDrag mode && not isDrag mode
-reactsToMouse _ = false
+reactsToMouse mode = isHookedToDrag mode && not isDrag mode
 
 getEditNodeId :: Mode -> Maybe NodeId
 getEditNodeId (Editing id) = Just id
 getEditNodeId _ = Nothing
+
+getResizedNodeId :: Mode -> Maybe NodeId
+getResizedNodeId (Resize details) = Just details.id
+getResizedNodeId _ = Nothing

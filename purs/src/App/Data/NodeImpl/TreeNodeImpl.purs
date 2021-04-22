@@ -1,19 +1,16 @@
 module App.Data.NodeImpl.TreeNode where
 
 import App.Prelude
-import App.Utils as Utils
 
-import App.View.ViewState as ViewState
-import App.Control.NodeAction as NA
 import App.Class.LayoutNode (class LayoutNode)
-import App.Data.NodeCommon (NodeId, NodePosition(..), positionToCSS, NodePath(..))
+import App.Control.NodeAction as NA
 import App.Data.CSSClasses as CC
+import App.Data.NodeCommon (NodeId, NodePosition(..), positionToCSS, maxWidthToCSS, NodePath(..))
 import App.Events.Node as NE
-
+import App.Utils as Utils
+import App.View.ViewState as ViewState
 import Component.Slots as Slots
-
 import Data.Array ((:))
-
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 
@@ -78,7 +75,9 @@ renderContents wrap viewState (TreeNodeImpl details) =
       ]
   in
   HH.div
-    [ HP.classes classes ] -- selection_container
+    [ HP.classes classes -- selection_container
+    , Utils.cssToStyle $ maxWidthToCSS details.maxWidth
+    ]
     [ HH.div
         containerProps -- contents_container
         [ labelEditor
@@ -86,6 +85,7 @@ renderContents wrap viewState (TreeNodeImpl details) =
             [ HP.class_ CC.node_label ] -- pointer-events: none.
             [ HH.text details.label ]
         ]
+    , NE.ewResizer wrap details.id
     ]
 
 instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
@@ -103,6 +103,7 @@ instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
         , CC.root    /\ (viewState.parentState == ViewState.NoParent)
         , CC.child   /\ (viewState.parentState /= ViewState.NoParent)
         , CC.dragged /\ (viewState.dragged == Just details.id)
+        , CC.resized /\ (viewState.resized == Just details.id)
         ]
       parentEdge = Utils.maybeDiv
         (viewState.parentState == ViewState.ShowParentEdge) $
@@ -122,7 +123,6 @@ instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
           [ HP.class_ CC.position_capture ]
           [ renderContents wrap viewState impl 
           , parentEdge
-          , NE.ewResizer wrap details.id
           ]
       , HH.div
           [ HP.class_ CC.child_area ]
@@ -157,3 +157,7 @@ moveAbsolutePosition impl@(TreeNodeImpl details) dx dy =
 setLabel :: TreeNodeImpl -> String -> TreeNodeImpl
 setLabel (TreeNodeImpl details) value =
   TreeNodeImpl details { label = value }
+
+setMaxWidth :: TreeNodeImpl -> Maybe Number -> TreeNodeImpl
+setMaxWidth (TreeNodeImpl details) value =
+  TreeNodeImpl details { maxWidth = value }

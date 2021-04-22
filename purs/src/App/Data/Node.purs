@@ -57,3 +57,9 @@ setLabel node value =
   case node of
     TreeNode impl -> TreeNode $ TreeNodeImpl.setLabel impl value
     ScrollerNode impl -> ScrollerNode $ ScrollerNodeImpl.setLabel impl value
+
+setMaxWidth :: Node -> Maybe Number -> Node
+setMaxWidth node value =
+  case node of
+    TreeNode impl -> TreeNode $ TreeNodeImpl.setMaxWidth impl value
+    ScrollerNode impl -> ScrollerNode $ ScrollerNodeImpl.setMaxWidth impl value

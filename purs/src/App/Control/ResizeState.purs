@@ -20,9 +20,9 @@ instance decodeDirection :: DecodeJson Direction where
 
 type State =
   { direction :: Direction
-  , x :: Int
-  , y :: Int 
-  , width :: Int
-  , height :: Int
+  , x :: Number
+  , y :: Number 
+  , width :: Number
+  , height :: Number
   , id :: NodeId
   }

@@ -7,16 +7,16 @@ import App.Control.ResizeAction (Action(..))
 import App.Control.ResizeState as RS
 import App.Control.StateChangeType as SCT
 import App.Data.NodeCommon (NodeId)
+import App.Data.Node as Node
 import Capabilities.Logging as Log
-import App.Data.MapRef (mapRef)
 
-import Halogen as H
+import Data.Map as Map
 
 import Web.Event.Event (stopPropagation, currentTarget)
 import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent)
-import Web.HTML.HTMLElement (fromEventTarget)
-import Web.DOM.Element (closest)
-import Web.DOM.ParentNode (QuerySelector)
+import Web.HTML.HTMLElement (fromElement, getBoundingClientRect)
+import Web.DOM.Element (closest, fromEventTarget)
+import Web.DOM.ParentNode (QuerySelector(..))
 
 handleAction :: forall m. Log.Logger m => MonadEffect m => Action -> MS.State -> m (Tuple MS.State SCT.Type)
 handleAction action state =
@@ -41,9 +41,40 @@ handleAction action state =
       else
         pure $ state /\ SCT.NoChange
 
--- TODO(vmpstr): Implement.
+setNodeMaxWidth :: MS.State -> NodeId -> Maybe Number -> MS.State
+setNodeMaxWidth state id value =
+  state
+    { nodes = Map.update
+        (\node -> Just $ Node.setMaxWidth node value)
+        id
+        state.nodes
+    }
+
+getResizeState :: MS.State -> Maybe RS.State
+getResizeState state =
+  case state.mode of
+    MM.Resize rstate -> Just rstate
+    _ -> Nothing
+
 updateSize :: MouseEvent -> MS.State -> MS.State
-updateSize me state = state
+updateSize me state = fromMaybe state do -- Maybe
+  rstate <- getResizeState state
+  let
+    dx = (toNumber $ clientX me) - rstate.x
+    dy = (toNumber $ clientY me) - rstate.y
+    width =
+      case rstate.direction of
+        RS.EW -> rstate.width + dx
+    -- Update the RS state
+    rstate' = rstate
+                { x = rstate.x + dx
+                , y = rstate.y + dy
+                , width = width
+                }
+    -- Update MS state with the RS state
+    state' = state { mode = MM.Resize rstate' }
+  -- Set the new max width on the node
+  pure $ setNodeMaxWidth state' rstate.id (Just width)
 
 -- TODO(vmpstr): Remove size constraint if element size + delta < constraint
 stopResize :: forall m. MonadEffect m => MS.State -> m MS.State
@@ -52,16 +83,21 @@ stopResize state = pure $ state { mode = MM.Idle }
 startEWResize :: forall m. Log.Logger m => MonadEffect m => MouseEvent -> NodeId -> MS.State -> m MS.State
 startEWResize me id state = do
   let mresizer = (currentTarget $ toEvent me) >>= fromEventTarget
-  
-  -- mhtmlMap <- H.lift $ H.getHTMLElementRef mapRef
-  Log.log Log.Info $ "ew resize start at " <> show (clientX me) <> " " <> show (clientY me)
-  pure state
-    { mode = MM.Resize
-      { direction: RS.EW
-      , x: clientX me
-      , y: clientY me
-      , width: 0
-      , height: 0
-      , id: id
-      }
-    }
+  mnode <- liftEffect $ case mresizer of
+             Just resizer -> closest (QuerySelector ".selection_container") resizer
+             Nothing -> pure Nothing
+  case mnode >>= fromElement of
+    Just htmlElement -> do
+      rect <- liftEffect $ getBoundingClientRect htmlElement
+      Log.log Log.Info $ "Starting dims " <> show rect.width <> " " <> show rect.height
+      pure state
+        { mode = MM.Resize
+          { direction: RS.EW
+          , x: toNumber $ clientX me
+          , y: toNumber $ clientY me
+          , width: rect.width
+          , height: rect.height
+          , id: id
+          }
+        }
+    Nothing -> pure state

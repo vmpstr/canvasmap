@@ -5,7 +5,7 @@ import Data.Tuple (Tuple)
 
 import CSS.Stylesheet (CSS)
 import CSS.Display (position, absolute, static) as CSS
-import CSS.Geometry (left, top) as CSS
+import CSS.Geometry (left, top, maxWidth) as CSS
 import CSS.Size (px) as CSS
 
 newtype NodeId = NodeId Int
@@ -34,6 +34,12 @@ positionToCSS = case _ of
     CSS.top $ CSS.px position.y
   Static -> do -- StyleM
     CSS.position CSS.static
+
+maxWidthToCSS :: Maybe Number -> CSS
+maxWidthToCSS = do
+  case _ of
+    Just width -> CSS.maxWidth $ CSS.px width
+    Nothing -> pure unit
 
 data NodePath
   = Top (Tuple Number Number)

@@ -19,4 +19,5 @@ type ViewState =
   , haveNextSibling :: Boolean
   , reactsToMouse :: Boolean
   , editing :: Maybe NodeId
+  , resized :: Maybe NodeId
   }

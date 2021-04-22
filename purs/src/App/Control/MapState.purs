@@ -4,7 +4,7 @@ import App.Prelude
 import App.Data.Node (Node)
 import App.Data.NodeCommon (NodeId(..))
 import App.View.ViewState (ViewState, ParentState(..))
-import App.Control.MapMode (Mode(..), isDrag, getDragNodeId, getClosestBeacon, reactsToMouse, getEditNodeId)
+import App.Control.MapMode (Mode(..), isDrag, getDragNodeId, getClosestBeacon, reactsToMouse, getEditNodeId, getResizedNodeId)
 
 import Data.List (List)
 import Data.Map (Map)
@@ -43,4 +43,5 @@ toInitialViewState state =
   , haveNextSibling: false
   , reactsToMouse: reactsToMouse state.mode
   , editing: getEditNodeId state.mode
+  , resized: getResizedNodeId state.mode
   }
