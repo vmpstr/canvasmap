@@ -1,0 +1,7 @@
+input[type="text"] {
+  font: inherit;
+  border: none;
+  outline: none;
+  padding: 0;
+  width: 100%;
+}

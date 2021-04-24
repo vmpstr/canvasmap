@@ -5,7 +5,7 @@ import App.Utils as Utils
 
 import App.Control.NodeAction as NA
 import App.View.ViewState as ViewState
-import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath(..), positionToCSS)
+import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath(..), positionToCSS, maxWidthToCSS)
 import App.Class.LayoutNode (class LayoutNode)
 import App.Data.CSSClasses as CC
 
@@ -79,10 +79,13 @@ renderContents wrap viewState (ScrollerNodeImpl details) children =
     props = HP.classes $ Utils.filterBySecond
       [ CC.selection_container /\ true
       , CC.selected            /\ (viewState.selected == Just details.id)
+      , CC.resized             /\ (viewState.resized == Just details.id)
       ]
   in
   HH.div
-    [ props ]
+    [ props -- selection_container
+    , Utils.cssToStyle $ maxWidthToCSS details.maxWidth
+    ]
     [ HH.div
         containerProps -- contents_container
         [ labelEditor
@@ -91,6 +94,7 @@ renderContents wrap viewState (ScrollerNodeImpl details) children =
             [ HH.text details.label ]
         ]
     , children
+    , NE.ewResizer wrap details.id
     ]
 
 instance scrollerNodeLayoutNode :: LayoutNode ScrollerNodeImpl where
@@ -168,4 +172,4 @@ setLabel (ScrollerNodeImpl details) value =
 
 setMaxWidth :: ScrollerNodeImpl -> Maybe Number -> ScrollerNodeImpl
 setMaxWidth (ScrollerNodeImpl details) value =
-  ScrollerNodeImpl details { maxWidth = value }
+  ScrollerNodeImpl details { maxWidth = map (max 0.0) value }

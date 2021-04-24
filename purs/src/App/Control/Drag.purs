@@ -44,9 +44,9 @@ handleAction action state =
         xoffset = domRect.left - (toNumber $ clientX mouseEvent)
         yoffset = domRect.top - (toNumber $ clientY mouseEvent)
       pure $ onMouseDown state mouseEvent id xoffset yoffset
-    MouseUp mouseEvent -> do
+    MouseUp _ -> do
       if MapMode.isHookedToDrag state.mode then
-        pure $ onMouseUp state mouseEvent
+        pure $ onMouseUp state
       else
         pure $ state /\ SCT.NoChange
     MouseMove mouseEvent -> do
@@ -264,8 +264,8 @@ setNodePath state nodeId path =
       in
       resetNodePosition state'' nodeId
 
-onMouseUp :: MapState.State -> MouseEvent -> Tuple MapState.State SCT.Type
-onMouseUp state event =
+onMouseUp :: MapState.State -> Tuple MapState.State SCT.Type
+onMouseUp state =
   if Mode.isHookedToDrag state.mode then
     let state' = state { mode = Mode.Idle } in
     case Mode.getClosestBeacon state.mode, Mode.getDragNodeId state.mode of

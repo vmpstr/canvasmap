@@ -15,8 +15,8 @@ import Data.Map as Map
 import Web.Event.Event (stopPropagation, currentTarget)
 import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent)
 import Web.HTML.HTMLElement (fromElement, getBoundingClientRect)
-import Web.DOM.Element (closest, fromEventTarget)
-import Web.DOM.ParentNode (QuerySelector(..))
+import Web.DOM.Element (closest, fromEventTarget, toParentNode)
+import Web.DOM.ParentNode (QuerySelector(..), querySelector)
 
 handleAction :: forall m. Log.Logger m => MonadEffect m => Action -> MS.State -> m (Tuple MS.State SCT.Type)
 handleAction action state =
@@ -37,7 +37,7 @@ handleAction action state =
     MouseUp mouseEvent ->
       if MM.isHookedToResize state.mode then
         let state' = updateSize mouseEvent state in
-        map (_ /\ SCT.Persistent) $ stopResize state'
+        map (_ /\ SCT.Persistent) $ stopResize mouseEvent state'
       else
         pure $ state /\ SCT.NoChange
 
@@ -76,9 +76,24 @@ updateSize me state = fromMaybe state do -- Maybe
   -- Set the new max width on the node
   pure $ setNodeMaxWidth state' rstate.id (Just width)
 
--- TODO(vmpstr): Remove size constraint if element size + delta < constraint
-stopResize :: forall m. MonadEffect m => MS.State -> m MS.State
-stopResize state = pure $ state { mode = MM.Idle }
+stopResize :: forall m. MonadEffect m => MouseEvent -> MS.State -> m MS.State
+stopResize me state =
+  case state.mode of
+    MM.Resize rstate -> do
+      let state' = state { mode = MM.Idle }
+      let mroot = (currentTarget $ toEvent me) >>= fromEventTarget
+      mresizer <- liftEffect $ case mroot of
+                    Just root -> querySelector (QuerySelector ".resized") $ toParentNode root
+                    Nothing -> pure Nothing
+      case mresizer >>= fromElement of
+        Just htmlElement -> do
+          rect <- liftEffect $ getBoundingClientRect htmlElement
+          if (rect.width + 3.0) < rstate.width then do
+            pure $ setNodeMaxWidth state' rstate.id Nothing
+          else
+            pure state'
+        Nothing -> pure state'
+    _ -> pure state
 
 startEWResize :: forall m. Log.Logger m => MonadEffect m => MouseEvent -> NodeId -> MS.State -> m MS.State
 startEWResize me id state = do

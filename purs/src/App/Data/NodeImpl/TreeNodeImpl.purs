@@ -61,6 +61,7 @@ renderContents wrap viewState (TreeNodeImpl details) =
     classes = Utils.filterBySecond
       [ CC.selection_container /\ true
       , CC.selected            /\ (viewState.selected == Just details.id)
+      , CC.resized             /\ (viewState.resized == Just details.id)
       ]
 
     labelEditor = Utils.maybeDiv'
@@ -103,7 +104,6 @@ instance treeNodeLayoutNode :: LayoutNode TreeNodeImpl where
         , CC.root    /\ (viewState.parentState == ViewState.NoParent)
         , CC.child   /\ (viewState.parentState /= ViewState.NoParent)
         , CC.dragged /\ (viewState.dragged == Just details.id)
-        , CC.resized /\ (viewState.resized == Just details.id)
         ]
       parentEdge = Utils.maybeDiv
         (viewState.parentState == ViewState.ShowParentEdge) $
@@ -160,4 +160,4 @@ setLabel (TreeNodeImpl details) value =
 
 setMaxWidth :: TreeNodeImpl -> Maybe Number -> TreeNodeImpl
 setMaxWidth (TreeNodeImpl details) value =
-  TreeNodeImpl details { maxWidth = value }
+  TreeNodeImpl details { maxWidth = map (max 0.0) value }
