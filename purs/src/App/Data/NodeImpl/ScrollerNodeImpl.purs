@@ -5,7 +5,7 @@ import App.Utils as Utils
 
 import App.Control.NodeAction as NA
 import App.View.ViewState as ViewState
-import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath(..), positionToCSS, maxWidthToCSS)
+import App.Data.NodeCommon (NodeId, NodePosition(..), NodePath(..), positionToCSS, maxWidthToCSS, maxHeightToCSS)
 import App.Class.LayoutNode (class LayoutNode)
 import App.Data.CSSClasses as CC
 
@@ -84,7 +84,7 @@ renderContents wrap viewState (ScrollerNodeImpl details) children =
   in
   HH.div
     [ props -- selection_container
-    , Utils.cssToStyle $ maxWidthToCSS details.maxWidth
+    , Utils.cssToStyle $ maxWidthToCSS details.maxWidth <> maxHeightToCSS details.maxHeight
     ]
     [ HH.div
         containerProps -- contents_container
@@ -95,6 +95,7 @@ renderContents wrap viewState (ScrollerNodeImpl details) children =
         ]
     , children
     , NE.ewResizer wrap details.id
+    , NE.nsResizer wrap details.id
     ]
 
 instance scrollerNodeLayoutNode :: LayoutNode ScrollerNodeImpl where
@@ -173,3 +174,7 @@ setLabel (ScrollerNodeImpl details) value =
 setMaxWidth :: ScrollerNodeImpl -> Maybe Number -> ScrollerNodeImpl
 setMaxWidth (ScrollerNodeImpl details) value =
   ScrollerNodeImpl details { maxWidth = map (max 0.0) value }
+
+setMaxHeight :: ScrollerNodeImpl -> Maybe Number -> ScrollerNodeImpl
+setMaxHeight (ScrollerNodeImpl details) value =
+  ScrollerNodeImpl details { maxHeight = map (max 0.0) value }

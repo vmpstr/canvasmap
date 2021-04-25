@@ -161,3 +161,6 @@ setLabel (TreeNodeImpl details) value =
 setMaxWidth :: TreeNodeImpl -> Maybe Number -> TreeNodeImpl
 setMaxWidth (TreeNodeImpl details) value =
   TreeNodeImpl details { maxWidth = map (max 0.0) value }
+
+setMaxHeight :: TreeNodeImpl -> Maybe Number -> TreeNodeImpl
+setMaxHeight impl _ = impl

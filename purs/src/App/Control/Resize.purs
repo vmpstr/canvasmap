@@ -29,6 +29,11 @@ handleAction action state =
         map (_ /\ SCT.Ephemeral) $ startEWResize mouseEvent id state
       else
         pure $ state /\ SCT.NoChange
+    NSStart mouseEvent id ->
+      if state.mode == MM.Idle then
+        map (_ /\ SCT.Ephemeral) $ startNSResize mouseEvent id state
+      else
+        pure $ state /\ SCT.NoChange
     MouseMove mouseEvent ->
       if MM.isHookedToResize state.mode then
         pure $ updateSize mouseEvent state /\ SCT.Ephemeral
@@ -50,6 +55,15 @@ setNodeMaxWidth state id value =
         state.nodes
     }
 
+setNodeMaxHeight :: MS.State -> NodeId -> Maybe Number -> MS.State
+setNodeMaxHeight state id value =
+  state
+    { nodes = Map.update
+        (\node -> Just $ Node.setMaxHeight node value)
+        id
+        state.nodes
+    }
+
 getResizeState :: MS.State -> Maybe RS.State
 getResizeState state =
   case state.mode of
@@ -62,19 +76,21 @@ updateSize me state = fromMaybe state do -- Maybe
   let
     dx = (toNumber $ clientX me) - rstate.x
     dy = (toNumber $ clientY me) - rstate.y
-    width =
-      case rstate.direction of
-        RS.EW -> rstate.width + dx
+    width = rstate.width + dx
+    height = rstate.height + dy
     -- Update the RS state
     rstate' = rstate
                 { x = rstate.x + dx
                 , y = rstate.y + dy
                 , width = width
+                , height = height
                 }
     -- Update MS state with the RS state
     state' = state { mode = MM.Resize rstate' }
   -- Set the new max width on the node
-  pure $ setNodeMaxWidth state' rstate.id (Just width)
+  case rstate.direction of
+    RS.EW -> pure $ setNodeMaxWidth state' rstate.id (Just width)
+    RS.NS -> pure $ setNodeMaxHeight state' rstate.id (Just width)
 
 stopResize :: forall m. MonadEffect m => MouseEvent -> MS.State -> m MS.State
 stopResize me state =
@@ -88,10 +104,15 @@ stopResize me state =
       case mresizer >>= fromElement of
         Just htmlElement -> do
           rect <- liftEffect $ getBoundingClientRect htmlElement
-          if (rect.width + 3.0) < rstate.width then do
-            pure $ setNodeMaxWidth state' rstate.id Nothing
+          widthState <-
+            if (rect.width + 3.0) < rstate.width then do
+              pure $ setNodeMaxWidth state' rstate.id Nothing
+            else
+              pure state'
+          if (rect.height + 3.0) < rstate.height then do
+            pure $ setNodeMaxHeight widthState rstate.id Nothing
           else
-            pure state'
+            pure widthState
         Nothing -> pure state'
     _ -> pure state
 
@@ -108,6 +129,28 @@ startEWResize me id state = do
       pure state
         { mode = MM.Resize
           { direction: RS.EW
+          , x: toNumber $ clientX me
+          , y: toNumber $ clientY me
+          , width: rect.width
+          , height: rect.height
+          , id: id
+          }
+        }
+    Nothing -> pure state
+
+startNSResize :: forall m. Log.Logger m => MonadEffect m => MouseEvent -> NodeId -> MS.State -> m MS.State
+startNSResize me id state = do
+  let mresizer = (currentTarget $ toEvent me) >>= fromEventTarget
+  mnode <- liftEffect $ case mresizer of
+             Just resizer -> closest (QuerySelector ".selection_container") resizer
+             Nothing -> pure Nothing
+  case mnode >>= fromElement of
+    Just htmlElement -> do
+      rect <- liftEffect $ getBoundingClientRect htmlElement
+      Log.log Log.Info $ "Starting dims " <> show rect.width <> " " <> show rect.height
+      pure state
+        { mode = MM.Resize
+          { direction: RS.NS
           , x: toNumber $ clientX me
           , y: toNumber $ clientY me
           , width: rect.width

@@ -5,6 +5,7 @@ import App.Data.NodeCommon (NodeId)
 
 data Direction
   = EW
+  | NS
 
 derive instance directionEq :: Eq Direction
 derive instance genericDirection :: Generic Direction _

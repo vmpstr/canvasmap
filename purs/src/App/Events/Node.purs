@@ -76,5 +76,15 @@ ewResizer wrap id =
           wrap' $ RA.StopPropagation event mouseDownAction
     ] []
 
-
-
+nsResizer :: forall w s. (NA.Action -> w) -> NodeId -> HH.HTML s w
+nsResizer wrap id =
+  let wrap' = wrap <<< NA.ResizeAction in
+  HH.div
+    [ HP.class_ CC.ns_resizer
+    , HE.onMouseDown
+        \mouseEvent ->
+          let event = toEvent mouseEvent
+              mouseDownAction = RA.NSStart mouseEvent id
+          in
+          wrap' $ RA.StopPropagation event mouseDownAction
+    ] []

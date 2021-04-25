@@ -63,3 +63,9 @@ setMaxWidth node value =
   case node of
     TreeNode impl -> TreeNode $ TreeNodeImpl.setMaxWidth impl value
     ScrollerNode impl -> ScrollerNode $ ScrollerNodeImpl.setMaxWidth impl value
+
+setMaxHeight :: Node -> Maybe Number -> Node
+setMaxHeight node value =
+  case node of
+    TreeNode impl -> TreeNode $ TreeNodeImpl.setMaxHeight impl value
+    ScrollerNode impl -> ScrollerNode $ ScrollerNodeImpl.setMaxHeight impl value

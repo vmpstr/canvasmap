@@ -7,3 +7,13 @@
   cursor: ew-resize;
   z-index: 15;
 }
+
+.ns_resizer {
+  position: absolute;
+  bottom: -3px;
+  left: 2px;
+  right: 2px;
+  height: 7px;
+  cursor: ns-resize;
+  z-index: 15;
+}
