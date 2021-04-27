@@ -14,11 +14,13 @@ import Data.Map as Map
 
 import Web.Event.Event (stopPropagation, currentTarget)
 import Web.UIEvent.MouseEvent (MouseEvent, clientX, clientY, toEvent)
-import Web.HTML.HTMLElement (fromElement, getBoundingClientRect)
+import Web.HTML.HTMLElement (HTMLElement, fromElement, getBoundingClientRect)
 import Web.DOM.Element (closest, fromEventTarget, toParentNode)
 import Web.DOM.ParentNode (QuerySelector(..), querySelector)
 
-handleAction :: forall m. Log.Logger m => MonadEffect m => Action -> MS.State -> m (Tuple MS.State SCT.Type)
+handleAction :: forall m.
+  Log.Logger m => MonadEffect m => MonadPlus m =>
+  Action -> MS.State -> m (Tuple MS.State SCT.Type)
 handleAction action state =
   case action of
     StopPropagation event next -> do
@@ -88,9 +90,21 @@ updateSize me state = fromMaybe state do -- Maybe
     -- Update MS state with the RS state
     state' = state { mode = MM.Resize rstate' }
   -- Set the new max width on the node
-  case rstate.direction of
-    RS.EW -> pure $ setNodeMaxWidth state' rstate.id (Just width)
-    RS.NS -> pure $ setNodeMaxHeight state' rstate.id (Just width)
+  let widthState = if affectsWidth rstate.direction then
+                     setNodeMaxWidth state' rstate.id (Just width)
+                   else state'
+  let finalState = if affectsHeight rstate.direction then
+                     setNodeMaxHeight widthState rstate.id (Just height)
+                   else widthState
+  pure finalState
+
+affectsWidth :: RS.Direction -> Boolean
+affectsWidth RS.EW = true
+affectsWidth _ = false
+
+affectsHeight :: RS.Direction -> Boolean
+affectsHeight RS.NS = true
+affectsHeight _ = false
 
 stopResize :: forall m. MonadEffect m => MouseEvent -> MS.State -> m MS.State
 stopResize me state =
@@ -105,57 +119,52 @@ stopResize me state =
         Just htmlElement -> do
           rect <- liftEffect $ getBoundingClientRect htmlElement
           widthState <-
-            if (rect.width + 3.0) < rstate.width then do
+            if (affectsWidth rstate.direction) && (rect.width + 3.0) < rstate.width then do
               pure $ setNodeMaxWidth state' rstate.id Nothing
             else
               pure state'
-          if (rect.height + 3.0) < rstate.height then do
+          if (affectsHeight rstate.direction) && (rect.height + 3.0) < rstate.height then do
             pure $ setNodeMaxHeight widthState rstate.id Nothing
           else
             pure widthState
         Nothing -> pure state'
     _ -> pure state
 
-startEWResize :: forall m. Log.Logger m => MonadEffect m => MouseEvent -> NodeId -> MS.State -> m MS.State
-startEWResize me id state = do
-  let mresizer = (currentTarget $ toEvent me) >>= fromEventTarget
-  mnode <- liftEffect $ case mresizer of
-             Just resizer -> closest (QuerySelector ".selection_container") resizer
-             Nothing -> pure Nothing
-  case mnode >>= fromElement of
-    Just htmlElement -> do
-      rect <- liftEffect $ getBoundingClientRect htmlElement
-      Log.log Log.Info $ "Starting dims " <> show rect.width <> " " <> show rect.height
-      pure state
-        { mode = MM.Resize
-          { direction: RS.EW
-          , x: toNumber $ clientX me
-          , y: toNumber $ clientY me
-          , width: rect.width
-          , height: rect.height
-          , id: id
-          }
-        }
-    Nothing -> pure state
+startEWResize :: forall m.
+  Log.Logger m => MonadEffect m => MonadPlus m =>
+  MouseEvent -> NodeId -> MS.State -> m MS.State
+startEWResize = startResizeFromSelectionContainer RS.EW
 
-startNSResize :: forall m. Log.Logger m => MonadEffect m => MouseEvent -> NodeId -> MS.State -> m MS.State
-startNSResize me id state = do
-  let mresizer = (currentTarget $ toEvent me) >>= fromEventTarget
-  mnode <- liftEffect $ case mresizer of
-             Just resizer -> closest (QuerySelector ".selection_container") resizer
-             Nothing -> pure Nothing
-  case mnode >>= fromElement of
-    Just htmlElement -> do
-      rect <- liftEffect $ getBoundingClientRect htmlElement
-      Log.log Log.Info $ "Starting dims " <> show rect.width <> " " <> show rect.height
-      pure state
-        { mode = MM.Resize
-          { direction: RS.NS
-          , x: toNumber $ clientX me
-          , y: toNumber $ clientY me
-          , width: rect.width
-          , height: rect.height
-          , id: id
-          }
+startNSResize :: forall m.
+  Log.Logger m => MonadEffect m => MonadPlus m =>
+  MouseEvent -> NodeId -> MS.State -> m MS.State
+startNSResize = startResizeFromSelectionContainer RS.NS
+
+liftMaybe :: forall m a. MonadPlus m => Maybe a -> m a
+liftMaybe (Just x) = pure x
+liftMaybe Nothing = empty
+
+startResizeFromSelectionContainer :: forall m.
+  Log.Logger m => MonadEffect m => MonadPlus m =>
+  RS.Direction -> MouseEvent -> NodeId -> MS.State -> m MS.State
+startResizeFromSelectionContainer direction me id state = do
+  melement <- liftEffect $ runMaybeT do
+    resizer <- liftMaybe $ (currentTarget $ toEvent me) >>= fromEventTarget
+    node <- wrap $ closest (QuerySelector ".selection_container") resizer
+    liftMaybe $ fromElement node
+  maybe (pure state) startResizeFromElement melement
+  where
+  startResizeFromElement :: HTMLElement -> m MS.State
+  startResizeFromElement element = do
+    rect <- liftEffect $ getBoundingClientRect element
+    Log.log Log.Info $ "Starting dims " <> show rect.width <> " " <> show rect.height
+    pure state
+      { mode = MM.Resize
+        { direction: direction
+        , x: toNumber $ clientX me
+        , y: toNumber $ clientY me
+        , width: rect.width
+        , height: rect.height
+        , id: id
         }
-    Nothing -> pure state
+      }

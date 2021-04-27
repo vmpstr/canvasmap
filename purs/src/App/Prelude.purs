@@ -1,7 +1,7 @@
 module App.Prelude (module X) where
 
 import Control.Applicative (pure, when) as X
-import Control.Bind (bind, discard, (>>=), (=<<)) as X
+import Control.Bind (bind, discard, (>>=), (=<<), join) as X
 import Control.Category (identity) as X
 import Control.Semigroupoid ((<<<), (>>>)) as X
 
@@ -22,7 +22,7 @@ import Data.Generic.Rep (class Generic) as X
 import Data.Show.Generic (genericShow) as X
 import Data.HeytingAlgebra ((&&), (||), not) as X
 import Data.Int (toNumber, round) as X
-import Data.Maybe (Maybe(..), fromMaybe, fromMaybe') as X
+import Data.Maybe (Maybe(..), fromMaybe, fromMaybe', maybe) as X
 import Data.Ord (class Ord, (<), (>), (<=), (>=), abs, compare, max) as X
 import Data.Ring ((-)) as X
 import Data.Semigroup ((<>)) as X
@@ -35,3 +35,7 @@ import Type.Proxy (Proxy(..)) as X
 import Effect.Aff.Class (class MonadAff, liftAff) as X
 import Effect.Class (liftEffect, class MonadEffect) as X
 import Data.Tuple.Nested ((/\)) as X
+import Control.MonadPlus (class MonadPlus) as X
+import Control.Plus (empty) as X
+import Control.Monad.Maybe.Trans (MaybeT(..), runMaybeT) as X
+import Data.Newtype (wrap) as X

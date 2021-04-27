@@ -72,7 +72,9 @@ render wrap state =
             (NCls.render nodeWrap renderChildren localViewState { haveNextSibling = false } last)
         Nothing -> []
 
-handleAction :: forall m. MonadAff m => Log.Logger m => MA.Action -> MS.State -> m (Tuple MS.State SCT.Type)
+handleAction :: forall m.
+  MonadAff m => Log.Logger m => MonadPlus m =>
+  MA.Action -> MS.State -> m (Tuple MS.State SCT.Type)
 handleAction action state =
   case action of
     MA.NodeAction na -> do

@@ -33,7 +33,7 @@ data Action
 
 mkComponent ::
   forall q i o m.
-  Log.Logger m => MonadAff m =>
+  Log.Logger m => MonadAff m => MonadPlus m =>
   Unit -> H.Component q i o m
 mkComponent _ =
   H.mkComponent
@@ -66,7 +66,7 @@ mkComponent _ =
           -- Make this ephemeral so we actually apply it.
           map (_ /\ SCT.Ephemeral) $ H.lift $ loadState unit
         MapAction ma ->
-          MC.handleAction ma state
+          H.lift $ MC.handleAction ma state
 
     when (changeType /= SCT.NoChange)
       (H.modify_ $ const state')

@@ -17,6 +17,9 @@ import Control.Monad (class Monad)
 import Effect.Class.Console as Console
 import Effect.Class (class MonadEffect, liftEffect)
 import Type.Equality as TE
+import Control.Plus (class Plus)
+import Control.Alternative (class Alternative)
+import Control.Alt (class Alt)
 
 -- AppM monad: ReaderT pattern with environment and Aff base monad.
 newtype AppM a = AppM (ReaderT Environment Aff a)
@@ -30,6 +33,13 @@ derive newtype instance appMApply :: Apply AppM
 derive newtype instance appMApplicative :: Applicative AppM
 derive newtype instance appMBind :: Bind AppM
 derive newtype instance appMMonad :: Monad AppM
+
+derive newtype instance appMAlt :: Alt AppM
+derive newtype instance appMPlus :: Plus AppM
+
+instance appMAlternative :: Alternative AppM
+instance appMMonadPlus :: MonadPlus AppM
+
 -- MonadEffect
 derive newtype instance appMMonadEffect :: MonadEffect AppM
 derive newtype instance appMMonadAff :: MonadAff AppM

@@ -20,7 +20,9 @@ import Web.Event.Event (stopPropagation)
 
 import Effect.Class (class MonadEffect)
 
-handleAction :: forall m. Log.Logger m => MonadEffect m => Action -> State -> m (Tuple State SCT.Type)
+handleAction :: forall m.
+  Log.Logger m => MonadEffect m => MonadPlus m =>
+  Action -> State -> m (Tuple State SCT.Type)
 handleAction action state =
   case action of
     StopPropagation event next -> do
