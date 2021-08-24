@@ -2,33 +2,30 @@ module App.Control.Map where
 
 import App.Prelude
 
-import App.Control.StateChangeType as SCT
-import App.Control.Node as NCtl
-import App.Control.Drag as DCtl
-import App.Control.Resize as RCtl
-import App.Control.MapAction as MA
-import App.Control.MapState as MS
-import App.Data.NodeCommon (NodeId, NodePath(..), nextId)
-import App.Data.Node (Node, errorNode)
-import App.View.ViewState (ViewState)
-import App.Control.MapMode as MM
 import App.Class.LayoutNode as NCls
-import App.Events.Map as ME
+import App.Control.Drag as DCtl
+import App.Control.MapAction as MA
+import App.Control.MapMode as MM
+import App.Control.MapState as MS
+import App.Control.Node as NCtl
+import App.Control.Resize as RCtl
+import App.Control.StateChangeType as SCT
 import App.Data.MapRef (mapRef)
-
+import App.Data.Node (Node, errorNode)
+import App.Data.NodeCommon (NodeId, NodePath(..), nextId)
+import App.Events.Map as ME
+import App.View.ViewState (ViewState)
+import CSS (key)
 import Capabilities.Logging as Log
-
 import Component.Slots (Slots)
-
 import Data.Array (unsnoc, snoc)
-import Data.Map as Map
 import Data.List as List
-
-import Web.Event.Event (preventDefault)
-import Web.UIEvent.KeyboardEvent as WKE
-
+import Data.Map as Map
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
+import Web.Event.Event (preventDefault)
+import Web.HTML.Event.EventTypes (offline)
+import Web.UIEvent.KeyboardEvent as WKE
 
 render :: forall m a. MonadAff m => (MA.Action -> a) -> MS.State -> HH.ComponentHTML a Slots m
 render wrap state =
@@ -121,6 +118,13 @@ handleAction action state =
             -- TODO(vmpstr): Should selected become the parent or something?
             pure (state' { selected = Nothing } /\ SCT.Persistent)
           Nothing -> pure (state /\ SCT.NoChange)
+      | WKE.code ke == "ArrowLeft" -> do
+        liftEffect $ preventDefault $ WKE.toEvent ke
+        pure (state { selected = findParent state.relations.parents state.selected } /\ SCT.Ephemeral)
       | otherwise -> do
           Log.log Log.Info $ "unhandled keypress " <> (WKE.code ke)
           pure (state /\ SCT.NoChange)
+  where
+  findParent :: Map.Map NodeId NodeId -> Maybe NodeId -> Maybe NodeId
+  findParent parents mid =
+    map (\id -> fromMaybe id $ Map.lookup id parents) mid

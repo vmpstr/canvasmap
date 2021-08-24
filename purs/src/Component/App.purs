@@ -2,30 +2,24 @@ module Component.App where
 
 import App.Prelude
 
-import App.Control.StateChangeType as SCT
-import App.Control.MapAction as MA
-import Capabilities.Logging as Log
 import App.Control.Map as MC
--- TODO(vmpstr): This is used for initial state. I need to make the state be
--- app state, and delegate to something like map to build up its own state?
+import App.Control.MapAction as MA
 import App.Control.MapState as MapState
-
-import Data.Argonaut.Core (stringify)
+import App.Control.StateChangeType as SCT
+import Capabilities.Logging as Log
 import Component.Slots (Slots)
-
-import Web.UIEvent.KeyboardEvent as KE
-import Web.UIEvent.KeyboardEvent.EventTypes as KET
-import Web.HTML (window)
-import Web.HTML.Window (document, localStorage)
-import Web.HTML.HTMLDocument as HTMLDocument
-import Web.Storage.Storage as Storage
-
-import Data.Argonaut.Parser (jsonParser)
+import Data.Argonaut.Core (stringify)
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
-
+import Data.Argonaut.Parser (jsonParser)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.Query.Event (eventListener)
+import Web.HTML (window)
+import Web.HTML.HTMLDocument as HTMLDocument
+import Web.HTML.Window (document, localStorage)
+import Web.Storage.Storage as Storage
+import Web.UIEvent.KeyboardEvent as KE
+import Web.UIEvent.KeyboardEvent.EventTypes as KET
 
 data Action 
   = Initialize
@@ -77,10 +71,14 @@ mkComponent _ =
 
   storageName = "cmstate" :: String
 
+  stateForSaving :: MapState.State -> MapState.State
+  stateForSaving state =
+    state { selected = Nothing }
+
   saveState :: MapState.State -> m Unit
   saveState state = do
     storage <- liftEffect $ localStorage =<< window
-    let json = encodeJson state
+    let json = encodeJson $ stateForSaving state
     liftEffect $ Storage.setItem storageName (stringify json) storage
     --Log.log Log.Debug $ stringifyWithIndent 2 json
 
