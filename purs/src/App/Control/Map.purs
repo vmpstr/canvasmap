@@ -168,5 +168,5 @@ handleAction action state =
     findPreviousSibling' (first:second:rest) target
                                          | second == target = Just first
                                          | first == target = Nothing
-                                         | otherwise = findPreviousSibling' rest target
+                                         | otherwise = findPreviousSibling' (second:rest) target
     findPreviousSibling' _ _ = Nothing
