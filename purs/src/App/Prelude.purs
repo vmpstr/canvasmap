@@ -23,6 +23,7 @@ import Data.Show.Generic (genericShow) as X
 import Data.HeytingAlgebra ((&&), (||), not) as X
 import Data.Int (toNumber, round) as X
 import Data.Maybe (Maybe(..), fromMaybe, fromMaybe', maybe) as X
+import Data.Monoid (mempty) as X
 import Data.Ord (class Ord, (<), (>), (<=), (>=), abs, compare, max) as X
 import Data.Ring ((-)) as X
 import Data.Semigroup ((<>)) as X

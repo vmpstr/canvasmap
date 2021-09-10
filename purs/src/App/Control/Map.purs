@@ -15,16 +15,15 @@ import App.Data.Node (Node, errorNode)
 import App.Data.NodeCommon (NodeId, NodePath(..), nextId)
 import App.Events.Map as ME
 import App.View.ViewState (ViewState)
-import CSS (key)
 import Capabilities.Logging as Log
 import Component.Slots (Slots)
 import Data.Array (unsnoc, snoc)
 import Data.List as List
+import Data.List (List, (:))
 import Data.Map as Map
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Web.Event.Event (preventDefault)
-import Web.HTML.Event.EventTypes (offline)
 import Web.UIEvent.KeyboardEvent as WKE
 
 render :: forall m a. MonadAff m => (MA.Action -> a) -> MS.State -> HH.ComponentHTML a Slots m
@@ -121,6 +120,15 @@ handleAction action state =
       | WKE.code ke == "ArrowLeft" -> do
         liftEffect $ preventDefault $ WKE.toEvent ke
         pure (state { selected = findParent state.relations.parents state.selected } /\ SCT.Ephemeral)
+      | WKE.code ke == "ArrowRight" -> do
+        liftEffect $ preventDefault $ WKE.toEvent ke
+        pure (state { selected = findFirstChild state.relations.children state.selected } /\ SCT.Ephemeral)
+      | WKE.code ke == "ArrowDown" -> do
+        liftEffect $ preventDefault $ WKE.toEvent ke
+        pure (state { selected = findNextSibling state.relations.parents state.relations.children state.selected } /\ SCT.Ephemeral)
+      | WKE.code ke == "ArrowUp" -> do
+        liftEffect $ preventDefault $ WKE.toEvent ke
+        pure (state { selected = findPreviousSibling state.relations.parents state.relations.children state.selected } /\ SCT.Ephemeral)
       | otherwise -> do
           Log.log Log.Info $ "unhandled keypress " <> (WKE.code ke)
           pure (state /\ SCT.NoChange)
@@ -128,3 +136,37 @@ handleAction action state =
   findParent :: Map.Map NodeId NodeId -> Maybe NodeId -> Maybe NodeId
   findParent parents mid =
     map (\id -> fromMaybe id $ Map.lookup id parents) mid
+
+  findFirstChild :: Map.Map NodeId (List NodeId) -> Maybe NodeId -> Maybe NodeId
+  findFirstChild children mid =
+    map (\id -> fromMaybe id $ join $ map List.head $ Map.lookup id children) mid
+
+  findNextSibling :: Map.Map NodeId NodeId -> Map.Map NodeId (List NodeId) -> Maybe NodeId -> Maybe NodeId
+  findNextSibling parents children mid =
+    case childList, mid of
+      Just list, Just id -> Just $ fromMaybe id $ findNextSibling' list id
+      _, _ -> mid
+    where
+    pid = findParent parents mid
+    childList = join $ map (\id -> Map.lookup id children) pid
+    
+    findNextSibling' :: List NodeId -> NodeId -> Maybe NodeId
+    findNextSibling' (first:rest) target | first == target = List.head rest
+                                         | otherwise = findNextSibling' rest target
+    findNextSibling' List.Nil _ = Nothing
+
+  findPreviousSibling :: Map.Map NodeId NodeId -> Map.Map NodeId (List NodeId) -> Maybe NodeId -> Maybe NodeId
+  findPreviousSibling parents children mid =
+    case childList, mid of
+      Just list, Just id -> Just $ fromMaybe id $ findPreviousSibling' list id
+      _, _ -> mid
+    where
+    pid = findParent parents mid
+    childList = join $ map (\id -> Map.lookup id children) pid
+    
+    findPreviousSibling' :: List NodeId -> NodeId -> Maybe NodeId
+    findPreviousSibling' (first:second:rest) target
+                                         | second == target = Just first
+                                         | first == target = Nothing
+                                         | otherwise = findPreviousSibling' rest target
+    findPreviousSibling' _ _ = Nothing
